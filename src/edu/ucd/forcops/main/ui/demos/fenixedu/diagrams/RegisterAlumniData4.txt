@@ -1,0 +1,139 @@
+@startuml
+ participant "JSP\nJSPRegisterAlumniData" as JSPRegisterAlumniData order 0
+ participant "services.alumni\nRegisterAlumniData" as RegisterAlumniData order 1
+ participant "java.text\nMessageFormat" as MessageFormat order 129
+ participant "core.i18n\nBundleUtil" as BundleUtil order 130
+ participant "domain.organizationalStructure\nUnit" as Unit order 131
+ participant "domain\nAlumniIdentityCheckRequest_Base" as AlumniIdentityCheckRequest_Base order 132
+ participant "domain\nAlumni" as Alumni order 133
+ participant "domain\nAlumni" as Alumni order 134
+ participant "domain\nAlumni" as Alumni order 135
+ participant "domain\nAlumni" as Alumni order 136
+ participant "dto.alumni.publicAccess\nAlumniPasswordBean" as AlumniPasswordBean order 137
+ participant "domain\nAlumni" as Alumni order 138
+ participant "domain\nAlumni" as Alumni order 139
+ participant "domain.student\nStudent" as Student order 146
+ participant "domain\nAlumni" as Alumni order 147
+ participant "domain.contacts\nEmailAddress_Base" as EmailAddress_Base order 148
+ participant "domain\nAlumniIdentityCheckRequest" as AlumniIdentityCheckRequest order 149
+ participant "org.joda.time\nDateTime" as DateTime order 192
+ participant "org.joda.time\nDateTime" as DateTime order 193
+ participant "core.domain\nBennu" as Bennu order 194
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 201
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 202
+ participant "domain\nAlumni" as Alumni order 203
+ participant "domain.student\nStudent" as Student order 210
+ JSPRegisterAlumniData -> RegisterAlumniData: getConnection()
+ JSPRegisterAlumniData <- RegisterAlumniData: returnConnection()
+ JSPRegisterAlumniData -> RegisterAlumniData: executeAction()
+ RegisterAlumniData -> RegisterAlumniData: run(AlumniPasswordBean):void
+ RegisterAlumniData -> AlumniPasswordBean: getAlumni():Alumni
+ RegisterAlumniData -> Alumni: setRegistered(Boolean):void
+ OPT !bean.getAlumni().hasAnyPendingIdentityRequests()
+ 	RegisterAlumniData -> AlumniPasswordBean: getAlumni():Alumni
+ 	RegisterAlumniData -> Alumni: getPersonalEmail():EmailAddress
+ 	Alumni -> Alumni: getStudent():Student
+ 	Alumni -> Student: getPerson():Person
+ 	Alumni -> Student: getEmailAddressStream():Stream<EmailAddress>
+ 	ALT personalEmail == null
+ 		RegisterAlumniData -> AlumniPasswordBean: getAlumni():Alumni
+ 		RegisterAlumniData -> Alumni: getStudent():Student
+ 		RegisterAlumniData -> Alumni: getPerson():Person
+ 		RegisterAlumniData -> Alumni: getEmailForSendingEmails():String
+ 	ELSE else
+ 		RegisterAlumniData -> EmailAddress_Base: getValue():String
+ 	END
+ 	RegisterAlumniData -> AlumniIdentityCheckRequest: AlumniIdentityCheckRequest\n(String,String,String,YearMonthDay,String,String,String,String,String,String,AlumniRequestType)
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: AlumniIdentityCheckRequest_Base()
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: checkParameters\n(String,String,String,YearMonthDay,String,String,String,String,String,String,AlumniRequestType):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setContactEmail(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setDocumentIdNumber(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setFullName(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setDateOfBirthYearMonthDay(YearMonthDay):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setDistrictOfBirth(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setDistrictSubdivisionOfBirth(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setParishOfBirth(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setSocialSecurityNumber(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setNameOfFather(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setNameOfMother(String):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setCreationDateTime(DateTime):void
+ 	AlumniIdentityCheckRequest -> DateTime: DateTime()
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setRequestType(AlumniRequestType):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setRequestToken(UUID):void
+ 	AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setRootDomainObject(Bennu):void
+ 	AlumniIdentityCheckRequest -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	RegisterAlumniData -> AlumniPasswordBean: getAlumni():Alumni
+ 	RegisterAlumniData -> Alumni: getStudent():Student
+ 	RegisterAlumniData -> Alumni: getPerson():Person
+ 	RegisterAlumniData -> Alumni: getDocumentIdNumber():String
+ 	Alumni -> Alumni: getStudent():Student
+ 	Alumni -> Student: getPerson():Person
+ 	Alumni -> Student: getDocumentIdNumber():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getFullName():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getDateOfBirthYearMonthDay():YearMonthDay
+ 	RegisterAlumniData -> AlumniPasswordBean: getDistrictOfBirth():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getDistrictSubdivisionOfBirth():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getParishOfBirth():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getSocialSecurityNumber():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getNameOfFather():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getNameOfMother():String
+ 	RegisterAlumniData -> AlumniPasswordBean: getRequestType():AlumniRequestType
+ 	RegisterAlumniData -> AlumniIdentityCheckRequest: setAlumni(Alumni):void
+ 	RegisterAlumniData -> AlumniPasswordBean: getAlumni():Alumni
+ 	OPT identityRequest.isValid()
+ 		RegisterAlumniData -> AlumniIdentityCheckRequest: validate(Boolean):void
+ 		AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setApproved(Boolean):void
+ 		AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setDecisionDateTime(DateTime):void
+ 		AlumniIdentityCheckRequest -> DateTime: DateTime()
+ 		RegisterAlumniData -> RegisterAlumniData: sendIdentityCheckEmail(AlumniIdentityCheckRequest,Boolean):void
+ 		RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 		RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 		RegisterAlumniData -> Unit: getInstitutionAcronym():String
+ 		ALT approval
+ 			RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 			RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 			RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 			RegisterAlumniData -> Alumni: getStudent():Student
+ 			RegisterAlumniData -> Alumni: getPerson():Person
+ 			RegisterAlumniData -> Alumni: getFirstAndLastName():String
+ 			ALT case IDENTITY_CHECK:
+ 				RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 			ELSE case PASSWORD_REQUEST:
+ 				RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 				RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 				RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 				RegisterAlumniData -> Alumni: getLoginUsername():String
+ 				RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getExternalId():String
+ 				RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getRequestToken():UUID
+ 			END
+ 			RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 			RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 			RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 			RegisterAlumniData -> Alumni: getStudent():Student
+ 			RegisterAlumniData -> Alumni: getNumber():Integer
+ 			RegisterAlumniData -> Unit: getInstitutionAcronym():String
+ 		ELSE else
+ 			RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 			RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 			RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 			RegisterAlumniData -> Alumni: getStudent():Student
+ 			RegisterAlumniData -> Alumni: getPerson():Person
+ 			RegisterAlumniData -> Alumni: getFirstAndLastName():String
+ 		END
+ 		RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getComment():String
+ 		OPT !approval && request.getRequestType().equals(AlumniRequestType.PASSWORD_REQUEST)
+ 			RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 			RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 			RegisterAlumniData -> RegisterAlumniData: getRegisterConclusionURL(Alumni):String
+ 			RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 		END
+ 		RegisterAlumniData -> RegisterAlumniData: sendEmail(String,String,String):void
+ 		RegisterAlumniData -> AlumniIdentityCheckRequest_Base: getContactEmail():String
+ 	END
+ END
+ @enduml

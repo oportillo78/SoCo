@@ -1,0 +1,41 @@
+@startuml
+ participant "JSP\nJSPPostingRulesManager" as JSPPostingRulesManager order 0
+ participant "services.accounting\nPostingRulesManager" as PostingRulesManager order 1
+ participant "dto.accounting.postingRule\nCreatePostingRuleBean" as CreatePostingRuleBean order 27
+ participant "domain.accounting.postingRules.gratuity\nDFAGratuityByAmountPerEctsPR" as DFAGratuityByAmountPerEctsPR order 32
+ participant "domain.accounting.postingRules.gratuity\nDFAGratuityByNumberOfEnrolmentsPR" as DFAGratuityByNumberOfEnrolmentsPR order 43
+ JSPPostingRulesManager -> PostingRulesManager: getConnection()
+ JSPPostingRulesManager <- PostingRulesManager: returnConnection()
+ JSPPostingRulesManager -> PostingRulesManager: executeAction()
+ PostingRulesManager -> PostingRulesManager: createDFAGratuityPostingRule(CreateDFAGratuityPostingRuleBean):void
+ ALT bean.getRule() == DFAGratuityByAmountPerEctsPR.class
+ 	PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 	PostingRulesManager -> CreatePostingRuleBean: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 	CreatePostingRuleBean -> CreatePostingRuleBean: getServiceAgreementTemplate():ServiceAgreementTemplate
+ 	PostingRulesManager -> CreatePostingRuleBean: getTotalAmount():Money
+ 	PostingRulesManager -> CreatePostingRuleBean: getPartialAcceptedPercentage():BigDecimal
+ 	PostingRulesManager -> CreatePostingRuleBean: getAmountPerEctsCredit():Money
+ 	PostingRulesManager -> DFAGratuityByAmountPerEctsPR: DFAGratuityByAmountPerEctsPR\n(DateTime,DateTime,ServiceAgreementTemplate,Money,BigDecimal,Money)
+ 	DFAGratuityByAmountPerEctsPR -> DFAGratuityByAmountPerEctsPR: DFAGratuityByAmountPerEctsPR_Base()
+ 	DFAGratuityByAmountPerEctsPR -> DFAGratuityByAmountPerEctsPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate,Money,BigDecimal,Money):void
+ 	DFAGratuityByAmountPerEctsPR -> DFAGratuityByAmountPerEctsPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate,Money,BigDecimal):void
+ 	DFAGratuityByAmountPerEctsPR -> DFAGratuityByAmountPerEctsPR: checkParameters(Money):void
+ 	DFAGratuityByAmountPerEctsPR -> DFAGratuityByAmountPerEctsPR: setDfaAmountPerEctsCredit(Money):void
+ ELSE else
+ 	ALT bean.getRule() == DFAGratuityByNumberOfEnrolmentsPR.class
+ 		PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 		PostingRulesManager -> CreatePostingRuleBean: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		CreatePostingRuleBean -> CreatePostingRuleBean: getServiceAgreementTemplate():ServiceAgreementTemplate
+ 		PostingRulesManager -> CreatePostingRuleBean: getTotalAmount():Money
+ 		PostingRulesManager -> CreatePostingRuleBean: getPartialAcceptedPercentage():BigDecimal
+ 		PostingRulesManager -> DFAGratuityByNumberOfEnrolmentsPR: DFAGratuityByNumberOfEnrolmentsPR\n(DateTime,DateTime,ServiceAgreementTemplate,Money,BigDecimal)
+ 		DFAGratuityByNumberOfEnrolmentsPR -> DFAGratuityByNumberOfEnrolmentsPR: DFAGratuityByNumberOfEnrolmentsPR_Base()
+ 		DFAGratuityByNumberOfEnrolmentsPR -> DFAGratuityByNumberOfEnrolmentsPR: DFAGratuityPR()
+ 		DFAGratuityByNumberOfEnrolmentsPR -> DFAGratuityByNumberOfEnrolmentsPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate,Money,BigDecimal):void
+ 		DFAGratuityByNumberOfEnrolmentsPR -> DFAGratuityByNumberOfEnrolmentsPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 		DFAGratuityByNumberOfEnrolmentsPR -> DFAGratuityByNumberOfEnrolmentsPR: checkParameters(Money,BigDecimal):void
+ 		DFAGratuityByNumberOfEnrolmentsPR -> DFAGratuityByNumberOfEnrolmentsPR: setDfaTotalAmount(Money):void
+ 		DFAGratuityByNumberOfEnrolmentsPR -> DFAGratuityByNumberOfEnrolmentsPR: setDfaPartialAcceptedPercentage(BigDecimal):void
+ 	END
+ END
+ @enduml

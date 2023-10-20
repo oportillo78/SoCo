@@ -1,0 +1,62 @@
+@startuml
+ participant "JSP\nJSPMergeExecutionCourses" as JSPMergeExecutionCourses order 0
+ participant "services.manager\nMergeExecutionCourses" as MergeExecutionCourses order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 17
+ participant "core.security\nAuthenticate" as Authenticate order 22
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 25
+ participant "core.domain\nUser" as User order 26
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 27
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 28
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 65
+ participant "domain.exceptions\nDomainException" as DomainException order 66
+ participant "core.domain\nSender" as Sender order 67
+ participant "domain\nEvaluationMethod" as EvaluationMethod order 68
+ participant "services.manager.MergeExecutionCourses\nSubDomainMergeHandler" as SubDomainMergeHandler order 75
+ JSPMergeExecutionCourses -> MergeExecutionCourses: getConnection()
+ JSPMergeExecutionCourses <- MergeExecutionCourses: returnConnection()
+ JSPMergeExecutionCourses -> MergeExecutionCourses: executeAction()
+ MergeExecutionCourses -> MergeExecutionCourses: merge(ExecutionCourse,ExecutionCourse):void
+ MergeExecutionCourses -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ MergeExecutionCourses -> AbstractDomainObject: getExternalId():String
+ MergeExecutionCourses -> AbstractDomainObject: getExternalId():String
+ LOOP for: handlers
+ 	MergeExecutionCourses -> SubDomainMergeHandler: mergeBlockers\n(ExecutionCourse,ExecutionCourse):Set<String>
+ 	ALT blockers.isEmpty()
+ 		MergeExecutionCourses -> SubDomainMergeHandler: merge(ExecutionCourse,ExecutionCourse):void
+ 	END
+ END
+ MergeExecutionCourses -> AbstractDomainObject: delete():void
+ AbstractDomainObject -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ AbstractDomainObject -> AbstractDomainObject: getDeletionBlockers():Collection<String>
+ AbstractDomainObject -> AbstractDomainObject: checkForDeletionBlockers(Collection<String>):void
+ LOOP for: ?
+ 	AbstractDomainObject -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ END
+ OPT super.getSender() != null
+ 	AbstractDomainObject -> AbstractDomainObject: getSender():Sender
+ 	AbstractDomainObject -> AbstractDomainObject: setSender(Sender):void
+ 	AbstractDomainObject -> Sender: delete():void
+ END
+ OPT getEvaluationMethod() != null
+ 	AbstractDomainObject -> AbstractDomainObject: getEvaluationMethod():EvaluationMethod
+ 	AbstractDomainObject -> EvaluationMethod: delete():void
+ 	EvaluationMethod -> EvaluationMethod: setExecutionCourse(ExecutionCourse):void
+ 	EvaluationMethod -> EvaluationMethod: setRootDomainObject(Bennu):void
+ 	EvaluationMethod -> EvaluationMethod: deleteDomainObject():void
+ END
+ AbstractDomainObject -> AbstractDomainObject: removeFinalEvaluations():void
+ AbstractDomainObject -> AbstractDomainObject: getAssociatedCurricularCoursesSet():Set<CurricularCourse>
+ AbstractDomainObject -> AbstractDomainObject: getNonAffiliatedTeachersSet():Set<NonAffiliatedTeacher>
+ AbstractDomainObject -> AbstractDomainObject: getTeacherGroupSet():Set<PersistentTeacherGroup>
+ AbstractDomainObject -> AbstractDomainObject: getStudentGroupSet():Set<PersistentStudentGroup>
+ AbstractDomainObject -> AbstractDomainObject: getSpecialCriteriaOverExecutionCourseGroupSet\n():Set<PersistentSpecialCriteriaOverExecutionCourseGroup>
+ AbstractDomainObject -> AbstractDomainObject: setExecutionPeriod(ExecutionSemester):void
+ AbstractDomainObject -> AbstractDomainObject: setRootDomainObject(Bennu):void
+ AbstractDomainObject -> AbstractDomainObject: deleteDomainObject():void
+ @enduml

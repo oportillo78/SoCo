@@ -1,0 +1,79 @@
+@startuml
+ participant "JSP\nJSPRemoveCoordinators" as JSPRemoveCoordinators order 0
+ participant "services.coordinator\nRemoveCoordinators" as RemoveCoordinators order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 29
+ participant "domain\nCoordinator_Base" as Coordinator_Base order 30
+ participant "domain\nCoordinationTeamLog" as CoordinationTeamLog order 39
+ participant "core.i18n\nBundleUtil" as BundleUtil order 56
+ participant "i18n\nI18N" as I18N order 61
+ participant "domain\nExecutionDegree" as ExecutionDegree order 63
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 68
+ participant "domain\nExecutionDegree" as ExecutionDegree order 69
+ participant "domain\nPerson" as Person order 70
+ participant "core.domain\nUser" as User order 91
+ participant "core.domain\nUserProfile" as UserProfile order 92
+ participant "core.domain\nUserProfile" as UserProfile order 93
+ participant "domain\nExecutionDegree" as ExecutionDegree order 94
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 101
+ JSPRemoveCoordinators -> RemoveCoordinators: getConnection()
+ JSPRemoveCoordinators <- RemoveCoordinators: returnConnection()
+ JSPRemoveCoordinators -> RemoveCoordinators: executeAction()
+ RemoveCoordinators -> RemoveCoordinators: run(String,List<String>):void
+ LOOP for: coordinatorsToRemoveIDs
+ 	RemoveCoordinators -> FenixFramework: getDomainObject(String):T
+ 	OPT coordinator != null
+ 		RemoveCoordinators -> Coordinator_Base: getPerson():Person
+ 		RemoveCoordinators -> CoordinationTeamLog: createLog\n(Degree,ExecutionYear,String,String,String[]):CoordinationTeamLog
+ 		CoordinationTeamLog -> CoordinationTeamLog: generateLabelDescription(String,String,String[]):String
+ 		CoordinationTeamLog -> BundleUtil: getString(String,String,String[]):String
+ 		BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 		BundleUtil -> I18N: getLocale():Locale
+ 		CoordinationTeamLog -> CoordinationTeamLog: createCoordinationTeamLog\n(Degree,ExecutionYear,String):CoordinationTeamLog
+ 		CoordinationTeamLog -> CoordinationTeamLog: CoordinationTeamLog(Degree,ExecutionYear,String)
+ 		CoordinationTeamLog -> CoordinationTeamLog: CoordinationTeamLog_Base()
+ 		OPT getDegree() == null
+ 			CoordinationTeamLog -> CoordinationTeamLog: setDegree(Degree):void
+ 		END
+ 		OPT getExecutionYear() == null
+ 			CoordinationTeamLog -> CoordinationTeamLog: setExecutionYear(ExecutionYear):void
+ 		END
+ 		CoordinationTeamLog -> CoordinationTeamLog: setDescription(String):void
+ 		RemoveCoordinators -> Coordinator_Base: getExecutionDegree():ExecutionDegree
+ 		RemoveCoordinators -> ExecutionDegree: getDegree():Degree
+ 		ExecutionDegree -> ExecutionDegree: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ExecutionDegree -> DegreeCurricularPlan: getDegree():Degree
+ 		RemoveCoordinators -> Coordinator_Base: getExecutionDegree():ExecutionDegree
+ 		RemoveCoordinators -> ExecutionDegree: getExecutionYear():ExecutionYear
+ 		RemoveCoordinators -> Coordinator_Base: getPerson():Person
+ 		RemoveCoordinators -> Person: getPresentationName():String
+ 		Person -> Person: getUsername():String
+ 		ALT username == null
+ 			Person -> Person: getName():String
+ 			Person -> Person: getProfile():UserProfile
+ 			Person -> UserProfile: getFullName():String
+ 		ELSE else
+ 			Person -> Person: getName():String
+ 			Person -> Person: getProfile():UserProfile
+ 			Person -> UserProfile: getFullName():String
+ 			Person -> Person: getUsername():String
+ 			Person -> Person: getUser():User
+ 			ALT user == null
+ 			ELSE else
+ 				Person -> User: getUsername():String
+ 			END
+ 		END
+ 		RemoveCoordinators -> Coordinator_Base: getExecutionDegree():ExecutionDegree
+ 		RemoveCoordinators -> ExecutionDegree: getPresentationName():String
+ 		ExecutionDegree -> ExecutionDegree: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ExecutionDegree -> ExecutionDegree: getExecutionYear():ExecutionYear
+ 		ExecutionDegree -> DegreeCurricularPlan: getPresentationName(ExecutionYear):String
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: getPresentationName(ExecutionYear,Locale):String
+ 		DegreeCurricularPlan -> I18N: getLocale():Locale
+ 		RemoveCoordinators -> Coordinator_Base: delete():void
+ 		Coordinator_Base -> Coordinator_Base: setExecutionDegree(ExecutionDegree):void
+ 		Coordinator_Base -> Coordinator_Base: setPerson(Person):void
+ 		Coordinator_Base -> Coordinator_Base: setRootDomainObject(Bennu):void
+ 		Coordinator_Base -> Coordinator_Base: deleteDomainObject():void
+ 	END
+ END
+ @enduml

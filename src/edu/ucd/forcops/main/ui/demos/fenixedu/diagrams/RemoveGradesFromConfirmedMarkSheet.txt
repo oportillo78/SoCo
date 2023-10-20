@@ -1,0 +1,102 @@
+@startuml
+ participant "JSP\nJSPRemoveGradesFromConfirmedMarkSheet" as JSPRemoveGradesFromConfirmedMarkSheet order 0
+ participant "services.manager\nRemoveGradesFromConfirmedMarkSheet" as RemoveGradesFromConfirmedMarkSheet order 1
+ participant "domain\nMarkSheet" as MarkSheet order 7
+ participant "domain\nExecutionSemester" as ExecutionSemester order 104
+ participant "domain\nExecutionSemester" as ExecutionSemester order 105
+ participant "domain\nTeacher" as Teacher order 106
+ participant "org.joda.time\nDateTime" as DateTime order 107
+ participant "domain\nEvaluationSeason" as EvaluationSeason order 108
+ participant "util\nFenixDigestUtils" as FenixDigestUtils order 109
+ participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 110
+ participant "domain\nEnrolment" as Enrolment order 111
+ participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 112
+ participant "domain\nEnrolmentEvaluation_Base" as EnrolmentEvaluation_Base order 113
+ participant "domain\nGrade" as Grade order 114
+ JSPRemoveGradesFromConfirmedMarkSheet -> RemoveGradesFromConfirmedMarkSheet: getConnection()
+ JSPRemoveGradesFromConfirmedMarkSheet <- RemoveGradesFromConfirmedMarkSheet: returnConnection()
+ JSPRemoveGradesFromConfirmedMarkSheet -> RemoveGradesFromConfirmedMarkSheet: executeAction()
+ RemoveGradesFromConfirmedMarkSheet -> RemoveGradesFromConfirmedMarkSheet: run\n(MarkSheet,List<EnrolmentEvaluation>):void
+ RemoveGradesFromConfirmedMarkSheet -> MarkSheet: removeGrades(Collection<EnrolmentEvaluation>):void
+ OPT enrolmentEvaluations != null && enrolmentEvaluations.size() > 0
+ 	OPT getMarkSheetState() == MarkSheetState.CONFIRMED
+ 		MarkSheet -> MarkSheet: setMarkSheetState(MarkSheetState):void
+ 		ALT isConfirmed()
+ 		ELSE else
+ 			MarkSheet -> MarkSheet: setMarkSheetState(MarkSheetState):void
+ 		END
+ 	END
+ 	OPT getMarkSheetState() == MarkSheetState.RECTIFICATION
+ 		MarkSheet -> MarkSheet: setMarkSheetState(MarkSheetState):void
+ 		ALT isConfirmed()
+ 		ELSE else
+ 			MarkSheet -> MarkSheet: setMarkSheetState(MarkSheetState):void
+ 		END
+ 	END
+ 	MarkSheet -> MarkSheet: setValidator(Person):void
+ 	ALT isConfirmed()
+ 	ELSE else
+ 		MarkSheet -> MarkSheet: setValidator(Person):void
+ 	END
+ 	MarkSheet -> MarkSheet: setConfirmationDateDateTime(DateTime):void
+ 	ALT isConfirmed()
+ 	ELSE else
+ 		MarkSheet -> MarkSheet: setConfirmationDateDateTime(DateTime):void
+ 	END
+ 	LOOP for: getEnrolmentEvaluationsSet()
+ 		ALT enrolmentEvaluations.contains(enrolmentEvaluation)
+ 			MarkSheet -> MarkSheet: removeEvaluationFromMarkSheet(EnrolmentEvaluation):void
+ 			MarkSheet -> MarkSheet: changeEvaluationStateToTemporaryState(EnrolmentEvaluation):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setEnrolmentEvaluationState(EnrolmentEvaluationState):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: getEnrolment():Enrolment
+ 			ALT enrolment.getAllFinalEnrolmentEvaluations().isEmpty()
+ 				MarkSheet -> Enrolment: setEnrollmentState(EnrollmentState):void
+ 			ELSE else
+ 				MarkSheet -> Enrolment: setEnrollmentState(EnrollmentState):void
+ 				MarkSheet -> Enrolment: getFinalEnrolmentEvaluation():EnrolmentEvaluation
+ 				MarkSheet -> EnrolmentEvaluation: getEnrollmentStateByGrade():EnrollmentState
+ 			END
+ 			MarkSheet -> EnrolmentEvaluation_Base: setMarkSheet(MarkSheet):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setGrade(Grade):void
+ 			MarkSheet -> Grade: createEmptyGrade():Grade
+ 			MarkSheet -> EnrolmentEvaluation_Base: setCheckSum(String):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setExamDateYearMonthDay(YearMonthDay):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setPerson(Person):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setGradeAvailableDateYearMonthDay(YearMonthDay):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setPersonResponsibleForGrade(Person):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setRectified(EnrolmentEvaluation):void
+ 		ELSE else
+ 			MarkSheet -> MarkSheet: changeEvaluationStateToTemporaryState(EnrolmentEvaluation):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: setEnrolmentEvaluationState(EnrolmentEvaluationState):void
+ 			MarkSheet -> EnrolmentEvaluation_Base: getEnrolment():Enrolment
+ 			ALT enrolment.getAllFinalEnrolmentEvaluations().isEmpty()
+ 				MarkSheet -> Enrolment: setEnrollmentState(EnrollmentState):void
+ 			ELSE else
+ 				MarkSheet -> Enrolment: setEnrollmentState(EnrollmentState):void
+ 				MarkSheet -> Enrolment: getFinalEnrolmentEvaluation():EnrolmentEvaluation
+ 				MarkSheet -> EnrolmentEvaluation: getEnrollmentStateByGrade():EnrollmentState
+ 			END
+ 		END
+ 	END
+ 	MarkSheet -> MarkSheet: generateCheckSum():void
+ 	OPT isNotConfirmed()
+ 		MarkSheet -> MarkSheet: getExecutionPeriod():ExecutionSemester
+ 		MarkSheet -> ExecutionSemester: getExecutionYear():ExecutionYear
+ 		MarkSheet -> ExecutionSemester: getYear():String
+ 		MarkSheet -> MarkSheet: getExecutionPeriod():ExecutionSemester
+ 		MarkSheet -> ExecutionSemester: getSemester():Integer
+ 		MarkSheet -> MarkSheet: getResponsibleTeacher():Teacher
+ 		MarkSheet -> Teacher: getPerson():Person
+ 		MarkSheet -> Teacher: getUsername():String
+ 		MarkSheet -> MarkSheet: getEvaluationDateDateTime():DateTime
+ 		MarkSheet -> DateTime: toString(String):String
+ 		MarkSheet -> MarkSheet: getEvaluationSeason():EvaluationSeason
+ 		MarkSheet -> EvaluationSeason: getExternalId():String
+ 		LOOP for: getEnrolmentEvaluationsSortedByStudentNumber()
+ 			MarkSheet -> EnrolmentEvaluation_Base: getCheckSum():String
+ 		END
+ 		MarkSheet -> MarkSheet: setCheckSum(String):void
+ 		MarkSheet -> FenixDigestUtils: createDigest(String):String
+ 	END
+ END
+ @enduml

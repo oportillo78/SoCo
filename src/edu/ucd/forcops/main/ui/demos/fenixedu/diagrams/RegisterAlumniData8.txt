@@ -1,0 +1,11 @@
+@startuml
+ participant "JSP\nJSPRegisterAlumniData" as JSPRegisterAlumniData order 0
+ participant "services.alumni\nRegisterAlumniData" as RegisterAlumniData order 1
+ participant "domain\nAlumni_Base" as Alumni_Base order 9
+ JSPRegisterAlumniData -> RegisterAlumniData: getConnection()
+ JSPRegisterAlumniData <- RegisterAlumniData: returnConnection()
+ JSPRegisterAlumniData -> RegisterAlumniData: executeAction()
+ RegisterAlumniData -> RegisterAlumniData: runRegisterAlumniData(Alumni,UUID):Alumni
+ RegisterAlumniData -> RegisterAlumniData: run(Alumni,UUID):Alumni
+ RegisterAlumniData -> Alumni_Base: setUrlRequestToken(UUID):void
+ @enduml

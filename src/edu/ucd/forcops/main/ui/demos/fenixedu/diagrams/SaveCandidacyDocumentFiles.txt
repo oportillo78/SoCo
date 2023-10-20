@@ -1,0 +1,46 @@
+@startuml
+participant "JSP\nJSPSaveCandidacyDocumentFiles" as JSPSaveCandidacyDocumentFiles order 0
+participant "services.administrativeOffice.candidacy\nSaveCandidacyDocumentFiles" as SaveCandidacyDocumentFiles order 1
+participant "services.administrativeOffice.candidacy\nSaveCandidacyDocumentFiles" as SaveCandidacyDocumentFiles order 5
+participant "com.google.common.io\nFiles" as Files order 24
+participant "dto.candidacy\nCandidacyDocumentUploadBean" as CandidacyDocumentUploadBean order 25
+participant "domain.candidacy\nCandidacyDocument_Base" as CandidacyDocument_Base order 26
+participant "domain.candidacy\nCandidacyDocumentFile" as CandidacyDocumentFile order 27
+participant "domain.candidacy\nCandidacyDocumentFile" as CandidacyDocumentFile order 36
+JSPSaveCandidacyDocumentFiles -> SaveCandidacyDocumentFiles: getConnection()
+JSPSaveCandidacyDocumentFiles <- SaveCandidacyDocumentFiles: returnConnection()
+JSPSaveCandidacyDocumentFiles -> SaveCandidacyDocumentFiles: executeAction()
+alt if cookiesNotFound
+     JSPSaveCandidacyDocumentFiles <-- SaveCandidacyDocumentFiles: showImpliedConsentCookieBanner(msg)
+     alt clickOnAcceptCookiesBtn
+          JSPSaveCandidacyDocumentFiles -> SaveCandidacyDocumentFiles: acceptAllCookies(sessionID)
+     else clickOnCloseBtn
+          JSPSaveCandidacyDocumentFiles -> SaveCandidacyDocumentFiles: keepDefaultCookies()
+     end
+else else
+	SaveCandidacyDocumentFiles -> SaveCandidacyDocumentFiles: run(List<CandidacyDocumentUploadBean>):void
+	loop for: candidacyDocuments
+		opt candidacyDocumentUploadBean.getTemporaryFile() != null
+			SaveCandidacyDocumentFiles -> CandidacyDocumentUploadBean: getFilename():String
+			SaveCandidacyDocumentFiles -> CandidacyDocumentUploadBean: getCandidacyDocument()\n:CandidacyDocument
+			SaveCandidacyDocumentFiles -> SaveCandidacyDocumentFiles: read(File):byte[]
+			SaveCandidacyDocumentFiles -> Files: toByteArray(File):byte[]
+			SaveCandidacyDocumentFiles -> CandidacyDocumentUploadBean: getTemporaryFile():File
+			opt candidacyDocument.getFile() != null
+				SaveCandidacyDocumentFiles -> CandidacyDocument_Base: getFile():CandidacyDocumentFile
+				SaveCandidacyDocumentFiles -> CandidacyDocumentFile: delete():void
+				CandidacyDocumentFile -> CandidacyDocumentFile: setCandidacyDocument\nCandidacyDocument):void
+				CandidacyDocumentFile -> CandidacyDocumentFile: delete():void
+				CandidacyDocumentFile -> CandidacyDocumentFile: setCandidacyDocument\n(CandidacyDocument):void
+				CandidacyDocumentFile -> CandidacyDocumentFile: delete():void
+			end
+			SaveCandidacyDocumentFiles -> CandidacyDocumentFile: CandidacyDocumentFile\n(String,String,byte[])
+			CandidacyDocumentFile -> CandidacyDocumentFile: newCandidacyDocumentFile_Base()
+			CandidacyDocumentFile -> CandidacyDocumentFile: newGenericFile()
+			CandidacyDocumentFile -> CandidacyDocumentFile: init(String,String,byte[]):void
+			SaveCandidacyDocumentFiles -> CandidacyDocument_Base: setFile(CandidacyDocumentFile):void
+		end
+	end
+    JSPSaveCandidacyDocumentFiles <- SaveCandidacyDocumentFiles: showPersonalizedPage(cookies)
+end
+@enduml

@@ -1,0 +1,97 @@
+@startuml
+ participant "JSP\nJSPTransferEnrollments" as JSPTransferEnrollments order 0
+ participant "services.manager\nTransferEnrollments" as TransferEnrollments order 1
+ participant "domain.studentCurriculum\nCurriculumLine" as CurriculumLine order 47
+ participant "domain\nCurricularCourse" as CurricularCourse order 50
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 51
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 52
+ participant "domain.studentCurriculum\nCurriculumLine" as CurriculumLine order 53
+ participant "domain\nCurricularCourse" as CurricularCourse order 54
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 55
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 56
+ participant "domain.studentCurriculum\nCurriculumGroup" as CurriculumGroup order 57
+ participant "domain\nEnrolment" as Enrolment order 66
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 79
+ participant "domain\nEnrolment" as Enrolment order 80
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 103
+ participant "domain.studentCurriculum\nCurriculumGroup" as CurriculumGroup order 104
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 109
+ participant "domain\nEnrolment_Base" as Enrolment_Base order 112
+ JSPTransferEnrollments -> TransferEnrollments: getConnection()
+ JSPTransferEnrollments <- TransferEnrollments: returnConnection()
+ JSPTransferEnrollments -> TransferEnrollments: executeAction()
+ TransferEnrollments -> TransferEnrollments: run(String,String[],String):void
+ ALT !StringUtils.isEmpty(destinationCurriculumGroupID)
+ 	TransferEnrollments -> FenixFramework: getDomainObject(String):T
+ 	TransferEnrollments -> CurriculumGroup: getStudentCurricularPlan():StudentCurricularPlan
+ 	CurriculumGroup -> CurriculumGroup: getCurriculumGroup():CurriculumGroup
+ 	CurriculumGroup -> CurriculumGroup: getStudentCurricularPlan():StudentCurricularPlan
+ 	CurriculumGroup -> CurriculumGroup: getCurriculumGroup():CurriculumGroup
+ 	CurriculumGroup -> CurriculumGroup: getStudentCurricularPlan():StudentCurricularPlan
+ 	LOOP for: enrollmentIDsToTransfer
+ 		TransferEnrollments -> FenixFramework: getDomainObject(String):T
+ 		TransferEnrollments -> TransferEnrollments: fixEnrolmentCurricularCourse(StudentCurricularPlan,Enrolment):void
+ 		OPT enrollment.getCurricularCourse().getDegreeCurricularPlan() != studentCurricularPlan.getDegreeCurricularPlan()
+ 			TransferEnrollments -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 			TransferEnrollments -> CurriculumLine: getCurricularCourse():CurricularCourse
+ 			TransferEnrollments -> CurricularCourse: getCode():String
+ 			TransferEnrollments -> DegreeCurricularPlan: getCurricularCourseByCode(String):CurricularCourse
+ 			OPT curricularCourse != null
+ 				TransferEnrollments -> CurriculumLine: setCurricularCourse(CurricularCourse):void
+ 			END
+ 		END
+ 		TransferEnrollments -> Enrolment: setCurriculumGroup(CurriculumGroup):void
+ 		TransferEnrollments -> Enrolment: setStudentCurricularPlan(StudentCurricularPlan):void
+ 		Enrolment -> Enrolment: setStudentCurricularPlan(StudentCurricularPlan):void
+ 		Enrolment -> Enrolment: resetIsFirstTimeEnrolment():void
+ 		ALT getStudentCurricularPlan() != null && getCurricularCourse() != null && getExecutionPeriod() != null                && getEnrollmentState() != null
+ 			Enrolment -> Enrolment: getStudentCurricularPlan():StudentCurricularPlan
+ 			Enrolment -> Enrolment: getCurricularCourse():CurricularCourse
+ 			Enrolment -> StudentCurricularPlan: resetIsFirstTimeEnrolmentForCurricularCourse\n(CurricularCourse):void
+ 		ELSE else
+ 			Enrolment -> Enrolment: setIsFirstTime(Boolean):void
+ 		END
+ 	END
+ ELSE else
+ 	TransferEnrollments -> FenixFramework: getDomainObject(String):T
+ 	LOOP for: enrollmentIDsToTransfer
+ 		TransferEnrollments -> FenixFramework: getDomainObject(String):T
+ 		TransferEnrollments -> TransferEnrollments: fixEnrolmentCurricularCourse(StudentCurricularPlan,Enrolment):void
+ 		OPT enrollment.getCurricularCourse().getDegreeCurricularPlan() != studentCurricularPlan.getDegreeCurricularPlan()
+ 			TransferEnrollments -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 			TransferEnrollments -> CurriculumLine: getCurricularCourse():CurricularCourse
+ 			TransferEnrollments -> CurricularCourse: getCode():String
+ 			TransferEnrollments -> DegreeCurricularPlan: getCurricularCourseByCode(String):CurricularCourse
+ 			OPT curricularCourse != null
+ 				TransferEnrollments -> CurriculumLine: setCurricularCourse(CurricularCourse):void
+ 				CurriculumLine -> CurriculumLine: setDegreeModule(DegreeModule):void
+ 			END
+ 		END
+ 		OPT enrollment.getStudentCurricularPlan() != studentCurricularPlan
+ 			TransferEnrollments -> Enrolment: setStudentCurricularPlan(StudentCurricularPlan):void
+ 			Enrolment -> Enrolment: setStudentCurricularPlan(StudentCurricularPlan):void
+ 			Enrolment -> Enrolment: setStudentCurricularPlan(StudentCurricularPlan):void
+ 			Enrolment -> Enrolment: resetIsFirstTimeEnrolment():void
+ 			Enrolment -> Enrolment: resetIsFirstTimeEnrolment():void
+ 			ALT getStudentCurricularPlan() != null && getCurricularCourse() != null && getExecutionPeriod() != null                && getEnrollmentState() != null
+ 				Enrolment -> Enrolment: getStudentCurricularPlan():StudentCurricularPlan
+ 				Enrolment -> Enrolment: getCurricularCourse():CurricularCourse
+ 				Enrolment -> StudentCurricularPlan: resetIsFirstTimeEnrolmentForCurricularCourse\n(CurricularCourse):void
+ 			ELSE else
+ 				Enrolment -> Enrolment: setIsFirstTime(Boolean):void
+ 			END
+ 			TransferEnrollments -> Enrolment: setCurriculumGroup(CurriculumGroup):void
+ 			Enrolment -> Enrolment: setCurriculumGroup(CurriculumGroup):void
+ 			OPT curriculumGroup != null
+ 				Enrolment -> CurriculumGroup: getStudentCurricularPlan():StudentCurricularPlan
+ 				CurriculumGroup -> CurriculumGroup: getCurriculumGroup():CurriculumGroup
+ 				CurriculumGroup -> CurriculumGroup: getStudentCurricularPlan():StudentCurricularPlan
+ 				Enrolment -> StudentCurricularPlan: setIsFirstTimeToNull():void
+ 				LOOP for: getEnrolmentsSet()
+ 					StudentCurricularPlan -> Enrolment_Base: setIsFirstTime(Boolean):void
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

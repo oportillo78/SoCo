@@ -1,0 +1,29 @@
+@startuml
+ participant "JSP\nJSPValidateAlumniIdentity" as JSPValidateAlumniIdentity order 0
+ participant "services.operator\nValidateAlumniIdentity" as ValidateAlumniIdentity order 1
+ participant "domain\nPerson" as Person order 11
+ participant "domain\nPersonInformationLog" as PersonInformationLog order 36
+ participant "core.i18n\nBundleUtil" as BundleUtil order 37
+ participant "domain\nAlumniIdentityCheckRequest_Base" as AlumniIdentityCheckRequest_Base order 38
+ JSPValidateAlumniIdentity -> ValidateAlumniIdentity: getConnection()
+ JSPValidateAlumniIdentity <- ValidateAlumniIdentity: returnConnection()
+ JSPValidateAlumniIdentity -> ValidateAlumniIdentity: executeAction()
+ ValidateAlumniIdentity -> ValidateAlumniIdentity: runValidateAlumniIdentity(AlumniIdentityCheckRequest,Person):void
+ ValidateAlumniIdentity -> ValidateAlumniIdentity: run(AlumniIdentityCheckRequest,Person):void
+ ValidateAlumniIdentity -> Person: setSocialSecurityNumber(String):void
+ Person -> Person: logSetterNullString(String,String,String,String):void
+ Person -> Person: valueToUpdateIfNewNotNull(String,String):String
+ Person -> BundleUtil: getString(String,String,String[]):String
+ Person -> Person: valueToUpdateIfNewNotNull(String,String):String
+ Person -> BundleUtil: getString(String,String,String[]):String
+ Person -> Person: logSetter(String,String,String,String):void
+ Person -> PersonInformationLog: getPersonNameForLogDescription(Person):String
+ OPT oldValue.compareTo(newValue) != 0
+ 	Person -> BundleUtil: getString(String,String,String[]):String
+ 	Person -> BundleUtil: getString(String,String,String[]):String
+ 	Person -> PersonInformationLog: createLog\n(Person,String,String,String[]):PersonInformationLog
+ END
+ Person -> Person: getSocialSecurityNumber():String
+ Person -> Person: setSocialSecurityNumber(String):void
+ ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getSocialSecurityNumber():String
+ @enduml

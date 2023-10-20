@@ -1,0 +1,71 @@
+@startuml
+participant "JSP\nJSPReadStudentListByCurricularCourse" as JSPReadStudentListByCurricularCourse order 0
+participant "services.commons.student\nReadStudentListByCurricularCourse" as ReadStudentListByCurricularCourse order 1
+participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 49
+participant "java.util\nList" as List order 50
+participant "org.apache.commons.beanutils\nBeanComparator" as BeanComparator order 51
+participant "java.util\nArrayList" as ArrayList order 52
+participant "domain\nEnrolment" as Enrolment order 55
+participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 56
+participant "dto\nInfoEnrolment" as InfoEnrolment order 57
+participant "java.util\nCollections" as Collections order 58
+participant "org.apache.commons.beanutils\nBeanComparator" as BeanComparator order 59
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 60
+participant "domain\nCurricularCourse" as CurricularCourse order 61
+participant "java.util\nList" as List order 72
+participant "java.util\nList" as List order 73
+participant "domain\nExecutionYear" as ExecutionYear order 74
+JSPReadStudentListByCurricularCourse -> ReadStudentListByCurricularCourse: getConnection()
+JSPReadStudentListByCurricularCourse <- ReadStudentListByCurricularCourse: returnConnection()
+JSPReadStudentListByCurricularCourse -> ReadStudentListByCurricularCourse: executeAction()
+ReadStudentListByCurricularCourse -> ReadStudentListByCurricularCourse: runReadStudentListByCurricularCourse\n(User,String,String):List
+ReadStudentListByCurricularCourse -> ReadStudentListByCurricularCourse: run(User,String,String):List
+ReadStudentListByCurricularCourse -> FenixFramework: getDomainObject(String):T
+alt (executionYear != null)
+	ReadStudentListByCurricularCourse -> ReadStudentListByCurricularCourse: cleanList(List<Enrolment>):List
+	ReadStudentListByCurricularCourse -> ArrayList: newArrayList()
+	loop for: enrolmentList
+		opt studentNumber == null || \nstudentNumber.intValue() != enrolment.getStudentCurricularPlan()\n.getRegistration().getNumber().intValue()
+			ReadStudentListByCurricularCourse -> Enrolment: getStudentCurricularPlan():StudentCurricularPlan
+			ReadStudentListByCurricularCourse -> StudentCurricularPlan: getNumber():Integer
+			ReadStudentListByCurricularCourse -> StudentCurricularPlan: getRegistration():Registration
+			ReadStudentListByCurricularCourse -> ArrayList: add(E):boolean
+			ReadStudentListByCurricularCourse -> InfoEnrolment: newInfoFromDomain(Enrolment):InfoEnrolment
+		end
+	end
+	ReadStudentListByCurricularCourse -> Collections: sort(List<T>,Comparator<? super T>):void
+	ReadStudentListByCurricularCourse -> BeanComparator: newBeanComparator(String)
+	ReadStudentListByCurricularCourse -> CurricularCourse: getEnrolmentsByYear(String):List<Enrolment>
+	CurricularCourse -> CurricularCourse: getEnrolmentsByExecutionYear\n(ExecutionYear):List<Enrolment>
+	CurricularCourse -> ArrayList: newArrayList()
+		loop for: getCurriculumModulesSet()
+		opt curriculumModule.isEnrolment()
+			opt enrolment.getExecutionPeriod()\n.getExecutionYear().equals(executionYear)
+				CurricularCourse -> List: add(E):boolean
+			end
+		end
+	end
+	CurricularCourse -> ExecutionYear: readExecutionYearByName\n(String):ExecutionYear
+else else
+	ReadStudentListByCurricularCourse -> ReadStudentListByCurricularCourse: cleanList(List<Enrolment>):List
+	ReadStudentListByCurricularCourse -> ArrayList: newArrayList()
+	loop for: enrolmentList
+		opt studentNumber == null || \nstudentNumber.intValue() != enrolment.getStudentCurricularPlan()\n.getRegistration().getNumber().intValue()
+			ReadStudentListByCurricularCourse -> Enrolment: getStudentCurricularPlan():StudentCurricularPlan
+			ReadStudentListByCurricularCourse -> StudentCurricularPlan: getRegistration():Registration
+			ReadStudentListByCurricularCourse -> StudentCurricularPlan: getNumber():Integer
+			ReadStudentListByCurricularCourse -> List: add(E):boolean
+			ReadStudentListByCurricularCourse -> InfoEnrolment: newInfoFromDomain(Enrolment):InfoEnrolment
+		end
+	end
+	ReadStudentListByCurricularCourse -> Collections: sort(List<T>,Comparator<? super T>):void	
+	ReadStudentListByCurricularCourse -> BeanComparator: newBeanComparator(String)
+	ReadStudentListByCurricularCourse -> CurricularCourse: getEnrolments():List<Enrolment>
+	CurricularCourse -> ArrayList: newArrayList()
+	loop for: getCurriculumModulesSet()
+		opt curriculumModule.isEnrolment()
+			CurricularCourse -> List: add(E):boolean
+		end
+	end
+end
+@enduml

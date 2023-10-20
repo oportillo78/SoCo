@@ -1,0 +1,19 @@
+@startuml
+ participant "JSP\nJSPReadStudentCurricularInformation" as JSPReadStudentCurricularInformation order 0
+ participant "services.manager\nReadStudentCurricularInformation" as ReadStudentCurricularInformation order 1
+ participant "dto\nInfoStudentCurricularPlan" as InfoStudentCurricularPlan order 9
+ JSPReadStudentCurricularInformation -> ReadStudentCurricularInformation: getConnection()
+ JSPReadStudentCurricularInformation <- ReadStudentCurricularInformation: returnConnection()
+ JSPReadStudentCurricularInformation -> ReadStudentCurricularInformation: executeAction()
+ ReadStudentCurricularInformation -> ReadStudentCurricularInformation: run(Integer,DegreeType):List
+ LOOP for: Registration.readByNumberAndDegreeType(studentNumber, degreeType)
+ 	LOOP for: registration.getStudentCurricularPlansSet()
+ 		ReadStudentCurricularInformation -> ReadStudentCurricularInformation: constructInfoStudentCurricularPlan\n(StudentCurricularPlan):InfoStudentCurricularPlan
+ 		ReadStudentCurricularInformation -> InfoStudentCurricularPlan: newInfoFromDomain\n(StudentCurricularPlan):InfoStudentCurricularPlan
+ 		ALT studentCurricularPlan == null
+ 		ELSE else
+ 			InfoStudentCurricularPlan -> InfoStudentCurricularPlan: InfoStudentCurricularPlan(StudentCurricularPlan)
+ 		END
+ 	END
+ END
+ @enduml

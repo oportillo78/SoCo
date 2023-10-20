@@ -1,0 +1,44 @@
+@startuml
+ participant "JSP\nJSPReadNotClosedPublicExecutionPeriodsByExecutionYear" as JSPReadNotClosedPublicExecutionPeriodsByExecutionYear order 0
+ participant "services.commons\nReadNotClosedPublicExecutionPeriodsByExecutionYear" as ReadNotClosedPublicExecutionPeriodsByExecutionYear order 1
+ participant "domain\nExecutionYear" as ExecutionYear order 13
+ participant "domain\nExecutionSemester" as ExecutionSemester order 18
+ participant "core.domain\nBennu" as Bennu order 23
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 30
+ participant "core.domain\nBennu" as Bennu order 31
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 32
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 33
+ participant "dto\nInfoExecutionYear" as InfoExecutionYear order 34
+ participant "domain\nExecutionYear" as ExecutionYear order 39
+ participant "dto\nInfoExecutionPeriod" as InfoExecutionPeriod order 40
+ JSPReadNotClosedPublicExecutionPeriodsByExecutionYear -> ReadNotClosedPublicExecutionPeriodsByExecutionYear: getConnection()
+ JSPReadNotClosedPublicExecutionPeriodsByExecutionYear <- ReadNotClosedPublicExecutionPeriodsByExecutionYear: returnConnection()
+ JSPReadNotClosedPublicExecutionPeriodsByExecutionYear -> ReadNotClosedPublicExecutionPeriodsByExecutionYear: executeAction()
+ ReadNotClosedPublicExecutionPeriodsByExecutionYear -> ReadNotClosedPublicExecutionPeriodsByExecutionYear: run(InfoExecutionYear):List
+ ALT infoExecutionYear == null
+ 	ReadNotClosedPublicExecutionPeriodsByExecutionYear -> ExecutionYear: readCurrentExecutionYear():ExecutionYear
+ 	ExecutionYear -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 	ExecutionSemester -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ 	ALT semester != null
+ 		ExecutionYear -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ 	END
+ ELSE else
+ 	ReadNotClosedPublicExecutionPeriodsByExecutionYear -> FenixFramework: getDomainObject(String):T
+ 	ReadNotClosedPublicExecutionPeriodsByExecutionYear -> InfoExecutionYear: getExternalId():String
+ 	InfoExecutionYear -> InfoExecutionYear: getExecutionYear():ExecutionYear
+ 	InfoExecutionYear -> ExecutionYear: getExternalId():String
+ END
+ LOOP for: executionYear.readNotClosedPublicExecutionPeriods()
+ 	ReadNotClosedPublicExecutionPeriodsByExecutionYear -> InfoExecutionPeriod: newInfoFromDomain(ExecutionSemester):InfoExecutionPeriod
+ 	ALT executionSemester == null
+ 	ELSE else
+ 		InfoExecutionPeriod -> InfoExecutionPeriod: InfoExecutionPeriod(ExecutionSemester)
+ 	END
+ END
+ @enduml

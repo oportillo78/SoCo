@@ -1,0 +1,64 @@
+@startuml
+ participant "JSP\nJSPUnEnrollStudentFromShift" as JSPUnEnrollStudentFromShift order 0
+ participant "services.enrollment.shift\nUnEnrollStudentFromShift" as UnEnrollStudentFromShift order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 15
+ participant "core.domain\nUser" as User order 20
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 21
+ participant "domain\nShift_Base" as Shift_Base order 22
+ participant "service.filter.enrollment\nClassEnrollmentAuthorizationFilter" as ClassEnrollmentAuthorizationFilter order 23
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 44
+ participant "domain\nDegreeCurricularPlanEquivalencePlan_Base" as DegreeCurricularPlanEquivalencePlan_Base order 45
+ participant "core.security\nAuthenticate" as Authenticate order 46
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 51
+ participant "core.domain\nUser" as User order 52
+ participant "domain.student\nRegistration" as Registration order 53
+ participant "domain.student\nStudent" as Student order 63
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nClassEnrollmentCondition" as ClassEnrollmentCondition order 64
+ participant "domain\nPerson" as Person order 65
+ JSPUnEnrollStudentFromShift -> UnEnrollStudentFromShift: getConnection()
+ JSPUnEnrollStudentFromShift <- UnEnrollStudentFromShift: returnConnection()
+ JSPUnEnrollStudentFromShift -> UnEnrollStudentFromShift: executeAction()
+ UnEnrollStudentFromShift -> UnEnrollStudentFromShift: runUnEnrollStudentFromShift\n(Registration,String,ExecutionSemester):void
+ UnEnrollStudentFromShift -> ClassEnrollmentAuthorizationFilter: execute(Registration,ExecutionSemester):void
+ ClassEnrollmentAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ClassEnrollmentAuthorizationFilter -> User: getPerson():Person
+ OPT RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(person.getUser())
+ 	ClassEnrollmentAuthorizationFilter -> Registration: getPerson():Person
+ 	Registration -> Registration: getStudent():Student
+ 	Registration -> Student: getPerson():Person
+ END
+ LOOP for: conditions
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentCondition: verify(Registration):void
+ END
+ ClassEnrollmentAuthorizationFilter -> Person: getActiveStudentCurricularPlansSortedByDegreeTypeAndDegreeName\n():SortedSet<StudentCurricularPlan>
+ LOOP for: getStudentsSet()
+ 	Person -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	ALT isActive()
+ 		Registration -> Registration: getLastStudentCurricularPlan():StudentCurricularPlan
+ 		Registration -> Registration: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ 	END
+ END
+ LOOP for: activeStudentCurricularPlans
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verify\n(StudentCurricularPlan,ExecutionSemester):FenixServiceException
+ 	ClassEnrollmentAuthorizationFilter -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	LOOP for: degreeCurricularPlan.getTargetEquivalencePlansSet()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlanEquivalencePlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	END
+ END
+ UnEnrollStudentFromShift -> UnEnrollStudentFromShift: run(Registration,String):void
+ UnEnrollStudentFromShift -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ UnEnrollStudentFromShift -> FenixFramework: getDomainObject(String):T
+ UnEnrollStudentFromShift -> Shift_Base: removeStudents(Registration):void
+ @enduml

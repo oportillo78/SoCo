@@ -1,0 +1,24 @@
+@startuml
+ participant "JSP\nJSPSearchCurriculumGroupsForRegistration" as JSPSearchCurriculumGroupsForRegistration order 0
+ participant "services.commons.searchers\nSearchCurriculumGroupsForRegistration" as SearchCurriculumGroupsForRegistration order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 11
+ participant "domain.student\nRegistration" as Registration order 12
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 15
+ participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 20
+ participant "domain.studentCurriculum\nCurriculumModule" as CurriculumModule order 23
+ JSPSearchCurriculumGroupsForRegistration -> SearchCurriculumGroupsForRegistration: getConnection()
+ JSPSearchCurriculumGroupsForRegistration <- SearchCurriculumGroupsForRegistration: returnConnection()
+ JSPSearchCurriculumGroupsForRegistration -> SearchCurriculumGroupsForRegistration: executeAction()
+ SearchCurriculumGroupsForRegistration -> SearchCurriculumGroupsForRegistration: getSearchResults\n(Map<String,String>,String,int):Collection<CurriculumGroup>
+ SearchCurriculumGroupsForRegistration -> SearchCurriculumGroupsForRegistration: getRegistration(Map<String,String>):Registration
+ SearchCurriculumGroupsForRegistration -> FenixFramework: getDomainObject(String):T
+ SearchCurriculumGroupsForRegistration -> Registration: getAllCurriculumGroupsWithoutNoCourseGroupCurriculumGroups\n():Collection<CurriculumGroup>
+ LOOP for: getStudentCurricularPlansSet()
+ 	Registration -> StudentCurricularPlan: getAllCurriculumGroupsWithoutNoCourseGroupCurriculumGroups\n():Set<CurriculumGroup>
+ 	StudentCurricularPlan -> StudentCurricularPlan: getRoot():RootCurriculumGroup
+ 	StudentCurricularPlan -> RootCurriculumGroup: getAllCurriculumGroupsWithoutNoCourseGroupCurriculumGroups\n():Set<CurriculumGroup>
+ 	LOOP for: getCurriculumModulesSet()
+ 		RootCurriculumGroup -> CurriculumModule: getAllCurriculumGroupsWithoutNoCourseGroupCurriculumGroups\n():Set<CurriculumGroup>
+ 	END
+ END
+ @enduml

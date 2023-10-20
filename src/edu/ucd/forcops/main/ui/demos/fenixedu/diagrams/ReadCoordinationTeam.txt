@@ -1,0 +1,30 @@
+@startuml
+ participant "JSP\nJSPReadCoordinationTeam" as JSPReadCoordinationTeam order 0
+ participant "services.coordinator\nReadCoordinationTeam" as ReadCoordinationTeam order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 15
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 16
+ participant "dto\nInfoCoordinator" as InfoCoordinator order 17
+ participant "service.filter\nDegreeCoordinatorAuthorizationFilter" as DegreeCoordinatorAuthorizationFilter order 20
+ participant "core.security\nAuthenticate" as Authenticate order 23
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 26
+ JSPReadCoordinationTeam -> ReadCoordinationTeam: getConnection()
+ JSPReadCoordinationTeam <- ReadCoordinationTeam: returnConnection()
+ JSPReadCoordinationTeam -> ReadCoordinationTeam: executeAction()
+ ReadCoordinationTeam -> ReadCoordinationTeam: runReadCoordinationTeam(String):List
+ ReadCoordinationTeam -> DegreeCoordinatorAuthorizationFilter: execute(String):void
+ DegreeCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ReadCoordinationTeam -> ReadCoordinationTeam: run(String):List
+ ReadCoordinationTeam -> FenixFramework: getDomainObject(String):T
+ ReadCoordinationTeam -> ExecutionDegree_Base: getCoordinatorsListSet():Set<Coordinator>
+ LOOP while: iterator.hasNext()
+ 	ReadCoordinationTeam -> InfoCoordinator: newInfoFromDomain(Coordinator):InfoCoordinator
+ 	ALT coordinator == null
+ 	ELSE else
+ 		InfoCoordinator -> InfoCoordinator: InfoCoordinator(Coordinator)
+ 	END
+ END
+ @enduml

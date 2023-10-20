@@ -1,0 +1,37 @@
+@startuml
+participant "JSP\nJSPSendAcademicServiceRequestToExternalEntity" as JSPSendAcademicServiceRequestToExternalEntity order 0
+participant "services.serviceRequests\nSendAcademicServiceRequestToExternalEntity" as SendAcademicServiceRequestToExternalEntity order 1
+participant "domain.serviceRequests\nAcademicServiceRequest" as AcademicServiceRequest order 7
+participant "dto.serviceRequests\nAcademicServiceRequestBean" as AcademicServiceRequestBean order 26
+participant "domain.serviceRequests\nAcademicServiceRequestSituation" as AcademicServiceRequestSituation order 27
+participant "predicate\nAccessControl" as AccessControl order 28
+participant "core.security\nAuthenticate" as Authenticate order 33
+participant "core.domain\nUser_Base" as User_Base order 34
+participant "dto.serviceRequests\nAcademicServiceRequestBean" as AcademicServiceRequestBean order 35
+JSPSendAcademicServiceRequestToExternalEntity -> SendAcademicServiceRequestToExternalEntity: getConnection()
+JSPSendAcademicServiceRequestToExternalEntity <- SendAcademicServiceRequestToExternalEntity: returnConnection()
+JSPSendAcademicServiceRequestToExternalEntity -> SendAcademicServiceRequestToExternalEntity: executeAction()
+SendAcademicServiceRequestToExternalEntity -> SendAcademicServiceRequestToExternalEntity: run\n(AcademicServiceRequest,YearMonthDay,String):void
+SendAcademicServiceRequestToExternalEntity -> AcademicServiceRequest: sendToExternalEntity(YearMonthDay,String):void
+AcademicServiceRequest -> AcademicServiceRequest: edit(AcademicServiceRequestBean):void
+alt getAcademicServiceRequestSituationType() != \n academicServiceRequestBean.getAcademicServiceRequestSituationType()
+	AcademicServiceRequest -> AcademicServiceRequest: checkRulesToChangeState\n(AcademicServiceRequestSituationType):void
+	AcademicServiceRequest -> AcademicServiceRequestBean: getAcademicServiceRequestSituationType()\n:AcademicServiceRequestSituationType
+	AcademicServiceRequest -> AcademicServiceRequest: internalChangeState(AcademicServiceRequestBean):void
+	AcademicServiceRequest -> AcademicServiceRequest: createAcademicServiceRequestSituations\n(AcademicServiceRequestBean):void
+else else
+	AcademicServiceRequest -> AcademicServiceRequest: getActiveSituation():AcademicServiceRequestSituation
+	AcademicServiceRequest -> AcademicServiceRequestSituation: edit(AcademicServiceRequestBean):void
+end
+AcademicServiceRequest -> AccessControl: getPerson():Person
+AccessControl -> Authenticate: getUser():User
+alt userView == null
+else else
+	AccessControl -> User_Base: getPerson():Person
+end
+AcademicServiceRequest -> AcademicServiceRequestBean: AcademicServiceRequestBean\n(AcademicServiceRequestSituationType,Person,\nYearMonthDay,String)
+AcademicServiceRequestBean -> AcademicServiceRequestBean: AcademicServiceRequestBean\n(AcademicServiceRequestSituationType,Person,String)
+AcademicServiceRequestBean -> AcademicServiceRequestBean: AcademicServiceRequestBean\n(AcademicServiceRequestSituationType,Person)
+AcademicServiceRequestBean -> AcademicServiceRequestBean: setJustification(String):void
+AcademicServiceRequestBean -> AcademicServiceRequestBean: setSituationDate(YearMonthDay):void
+@enduml

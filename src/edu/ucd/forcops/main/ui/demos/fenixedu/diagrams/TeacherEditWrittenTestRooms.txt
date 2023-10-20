@@ -1,0 +1,86 @@
+@startuml
+ participant "JSP\nJSPTeacherEditWrittenTestRooms" as JSPTeacherEditWrittenTestRooms order 0
+ participant "services.teacher\nTeacherEditWrittenTestRooms" as TeacherEditWrittenTestRooms order 1
+ participant "domain\nWrittenTest" as WrittenTest order 13
+ participant "domain.space\nSpaceUtils" as SpaceUtils order 48
+ participant "domain.space\nWrittenEvaluationSpaceOccupation" as WrittenEvaluationSpaceOccupation order 49
+ participant "domain.space\nWrittenEvaluationSpaceOccupation" as WrittenEvaluationSpaceOccupation order 54
+ participant "domain\nLesson" as Lesson order 59
+ participant "domain.space\nLessonSpaceOccupation" as LessonSpaceOccupation order 60
+ participant "domain\nEvaluationManagementLog" as EvaluationManagementLog order 61
+ participant "core.i18n\nBundleUtil" as BundleUtil order 76
+ participant "domain\nExecutionCourse" as ExecutionCourse order 77
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 78
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 79
+ participant "core.security\nAuthenticate" as Authenticate order 82
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 85
+ JSPTeacherEditWrittenTestRooms -> TeacherEditWrittenTestRooms: getConnection()
+ JSPTeacherEditWrittenTestRooms <- TeacherEditWrittenTestRooms: returnConnection()
+ JSPTeacherEditWrittenTestRooms -> TeacherEditWrittenTestRooms: executeAction()
+ TeacherEditWrittenTestRooms -> TeacherEditWrittenTestRooms: runTeacherEditWrittenTestRooms\n(ExecutionCourse,Teacher,WrittenTest,List<Space>):void
+ TeacherEditWrittenTestRooms -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ TeacherEditWrittenTestRooms -> TeacherEditWrittenTestRooms: run\n(ExecutionCourse,Teacher,WrittenTest,List<Space>):void
+ TeacherEditWrittenTestRooms -> WrittenTest: teacherEditRooms\n(Teacher,ExecutionSemester,List<Space>):void
+ WrittenTest -> WrittenTest: getTeacherAvailableRooms(Teacher):Collection<Space>
+ LOOP for: getAssociatedExecutionCoursesSet()
+ 	OPT executionCourse.teacherLecturesExecutionCourse(teacher)
+ 		LOOP for: executionCourse.getLessons()
+ 			OPT lesson.getRoomOccupation() != null                            && lesson.isAllIntervalIn(new Interval(getBeginningDateTime(), getEndDateTime()))
+ 				WrittenTest -> Lesson: getRoomOccupation():LessonSpaceOccupation
+ 				WrittenTest -> LessonSpaceOccupation: getRoom():Space
+ 			END
+ 		END
+ 	END
+ END
+ WrittenTest -> WrittenTest: getAssociatedRooms():List<Space>
+ LOOP for: rooms
+ 	OPT !associatedRooms.contains(room)
+ 		WrittenTest -> WrittenTest: associateNewRoom(Space):WrittenEvaluationSpaceOccupation
+ 		ALT !hasOccupationForRoom(room)
+ 			WrittenTest -> SpaceUtils: getFirstOccurrenceOfResourceAllocationByClass\n(Space,WrittenEvaluation):Occupation
+ 			ALT occupation == null
+ 				WrittenTest -> WrittenEvaluationSpaceOccupation: WrittenEvaluationSpaceOccupation(Space)
+ 				WrittenEvaluationSpaceOccupation -> WrittenEvaluationSpaceOccupation: WrittenEvaluationSpaceOccupation_Base()
+ 				WrittenEvaluationSpaceOccupation -> WrittenEvaluationSpaceOccupation: setResource(Space):void
+ 			END
+ 			WrittenTest -> WrittenEvaluationSpaceOccupation: edit(WrittenEvaluation):void
+ 			OPT getWrittenEvaluationsSet().contains(writtenEvaluation)
+ 				WrittenEvaluationSpaceOccupation -> WrittenEvaluationSpaceOccupation: removeWrittenEvaluations(WrittenEvaluation):void
+ 			END
+ 			WrittenEvaluationSpaceOccupation -> WrittenEvaluationSpaceOccupation: addWrittenEvaluations(WrittenEvaluation):void
+ 		END
+ 	END
+ END
+ LOOP for: associatedRooms
+ 	OPT !rooms.contains(room) && canTeacherRemoveRoom(executionSemester, teacher, room)
+ 		WrittenTest -> WrittenTest: removeRoomOccupation(Space):void
+ 		OPT hasOccupationForRoom(room)
+ 			WrittenTest -> SpaceUtils: getFirstOccurrenceOfResourceAllocationByClass\n(Space,WrittenEvaluation):Occupation
+ 			WrittenTest -> WrittenTest: removeWrittenEvaluationSpaceOccupations(WrittenEvaluationSpaceOccupation):void
+ 		END
+ 	END
+ END
+ LOOP for: getAssociatedExecutionCoursesSet()
+ 	WrittenTest -> EvaluationManagementLog: createLog\n(ExecutionCourse,String,String,String[]):EvaluationManagementLog
+ 	EvaluationManagementLog -> EvaluationManagementLog: generateLabelDescription(String,String,String[]):String
+ 	EvaluationManagementLog -> BundleUtil: getString(String,String,String[]):String
+ 	EvaluationManagementLog -> EvaluationManagementLog: createEvaluationManagementLog\n(ExecutionCourse,String):EvaluationManagementLog
+ 	EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog(ExecutionCourse,String)
+ 	EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog_Base()
+ 	OPT getExecutionCourse() == null
+ 		EvaluationManagementLog -> EvaluationManagementLog: setExecutionCourse(ExecutionCourse):void
+ 	END
+ 	EvaluationManagementLog -> EvaluationManagementLog: setDescription(String):void
+ 	WrittenTest -> WrittenTest: getPresentationName():String
+ 	WrittenTest -> BundleUtil: getString(String,String,String[]):String
+ 	WrittenTest -> WrittenTest: getDescription():String
+ 	WrittenTest -> ExecutionCourse: getName():String
+ 	WrittenTest -> ExecutionCourse: getDegreePresentationString():String
+ END
+ TeacherEditWrittenTestRooms -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ @enduml

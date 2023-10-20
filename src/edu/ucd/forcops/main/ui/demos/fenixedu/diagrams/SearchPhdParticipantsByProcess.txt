@@ -1,0 +1,13 @@
+@startuml
+ participant "JSP\nJSPSearchPhdParticipantsByProcess" as JSPSearchPhdParticipantsByProcess order 0
+ participant "services.phd\nSearchPhdParticipantsByProcess" as SearchPhdParticipantsByProcess order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 11
+ participant "domain.phd\nPhdIndividualProgramProcess" as PhdIndividualProgramProcess order 12
+ JSPSearchPhdParticipantsByProcess -> SearchPhdParticipantsByProcess: getConnection()
+ JSPSearchPhdParticipantsByProcess <- SearchPhdParticipantsByProcess: returnConnection()
+ JSPSearchPhdParticipantsByProcess -> SearchPhdParticipantsByProcess: executeAction()
+ SearchPhdParticipantsByProcess -> SearchPhdParticipantsByProcess: getSearchResults\n(Map<String,String>,String,int):Collection<PhdParticipant>
+ SearchPhdParticipantsByProcess -> SearchPhdParticipantsByProcess: getPhdIndividualProgramProcess\n(Map<String,String>):PhdIndividualProgramProcess
+ SearchPhdParticipantsByProcess -> FenixFramework: getDomainObject(String):T
+ SearchPhdParticipantsByProcess -> PhdIndividualProgramProcess: getParticipantsSet():Set<PhdParticipant>
+ @enduml

@@ -1,0 +1,61 @@
+@startuml
+ participant "JSP\nJSPReadStudentSenior" as JSPReadStudentSenior order 0
+ participant "services.student.senior\nReadStudentSenior" as ReadStudentSenior order 1
+ participant "predicate\nAccessControl" as AccessControl order 17
+ participant "core.security\nAuthenticate" as Authenticate order 22
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 25
+ participant "core.domain\nUser_Base" as User_Base order 26
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 27
+ participant "domain\nPerson" as Person order 28
+ participant "core.domain\nUser" as User order 33
+ participant "domain.student\nRegistration_Base" as Registration_Base order 34
+ participant "domain.student\nSenior" as Senior order 35
+ participant "core.domain\nBennu" as Bennu order 48
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 55
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 56
+ JSPReadStudentSenior -> ReadStudentSenior: getConnection()
+ JSPReadStudentSenior <- ReadStudentSenior: returnConnection()
+ JSPReadStudentSenior -> ReadStudentSenior: executeAction()
+ ReadStudentSenior -> ReadStudentSenior: run(Registration):Senior
+ ReadStudentSenior -> ReadStudentSenior: check(AccessControlPredicate<?>):void
+ ReadStudentSenior -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ ReadStudentSenior -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		ReadStudentSenior -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ ALT registration.getSenior() != null
+ 	ReadStudentSenior -> Registration_Base: getSenior():Senior
+ ELSE else
+ 	ALT registration.isQualifiedForSeniority()
+ 		ReadStudentSenior -> Senior: Senior(Registration)
+ 		Senior -> Senior: Senior_Base()
+ 		Senior -> Senior: AbstractDomainObject()
+ 		Senior -> Senior: setRootDomainObject(Bennu):void
+ 		Senior -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		Senior -> Senior: setRegistration(Registration):void
+ 		Senior -> Senior: setStudent(Registration):void
+ 	END
+ END
+ @enduml

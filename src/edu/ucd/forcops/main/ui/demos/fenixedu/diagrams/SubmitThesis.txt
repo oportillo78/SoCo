@@ -1,0 +1,34 @@
+@startuml
+participant "JSP\nJSPSubmitThesis" as JSPSubmitThesis order 0
+participant "services.thesis\nSubmitThesis" as SubmitThesis order 1
+participant "domain.thesis\nThesis" as Thesis order 7
+participant "domain.thesis\nThesisEvaluationParticipant" as ThesisEvaluationParticipant order 38
+participant "predicate\nAccessControl" as AccessControl order 39
+participant "org.joda.time\nDateTime" as DateTime order 40
+JSPSubmitThesis -> SubmitThesis: getConnection()
+JSPSubmitThesis <- SubmitThesis: returnConnection()
+JSPSubmitThesis -> SubmitThesis: executeAction()
+SubmitThesis -> SubmitThesis: run(DegreeCurricularPlan,Thesis):void
+SubmitThesis -> Thesis: submit(Thesis):void
+Thesis -> AccessControl: getPerson():Person
+Thesis -> Thesis: setSubmission(DateTime):void
+Thesis -> DateTime: newDateTime()
+Thesis -> Thesis: setSubmitter(Person):void
+Thesis -> Thesis: setParticipation(Person,ThesisParticipationType):void
+alt person == null
+	Thesis -> Thesis: removeParticipation(ThesisEvaluationParticipant):void
+	Thesis -> Thesis: getParticipant\n(ThesisParticipationType):ThesisEvaluationParticipant
+else else
+	Thesis -> ThesisEvaluationParticipant: newThesisEvaluationParticipant(Thesis,Person,ThesisParticipationType)
+end
+Thesis -> Thesis: setRejectionComment(String):void
+Thesis -> Thesis: setState(ThesisState):void
+opt state == ThesisState.REVISION
+	Thesis -> Thesis: setConfirmmedDocuments(DateTime):void
+	Thesis -> Thesis: setConfirmer(Person):void
+	Thesis -> AccessControl: getPerson():Person
+	Thesis -> Thesis: setConfirmmedDocuments(DateTime):void
+end
+Thesis -> Thesis: setState(ThesisState):void
+Thesis -> SubmitThesis: sendConfirmationEmail()
+@enduml

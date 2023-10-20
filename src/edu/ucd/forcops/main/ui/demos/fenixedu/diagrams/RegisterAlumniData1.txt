@@ -1,0 +1,32 @@
+@startuml
+ participant "JSP\nJSPRegisterAlumniData" as JSPRegisterAlumniData order 0
+ participant "services.alumni\nRegisterAlumniData" as RegisterAlumniData order 1
+ participant "domain.student\nStudent" as Student order 37
+ participant "java.text\nMessageFormat" as MessageFormat order 38
+ participant "core.i18n\nBundleUtil" as BundleUtil order 39
+ participant "domain.organizationalStructure\nUnit" as Unit order 40
+ participant "domain.student\nStudent" as Student order 41
+ participant "domain\nAlumni_Base" as Alumni_Base order 42
+ JSPRegisterAlumniData -> RegisterAlumniData: getConnection()
+ JSPRegisterAlumniData <- RegisterAlumniData: returnConnection()
+ JSPRegisterAlumniData -> RegisterAlumniData: executeAction()
+ RegisterAlumniData -> RegisterAlumniData: run(Alumni,Boolean):Alumni
+ RegisterAlumniData -> Alumni_Base: setRegistered(Boolean):void
+ OPT registered
+ 	RegisterAlumniData -> RegisterAlumniData: sendRegistrationSuccessMail(Alumni):void
+ 	RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 	RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 	RegisterAlumniData -> Unit: getInstitutionAcronym():String
+ 	RegisterAlumniData -> MessageFormat: format(String,Object[]):String
+ 	RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ 	RegisterAlumniData -> Alumni_Base: getStudent():Student
+ 	RegisterAlumniData -> Student: getPerson():Person
+ 	RegisterAlumniData -> Student: getFirstAndLastName():String
+ 	RegisterAlumniData -> Alumni_Base: getLoginUsername():String
+ 	RegisterAlumniData -> RegisterAlumniData: sendEmail(Group,String,String):void
+ 	RegisterAlumniData -> RegisterAlumniData: getAlumniRecipients(Alumni):Group
+ 	RegisterAlumniData -> Alumni_Base: getStudent():Student
+ 	RegisterAlumniData -> Student: getPerson():Person
+ 	RegisterAlumniData -> Student: getPersonGroup():Group
+ END
+ @enduml

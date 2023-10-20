@@ -1,0 +1,55 @@
+@startuml
+ participant "JSP\nJSPSearchPaymentCodesByExecutionYear" as JSPSearchPaymentCodesByExecutionYear order 0
+ participant "services.accounting\nSearchPaymentCodesByExecutionYear" as SearchPaymentCodesByExecutionYear order 1
+ participant "domain.candidacyProcess\nCandidacyProcess" as CandidacyProcess order 43
+ participant "core.domain\nBennu" as Bennu order 62
+ participant "core.domain\nBennu" as Bennu order 63
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 76
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 77
+ participant "core.domain\nBennu" as Bennu order 78
+ participant "domain.candidacyProcess\nCandidacyProcess_Base" as CandidacyProcess_Base order 79
+ participant "domain\nExecutionYear_Base" as ExecutionYear_Base order 80
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 81
+ JSPSearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: getConnection()
+ JSPSearchPaymentCodesByExecutionYear <- SearchPaymentCodesByExecutionYear: returnConnection()
+ JSPSearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: executeAction()
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: getSearchResults\n(Map<String,String>,String,int):Collection<PaymentCode>
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: getExecutionYear(String):ExecutionYear
+ SearchPaymentCodesByExecutionYear -> FenixFramework: getDomainObject(String):T
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: findAnnualEventsPaymentCodeFor\n(String,ExecutionYear):Collection<PaymentCode>
+ SearchPaymentCodesByExecutionYear -> ExecutionYear_Base: getAnnualEventsSet():Set<AnnualEvent>
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: findIndividualCandidaciesEventPaymentCodesFor\n(Class<? extends CandidacyProcess>,String,ExecutionYear):Collection<PaymentCode>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess: getCandidacyProcessByExecutionInterval(Class<T>,ExecutionInterval)
+ CandidacyProcess -> CandidacyProcess: getAllInstancesOf(Class<? extends T>):Set<T>
+ CandidacyProcess -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ CandidacyProcess -> Bennu: getProcessesSet():Set<Process>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess_Base: getChildProcessesSet():Set<IndividualCandidacyProcess>
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: findIndividualCandidaciesEventPaymentCodesFor\n(Class<? extends CandidacyProcess>,String,ExecutionYear):Collection<PaymentCode>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess: getCandidacyProcessByExecutionInterval(Class<T>,ExecutionInterval)
+ CandidacyProcess -> CandidacyProcess: getAllInstancesOf(Class<? extends T>):Set<T>
+ CandidacyProcess -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ CandidacyProcess -> Bennu: getProcessesSet():Set<Process>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess_Base: getChildProcessesSet():Set<IndividualCandidacyProcess>
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: findIndividualCandidaciesEventPaymentCodesFor\n(Class<? extends CandidacyProcess>,String,ExecutionYear):Collection<PaymentCode>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess: getCandidacyProcessByExecutionInterval(Class<T>,ExecutionInterval)
+ CandidacyProcess -> CandidacyProcess: getAllInstancesOf(Class<? extends T>):Set<T>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess_Base: getChildProcessesSet():Set<IndividualCandidacyProcess>
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: findIndividualCandidaciesEventPaymentCodesFor\n(Class<? extends CandidacyProcess>,String,ExecutionYear):Collection<PaymentCode>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess: getCandidacyProcessByExecutionInterval(Class<T>,ExecutionInterval)
+ CandidacyProcess -> CandidacyProcess: getAllInstancesOf(Class<? extends T>):Set<T>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess_Base: getChildProcessesSet():Set<IndividualCandidacyProcess>
+ SearchPaymentCodesByExecutionYear -> SearchPaymentCodesByExecutionYear: findIndividualCandidaciesEventPaymentCodesFor\n(Class<? extends CandidacyProcess>,String,ExecutionYear):Collection<PaymentCode>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess: getCandidacyProcessByExecutionInterval(Class<T>,ExecutionInterval)
+ CandidacyProcess -> CandidacyProcess: getAllInstancesOf(Class<? extends T>):Set<T>
+ SearchPaymentCodesByExecutionYear -> CandidacyProcess_Base: getChildProcessesSet():Set<IndividualCandidacyProcess>
+ @enduml

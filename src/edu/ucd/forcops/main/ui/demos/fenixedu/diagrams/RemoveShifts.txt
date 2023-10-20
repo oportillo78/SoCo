@@ -1,0 +1,51 @@
+@startuml
+ participant "JSP\nJSPRemoveShifts" as JSPRemoveShifts order 0
+ participant "services.resourceAllocationManager\nRemoveShifts" as RemoveShifts order 1
+ participant "predicate\nAccessControl" as AccessControl order 21
+ participant "core.security\nAuthenticate" as Authenticate order 26
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 29
+ participant "core.domain\nUser_Base" as User_Base order 30
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 31
+ participant "domain\nPerson" as Person order 32
+ participant "core.domain\nUser" as User order 37
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 40
+ participant "dto\nInfoClass" as InfoClass order 41
+ participant "domain\nSchoolClass" as SchoolClass order 46
+ participant "domain\nSchoolClass_Base" as SchoolClass_Base order 47
+ JSPRemoveShifts -> RemoveShifts: getConnection()
+ JSPRemoveShifts <- RemoveShifts: returnConnection()
+ JSPRemoveShifts -> RemoveShifts: executeAction()
+ RemoveShifts -> RemoveShifts: run(InfoClass,List<String>):Boolean
+ RemoveShifts -> RemoveShifts: check(AccessControlPredicate<?>):void
+ RemoveShifts -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ RemoveShifts -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		RemoveShifts -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ RemoveShifts -> FenixFramework: getDomainObject(String):T
+ RemoveShifts -> InfoClass: getExternalId():String
+ InfoClass -> InfoClass: getSchoolClass():SchoolClass
+ InfoClass -> SchoolClass: getExternalId():String
+ RemoveShifts -> SchoolClass_Base: getAssociatedShiftsSet():Set<Shift>
+ LOOP for: shiftOIDs
+ 	RemoveShifts -> FenixFramework: getDomainObject(String):T
+ END
+ @enduml

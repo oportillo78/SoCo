@@ -1,0 +1,34 @@
+@startuml
+ participant "JSP\nJSPSearchExecutionCourses" as JSPSearchExecutionCourses order 0
+ participant "services.resourceAllocationManager\nSearchExecutionCourses" as SearchExecutionCourses order 1
+ participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 11
+ participant "domain\nExecutionCourse" as ExecutionCourse order 16
+ participant "domain\nExecutionInterval" as ExecutionInterval order 23
+ participant "domain\nExecutionSemester" as ExecutionSemester order 24
+ participant "StringNormalizer" as StringNormalizer order 31
+ participant "domain\nExecutionCourse" as ExecutionCourse order 36
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 37
+ JSPSearchExecutionCourses -> SearchExecutionCourses: getConnection()
+ JSPSearchExecutionCourses <- SearchExecutionCourses: returnConnection()
+ JSPSearchExecutionCourses -> SearchExecutionCourses: executeAction()
+ SearchExecutionCourses -> SearchExecutionCourses: run\n(AcademicInterval,ExecutionDegree,CurricularYear,String):List<InfoExecutionCourse>
+ SearchExecutionCourses -> ExecutionCourse: searchByAcademicIntervalAndExecutionDegreeYearAndName\n(AcademicInterval,ExecutionDegree,CurricularYear,String):List<ExecutionCourse>
+ ExecutionCourse -> ExecutionInterval: getExecutionInterval(AcademicInterval):ExecutionInterval
+ ExecutionCourse -> ExecutionSemester: getExecutionCoursesByDegreeCurricularPlanAndSemesterAndCurricularYearAndName\n(DegreeCurricularPlan,CurricularYear,String):List<ExecutionCourse>
+ ALT (name != null)
+ 	ExecutionSemester -> StringNormalizer: normalize(String):String
+ 	StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ END
+ LOOP for: getAssociatedExecutionCoursesSet()
+ 	ExecutionSemester -> StringNormalizer: normalize(String):String
+ 	StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 	ExecutionSemester -> ExecutionCourse: getNome():String
+ END
+ ExecutionCourse -> ExecutionDegree_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ SearchExecutionCourses -> SearchExecutionCourses: fillInfoExecutionCourses\n(AcademicInterval,List<ExecutionCourse>):List<InfoExecutionCourse>
+ SearchExecutionCourses -> CollectionUtils: collect(Collection,Transformer):Collection
+ CollectionUtils -> CollectionUtils: collect\n(Collection,Transformer,Collection):Collection
+ OPT ?
+ 	CollectionUtils -> CollectionUtils: collect\n(Iterator,Transformer,Collection):Collection
+ END
+ @enduml

@@ -1,0 +1,348 @@
+@startuml
+ participant "JSP\nJSPSeperateExecutionCourse" as JSPSeperateExecutionCourse order 0
+ participant "services.manager.executionCourseManagement\nSeperateExecutionCourse" as SeperateExecutionCourse order 1
+ participant "domain\nStudentGroup_Base" as StudentGroup_Base order 113
+ participant "domain\nGrouping" as Grouping order 142
+ participant "domain\nGroupsAndShiftsManagementLog" as GroupsAndShiftsManagementLog order 143
+ participant "core.i18n\nBundleUtil" as BundleUtil order 163
+ participant "domain\nGrouping" as Grouping order 164
+ participant "domain\nExecutionCourse" as ExecutionCourse order 165
+ participant "domain\nGrouping" as Grouping order 168
+ participant "domain\nAttends_Base" as Attends_Base order 198
+ participant "domain\nExportGrouping_Base" as ExportGrouping_Base order 199
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 214
+ participant "domain\nShiftGroupingProperties" as ShiftGroupingProperties order 215
+ participant "domain\nProject" as Project order 224
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 233
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 234
+ participant "domain\nShift_Base" as Shift_Base order 235
+ participant "domain\nCourseLoad" as CourseLoad order 236
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 237
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 238
+ participant "domain\nAttends_Base" as Attends_Base order 239
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 240
+ participant "services.manager\nCreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod" as CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod order 241
+ participant "domain\nExecutionCourse" as ExecutionCourse order 242
+ participant "domain\nExecutionCourse" as ExecutionCourse order 243
+ participant "core.domain\nBennu" as Bennu order 282
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 291
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 296
+ participant "domain\nFinalEvaluation" as FinalEvaluation order 297
+ participant "domain.messaging\nExecutionCourseForum" as ExecutionCourseForum order 302
+ participant "core.signals\nSignal" as Signal order 305
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 318
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 319
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 320
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 321
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 322
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 323
+ participant "domain\nCourseLoad" as CourseLoad order 324
+ participant "domain\nProfessorship" as Professorship order 340
+ participant "domain\nProfessorshipPermissions" as ProfessorshipPermissions order 348
+ participant "domain\nProfessorship_Base" as Professorship_Base order 349
+ participant "domain\nProfessorshipPermissions" as ProfessorshipPermissions order 351
+ participant "domain\nProfessorshipPermissions_Base" as ProfessorshipPermissions_Base order 421
+ participant "service.utils\nExecutionCourseUtils" as ExecutionCourseUtils order 422
+ participant "domain\nExecutionCourse" as ExecutionCourse order 427
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 452
+ participant "domain\nEvaluationMethod_Base" as EvaluationMethod_Base order 453
+ participant "domain\nEvaluationMethod" as EvaluationMethod order 454
+ participant "domain\nBibliographicReference_Base" as BibliographicReference_Base order 455
+ JSPSeperateExecutionCourse -> SeperateExecutionCourse: getConnection()
+ JSPSeperateExecutionCourse <- SeperateExecutionCourse: returnConnection()
+ JSPSeperateExecutionCourse -> SeperateExecutionCourse: executeAction()
+ SeperateExecutionCourse -> SeperateExecutionCourse: run\n(ExecutionCourse,ExecutionCourse,List<Shift>,List<CurricularCourse>):ExecutionCourse
+ OPT destinationExecutionCourse == null
+ 	SeperateExecutionCourse -> SeperateExecutionCourse: createNewExecutionCourse(ExecutionCourse):ExecutionCourse
+ 	SeperateExecutionCourse -> SeperateExecutionCourse: getUniqueExecutionCourseCode(String,ExecutionSemester,String):String
+ 	SeperateExecutionCourse -> SeperateExecutionCourse: getExecutionCourseCodes(ExecutionSemester):Set<String>
+ 	SeperateExecutionCourse -> CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: getUniqueSigla(Set<String>,String):String
+ 	SeperateExecutionCourse -> ExecutionCourse: getNome():String
+ 	SeperateExecutionCourse -> ExecutionCourse: getExecutionPeriod():ExecutionSemester
+ 	SeperateExecutionCourse -> ExecutionCourse: getSigla():String
+ 	SeperateExecutionCourse -> ExecutionCourse: ExecutionCourse\n(String,String,ExecutionSemester,EntryPhase)
+ 	ExecutionCourse -> ExecutionCourse: ExecutionCourse_Base()
+ 	ExecutionCourse -> ExecutionCourse: setRootDomainObject(Bennu):void
+ 	ExecutionCourse -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionCourse -> ExecutionCourse: addAssociatedEvaluations(Evaluation):void
+ 	ExecutionCourse -> FinalEvaluation: FinalEvaluation()
+ 	FinalEvaluation -> FinalEvaluation: FinalEvaluation_Base()
+ 	FinalEvaluation -> FinalEvaluation: setGradeScale(GradeScale):void
+ 	ExecutionCourse -> ExecutionCourse: setAvailableGradeSubmission(Boolean):void
+ 	ExecutionCourse -> ExecutionCourse: setNome(String):void
+ 	ExecutionCourse -> ExecutionCourse: setExecutionPeriod(ExecutionSemester):void
+ 	ExecutionCourse -> ExecutionCourse: setSigla(String):void
+ 	ExecutionCourse -> ExecutionCourse: setComment(String):void
+ 	ExecutionCourse -> ExecutionCourse: setEntryPhase(EntryPhase):void
+ 	ExecutionCourse -> ExecutionCourse: setProjectTutorialCourse(Boolean):void
+ 	ExecutionCourse -> ExecutionCourse: setUnitCreditValue(BigDecimal):void
+ 	ExecutionCourse -> ExecutionCourseForum: ExecutionCourseForum()
+ 	ExecutionCourseForum -> ExecutionCourseForum: ExecutionCourseForum_Base()
+ 	ExecutionCourse -> ExecutionCourseForum: setName(LocalizedString):void
+ 	ExecutionCourse -> ExecutionCourse: getNameI18N():LocalizedString
+ 	ExecutionCourse -> ExecutionCourse: addForum(ExecutionCourseForum):void
+ 	ExecutionCourse -> Signal: emit(String,Object):void
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: getFromContext(String):T
+ 		OPT ?
+ 			Signal -> FenixFramework: getTransaction():Transaction
+ 			Signal -> Transaction: putInContext(String,Object):void
+ 		END
+ 	END
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: getFromContext(String):T
+ 		OPT ?
+ 			Signal -> FenixFramework: getTransaction():Transaction
+ 			Signal -> Transaction: putInContext(String,Object):void
+ 		END
+ 	END
+ 	ExecutionCourse -> DomainObjectEvent: DomainObjectEvent(T)
+ 	SeperateExecutionCourse -> ExecutionCourse: getNome():String
+ 	SeperateExecutionCourse -> ExecutionCourse: getExecutionPeriod():ExecutionSemester
+ 	LOOP for: originExecutionCourse.getCourseLoadsSet()
+ 		SeperateExecutionCourse -> CourseLoad_Base: getType():ShiftType
+ 		SeperateExecutionCourse -> CourseLoad_Base: getUnitQuantity():BigDecimal
+ 		SeperateExecutionCourse -> CourseLoad_Base: getTotalQuantity():BigDecimal
+ 		SeperateExecutionCourse -> CourseLoad: CourseLoad\n(ExecutionCourse,ShiftType,BigDecimal,BigDecimal)
+ 		CourseLoad -> CourseLoad: CourseLoad_Base()
+ 		CourseLoad -> CourseLoad: setRootDomainObject(Bennu):void
+ 		CourseLoad -> Bennu: getInstance():Bennu
+ 		CourseLoad -> CourseLoad: setUnitQuantity(BigDecimal):void
+ 		CourseLoad -> CourseLoad: setTotalQuantity(BigDecimal):void
+ 		CourseLoad -> CourseLoad: setExecutionCourse(ExecutionCourse):void
+ 		CourseLoad -> CourseLoad: setType(ShiftType):void
+ 		CourseLoad -> CourseLoad: checkQuantities():void
+ 	END
+ 	LOOP for: originExecutionCourse.getProfessorshipsSet()
+ 		SeperateExecutionCourse -> Professorship: Professorship()
+ 		Professorship -> Professorship: Professorship_Base()
+ 		Professorship -> Professorship: setRootDomainObject(Bennu):void
+ 		Professorship -> Bennu: getInstance():Bennu
+ 		Professorship -> ProfessorshipPermissions: ProfessorshipPermissions(Professorship)
+ 		SeperateExecutionCourse -> Professorship: setExecutionCourse(ExecutionCourse):void
+ 		SeperateExecutionCourse -> Professorship: setPerson(Person):void
+ 		SeperateExecutionCourse -> Professorship_Base: getPerson():Person
+ 		SeperateExecutionCourse -> Professorship: setResponsibleFor(Boolean):void
+ 		SeperateExecutionCourse -> Professorship_Base: getResponsibleFor():Boolean
+ 		SeperateExecutionCourse -> Professorship_Base: getPermissions():ProfessorshipPermissions
+ 		SeperateExecutionCourse -> ProfessorshipPermissions: copyPremissions(Professorship):ProfessorshipPermissions
+ 		ProfessorshipPermissions -> Professorship_Base: getPermissions():ProfessorshipPermissions
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setPersonalization(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getPersonalization():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setSiteArchive(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getSiteArchive():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setAnnouncements(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getAnnouncements():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setSections(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getSections():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setSummaries(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getSummaries():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setStudents(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getStudents():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setPlanning(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getPlanning():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setEvaluationSpecific(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getEvaluationSpecific():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setEvaluationWorksheets(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getEvaluationWorksheets():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setEvaluationProject(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getEvaluationProject():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setEvaluationTests(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getEvaluationTests():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setEvaluationExams(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getEvaluationExams():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setWorksheets(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getWorksheets():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setGroups(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getGroups():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setShift(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getShift():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setEvaluationMethod(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getEvaluationMethod():boolean
+ 		ProfessorshipPermissions -> ProfessorshipPermissions_Base: setBibliografy(boolean):void
+ 		ProfessorshipPermissions -> ProfessorshipPermissions: getBibliografy():boolean
+ 		SeperateExecutionCourse -> ExecutionCourse: getProfessorshipsSet():Set<Professorship>
+ 	END
+ 	SeperateExecutionCourse -> ExecutionCourseUtils: copyBibliographicReference\n(ExecutionCourse,ExecutionCourse):List<BibliographicReference>
+ 	ExecutionCourseUtils -> ExecutionCourse: copyBibliographicReferencesFrom\n(ExecutionCourse):List<BibliographicReference>
+ 	LOOP for: executionCourseFrom.getAssociatedBibliographicReferencesSet()
+ 		ALT canAddBibliographicReference(bibliographicReference)
+ 			ExecutionCourse -> ExecutionCourse: createBibliographicReference\n(String,String,String,String,Boolean):void
+ 			ExecutionCourse -> BibliographicReference_Base: getTitle():String
+ 			ExecutionCourse -> BibliographicReference_Base: getAuthors():String
+ 			ExecutionCourse -> BibliographicReference_Base: getReference():String
+ 			ExecutionCourse -> BibliographicReference_Base: getYear():String
+ 			ExecutionCourse -> BibliographicReference_Base: getOptional():Boolean
+ 		END
+ 	END
+ 	SeperateExecutionCourse -> ExecutionCourseUtils: copyEvaluationMethod(ExecutionCourse,ExecutionCourse):void
+ 	ExecutionCourseUtils -> ExecutionCourse: copyEvaluationMethodFrom(ExecutionCourse):void
+ 	OPT executionCourseFrom.getEvaluationMethod() != null
+ 		ExecutionCourse -> ExecutionCourse_Base: getEvaluationMethod():EvaluationMethod
+ 		ExecutionCourse -> ExecutionCourse: getEvaluationMethod():EvaluationMethod
+ 		ALT evaluationMethodTo == null
+ 			ExecutionCourse -> ExecutionCourse: createEvaluationMethod(LocalizedString):void
+ 			ExecutionCourse -> EvaluationMethod_Base: getEvaluationElements():LocalizedString
+ 		ELSE else
+ 			ExecutionCourse -> EvaluationMethod: edit(LocalizedString):void
+ 			ExecutionCourse -> EvaluationMethod_Base: getEvaluationElements():LocalizedString
+ 		END
+ 	END
+ END
+ SeperateExecutionCourse -> SeperateExecutionCourse: transferCurricularCourses\n(ExecutionCourse,ExecutionCourse,List<CurricularCourse>):void
+ LOOP for: curricularCoursesToTransfer
+ 	SeperateExecutionCourse -> ExecutionCourse_Base: removeAssociatedCurricularCourses(CurricularCourse):void
+ 	SeperateExecutionCourse -> ExecutionCourse: addAssociatedCurricularCourses(CurricularCourse):void
+ END
+ SeperateExecutionCourse -> SeperateExecutionCourse: transferAttends(ExecutionCourse,ExecutionCourse):void
+ SeperateExecutionCourse -> ExecutionCourse_Base: getAssociatedCurricularCoursesSet():Set<CurricularCourse>
+ SeperateExecutionCourse -> ExecutionCourse_Base: getAttendsSet():Set<Attends>
+ LOOP for: allAttends
+ 	SeperateExecutionCourse -> Attends_Base: getEnrolment():Enrolment
+ 	OPT enrolment != null && curricularCourses.contains(enrolment.getCurricularCourse())
+ 		SeperateExecutionCourse -> Attends_Base: setDisciplinaExecucao(ExecutionCourse):void
+ 	END
+ END
+ SeperateExecutionCourse -> SeperateExecutionCourse: transferShifts\n(ExecutionCourse,ExecutionCourse,List<Shift>):void
+ LOOP for: shiftsToTransfer
+ 	SeperateExecutionCourse -> Shift_Base: getCourseLoadsSet():Set<CourseLoad>
+ 	LOOP for:iter.hasNext()
+ 		SeperateExecutionCourse -> ExecutionCourse: getCourseLoadByShiftType(ShiftType):CourseLoad
+ 		SeperateExecutionCourse -> CourseLoad_Base: getType():ShiftType
+ 		OPT newCourseLoad == null
+ 			SeperateExecutionCourse -> CourseLoad: CourseLoad\n(ExecutionCourse,ShiftType,BigDecimal,BigDecimal)
+ 			SeperateExecutionCourse -> CourseLoad_Base: getType():ShiftType
+ 			SeperateExecutionCourse -> CourseLoad_Base: getUnitQuantity():BigDecimal
+ 			SeperateExecutionCourse -> CourseLoad_Base: getTotalQuantity():BigDecimal
+ 		END
+ 		SeperateExecutionCourse -> Shift_Base: removeCourseLoads(CourseLoad):void
+ 		SeperateExecutionCourse -> Shift_Base: addCourseLoads(CourseLoad):void
+ 	END
+ END
+ SeperateExecutionCourse -> SeperateExecutionCourse: handleEvaluations\n(ExecutionCourse,ExecutionCourse,List<CurricularCourse>):void
+ OPT !originExecutionCourse.getAssociatedEvaluationsSet().isEmpty()
+ 	LOOP for: originExecutionCourse.getAssociatedEvaluationsSet()
+ 		OPT evaluation instanceof WrittenEvaluation
+ 			LOOP for: writtenEvaluation.getAssociatedContextsSet()
+ 				OPT curricularCourseToTransfer.contains(context.getChildDegreeModule())
+ 					SeperateExecutionCourse -> ExecutionCourse_Base: getAssociatedEvaluationsSet():Set<Evaluation>
+ 				END
+ 			END
+ 			OPT isToRemove
+ 				SeperateExecutionCourse -> ExecutionCourse_Base: getAssociatedEvaluationsSet():Set<Evaluation>
+ 			END
+ 		END
+ 	END
+ END
+ SeperateExecutionCourse -> SeperateExecutionCourse: fixStudentShiftEnrolements(ExecutionCourse):void
+ LOOP for: executionCourse.getAssociatedShifts()
+ 	LOOP for: shift.getStudentsSet()
+ 		OPT !registration.attends(executionCourse)
+ 			SeperateExecutionCourse -> Shift_Base: removeStudents(Registration):void
+ 		END
+ 	END
+ END
+ SeperateExecutionCourse -> SeperateExecutionCourse: fixStudentShiftEnrolements(ExecutionCourse):void
+ LOOP for: executionCourse.getAssociatedShifts()
+ 	LOOP for: shift.getStudentsSet()
+ 		OPT !registration.attends(executionCourse)
+ 			SeperateExecutionCourse -> Shift_Base: removeStudents(Registration):void
+ 		END
+ 	END
+ END
+ SeperateExecutionCourse -> SeperateExecutionCourse: associateGroupings(ExecutionCourse,ExecutionCourse):void
+ LOOP for: originExecutionCourse.getGroupings()
+ 	LOOP for: grouping.getStudentGroupsSet()
+ 		SeperateExecutionCourse -> StudentGroup_Base: getAttendsSet():Set<Attends>
+ 		SeperateExecutionCourse -> StudentGroup_Base: delete():void
+ 		StudentGroup_Base -> StudentGroup_Base: getGrouping():Grouping
+ 		StudentGroup_Base -> Grouping: getExecutionCourses():List<ExecutionCourse>
+ 		LOOP for: ecs
+ 			StudentGroup_Base -> GroupsAndShiftsManagementLog: createLog\n(ExecutionCourse,String,String,String[]):GroupsAndShiftsManagementLog
+ 			GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: generateLabelDescription(String,String,String[]):String
+ 			GroupsAndShiftsManagementLog -> BundleUtil: getString(String,String,String[]):String
+ 			GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: createGroupsAndShiftsManagementLog\n(ExecutionCourse,String):GroupsAndShiftsManagementLog
+ 			GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: GroupsAndShiftsManagementLog(ExecutionCourse,String)
+ 			GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: GroupsAndShiftsManagementLog_Base()
+ 			OPT getExecutionCourse() == null
+ 				GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: setExecutionCourse(ExecutionCourse):void
+ 			END
+ 			GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: setDescription(String):void
+ 			StudentGroup_Base -> StudentGroup_Base: getGroupNumber():Integer
+ 			StudentGroup_Base -> StudentGroup_Base: getGrouping():Grouping
+ 			StudentGroup_Base -> Grouping: getName():String
+ 			StudentGroup_Base -> ExecutionCourse: getNome():String
+ 			StudentGroup_Base -> ExecutionCourse: getDegreePresentationString():String
+ 		END
+ 		ALT !getProjectSubmissionsSet().isEmpty() && this.getGrouping().isPersonTeacher(AccessControl.getPerson())
+ 			StudentGroup_Base -> StudentGroup_Base: setValid(Boolean):void
+ 		ELSE else
+ 			ALT getProjectSubmissionsSet().isEmpty() && getAttendsSet().isEmpty()
+ 				ALT getStudentGroupGroup() != null
+ 					StudentGroup_Base -> StudentGroup_Base: setValid(Boolean):void
+ 				ELSE else
+ 					StudentGroup_Base -> StudentGroup_Base: setShift(Shift):void
+ 					StudentGroup_Base -> StudentGroup_Base: setGrouping(Grouping):void
+ 					StudentGroup_Base -> StudentGroup_Base: setRootDomainObject(Bennu):void
+ 					StudentGroup_Base -> StudentGroup_Base: deleteDomainObject():void
+ 				END
+ 			END
+ 		END
+ 	END
+ 	SeperateExecutionCourse -> Grouping: delete():void
+ 	Grouping -> Grouping: getExecutionCourses():List<ExecutionCourse>
+ 	LOOP for: this.getExportGroupingsSet()
+ 		OPT exportGrouping.getProposalState().getState() == ProposalState.ACEITE                    || exportGrouping.getProposalState().getState() == ProposalState.CRIADOR
+ 			Grouping -> ExportGrouping_Base: getExecutionCourse():ExecutionCourse
+ 		END
+ 	END
+ 	LOOP for: ecs
+ 		Grouping -> GroupsAndShiftsManagementLog: createLog\n(ExecutionCourse,String,String,String[]):GroupsAndShiftsManagementLog
+ 		GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: generateLabelDescription(String,String,String[]):String
+ 		GroupsAndShiftsManagementLog -> GroupsAndShiftsManagementLog: createGroupsAndShiftsManagementLog\n(ExecutionCourse,String):GroupsAndShiftsManagementLog
+ 		Grouping -> Grouping: getName():String
+ 		Grouping -> ExecutionCourse: getNome():String
+ 		Grouping -> ExecutionCourse: getDegreePresentationString():String
+ 	END
+ 	Grouping -> Grouping: getAttendsSet():Set<Attends>
+ 	LOOP for: attendsAux
+ 		Grouping -> Attends_Base: removeGroupings(Grouping):void
+ 	END
+ 	Grouping -> Grouping: getExportGroupingsSet():Set<ExportGrouping>
+ 	LOOP for: exportGroupingsAux
+ 		Grouping -> ExportGrouping_Base: getExecutionCourse():ExecutionCourse
+ 		Grouping -> ExecutionCourse_Base: removeExportGroupings(ExportGrouping):void
+ 		Grouping -> ExportGrouping_Base: delete():void
+ 		ExportGrouping_Base -> ExportGrouping_Base: setExecutionCourse(ExecutionCourse):void
+ 		ExportGrouping_Base -> ExportGrouping_Base: setGrouping(Grouping):void
+ 		ExportGrouping_Base -> ExportGrouping_Base: setReceiverPerson(Person):void
+ 		ExportGrouping_Base -> ExportGrouping_Base: setSenderExecutionCourse(ExecutionCourse):void
+ 		ExportGrouping_Base -> ExportGrouping_Base: setSenderPerson(Person):void
+ 		ExportGrouping_Base -> ExportGrouping_Base: setRootDomainObject(Bennu):void
+ 		ExportGrouping_Base -> ExportGrouping_Base: deleteDomainObject():void
+ 	END
+ 	LOOP for: getShiftGroupingPropertiesSet()
+ 		Grouping -> ShiftGroupingProperties: delete():void
+ 		ShiftGroupingProperties -> ShiftGroupingProperties: setGrouping(Grouping):void
+ 		ShiftGroupingProperties -> ShiftGroupingProperties: setShift(Shift):void
+ 		ShiftGroupingProperties -> ShiftGroupingProperties: setRootDomainObject(Bennu):void
+ 		ShiftGroupingProperties -> ShiftGroupingProperties: deleteDomainObject():void
+ 	END
+ 	LOOP for: getProjectsSet()
+ 		Grouping -> Project: delete():void
+ 		Project -> Project: logRemove():void
+ 		Project -> Project: setGrouping(Grouping):void
+ 		Project -> Project: getDeparmentsSet():Set<Department>
+ 		Project -> Project: delete():void
+ 	END
+ 	Grouping -> Grouping: setRootDomainObject(Bennu):void
+ 	Grouping -> Grouping: deleteDomainObject():void
+ END
+ @enduml

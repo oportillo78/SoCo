@@ -1,0 +1,27 @@
+@startuml
+ participant "JSP\nJSPSearchOtherFormationInstitutions" as JSPSearchOtherFormationInstitutions order 0
+ participant "services.alumni\nSearchOtherFormationInstitutions" as SearchOtherFormationInstitutions order 1
+ participant "domain.organizationalStructure\nAcademicalInstitutionUnit" as AcademicalInstitutionUnit order 9
+ participant "domain.organizationalStructure\nUnitName_Base" as UnitName_Base order 12
+ participant "domain.organizationalStructure\nAcademicalInstitutionUnit" as AcademicalInstitutionUnit order 13
+ participant "util\nLocaleUtils" as LocaleUtils order 18
+ participant "i18n\nLocalizedString" as LocalizedString order 23
+ JSPSearchOtherFormationInstitutions -> SearchOtherFormationInstitutions: getConnection()
+ JSPSearchOtherFormationInstitutions <- SearchOtherFormationInstitutions: returnConnection()
+ JSPSearchOtherFormationInstitutions -> SearchOtherFormationInstitutions: executeAction()
+ SearchOtherFormationInstitutions -> SearchOtherFormationInstitutions: getSearchResults\n(Map<String,String>,String,int):Collection<AcademicalInstitutionUnit>
+ SearchOtherFormationInstitutions -> AcademicalInstitutionUnit: readOtherAcademicUnits():List<AcademicalInstitutionUnit>
+ LOOP for: Bennu.getInstance().getUnitNameSet()
+ 	OPT unitName.getUnit().isAcademicalUnit() && !unitName.getUnit().isOfficial()
+ 		AcademicalInstitutionUnit -> UnitName_Base: getUnit():Unit
+ 	END
+ END
+ SearchOtherFormationInstitutions -> AcademicalInstitutionUnit: getName():String
+ AcademicalInstitutionUnit -> LocaleUtils: getPreferedContent(LocalizedString):String
+ LocaleUtils -> LocalizedString: getContent(Locale):String
+ ALT content != null
+ ELSE else
+ 	LocaleUtils -> LocalizedString: getContent():String
+ END
+ AcademicalInstitutionUnit -> AcademicalInstitutionUnit: getPartyName():LocalizedString
+ @enduml

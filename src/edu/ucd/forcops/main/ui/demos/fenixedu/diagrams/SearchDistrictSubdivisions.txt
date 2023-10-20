@@ -1,0 +1,16 @@
+@startuml
+ participant "JSP\nJSPSearchDistrictSubdivisions" as JSPSearchDistrictSubdivisions order 0
+ participant "services.commons.searchers\nSearchDistrictSubdivisions" as SearchDistrictSubdivisions order 1
+ participant "domain\nDistrictSubdivision" as DistrictSubdivision order 9
+ participant "StringNormalizer" as StringNormalizer order 12
+ participant "java.text\nNormalizer" as Normalizer order 17
+ JSPSearchDistrictSubdivisions -> SearchDistrictSubdivisions: getConnection()
+ JSPSearchDistrictSubdivisions <- SearchDistrictSubdivisions: returnConnection()
+ JSPSearchDistrictSubdivisions -> SearchDistrictSubdivisions: executeAction()
+ SearchDistrictSubdivisions -> SearchDistrictSubdivisions: getSearchResults\n(Map<String,String>,String,int):Collection<DistrictSubdivision>
+ SearchDistrictSubdivisions -> DistrictSubdivision: findByName\n(String,int):Collection<DistrictSubdivision>
+ DistrictSubdivision -> StringNormalizer: normalize(String):String
+ StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ StringNormalizer -> Normalizer: normalize(CharSequence,Form):String
+ SearchDistrictSubdivisions -> SearchDistrictSubdivisions: getSize(Map<String,String>):int
+ @enduml

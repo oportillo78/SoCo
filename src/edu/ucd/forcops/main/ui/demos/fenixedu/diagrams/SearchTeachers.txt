@@ -1,0 +1,9 @@
+@startuml
+ participant "JSP\nJSPSearchTeachers" as JSPSearchTeachers order 0
+ participant "services.commons.searchers\nSearchTeachers" as SearchTeachers order 1
+ JSPSearchTeachers -> SearchTeachers: getConnection()
+ JSPSearchTeachers <- SearchTeachers: returnConnection()
+ JSPSearchTeachers -> SearchTeachers: executeAction()
+ SearchTeachers -> SearchTeachers: getSearchResults\n(Map<String,String>,String,int):Collection<Teacher>
+ SearchTeachers -> SearchTeachers: search(String,int):Collection<Teacher>
+ @enduml

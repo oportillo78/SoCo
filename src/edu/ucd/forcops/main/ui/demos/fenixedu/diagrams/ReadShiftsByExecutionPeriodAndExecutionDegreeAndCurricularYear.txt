@@ -1,0 +1,88 @@
+@startuml
+ participant "JSP\nJSPReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear" as JSPReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear order 0
+ participant "services.resourceAllocationManager\nReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear" as ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear order 1
+ participant "predicate\nAccessControl" as AccessControl order 27
+ participant "core.security\nAuthenticate" as Authenticate order 32
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 35
+ participant "core.domain\nUser_Base" as User_Base order 36
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 37
+ participant "domain\nPerson" as Person order 38
+ participant "core.domain\nUser" as User order 43
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 44
+ participant "dto\nInfoExecutionDegree" as InfoExecutionDegree order 45
+ participant "domain\nExecutionDegree" as ExecutionDegree order 50
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 51
+ participant "dto\nInfoCurricularYear" as InfoCurricularYear order 52
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 55
+ participant "domain\nExecutionCourse" as ExecutionCourse order 56
+ participant "domain\nExecutionInterval" as ExecutionInterval order 61
+ participant "domain\nExecutionSemester" as ExecutionSemester order 62
+ participant "StringNormalizer" as StringNormalizer order 69
+ participant "domain\nExecutionCourse" as ExecutionCourse order 74
+ participant "dto\nInfoShift" as InfoShift order 75
+ participant "domain\nShift" as Shift order 82
+ participant "domain\nShiftGroupingProperties_Base" as ShiftGroupingProperties_Base order 83
+ JSPReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear: getConnection()
+ JSPReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear <- ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear: returnConnection()
+ JSPReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear: executeAction()
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear: run\n(AcademicInterval,InfoExecutionDegree,InfoCurricularYear):List<InfoShift>
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear: check(AccessControlPredicate<?>):void
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> InfoExecutionDegree: getExternalId():String
+ InfoExecutionDegree -> InfoExecutionDegree: getExecutionDegree():ExecutionDegree
+ InfoExecutionDegree -> ExecutionDegree: getExternalId():String
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> ExecutionDegree_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> InfoCurricularYear: getExternalId():String
+ ALT curricularYear == null
+ ELSE else
+ 	InfoCurricularYear -> AbstractDomainObject: getExternalId():String
+ END
+ ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> ExecutionCourse: filterByAcademicIntervalAndDegreeCurricularPlanAndCurricularYearAndName\n(AcademicInterval,DegreeCurricularPlan,CurricularYear,String):List<ExecutionCourse>
+ ExecutionCourse -> ExecutionInterval: getExecutionInterval(AcademicInterval):ExecutionInterval
+ ALT executionSemester == null
+ ELSE else
+ 	ExecutionCourse -> ExecutionSemester: getExecutionCoursesByDegreeCurricularPlanAndSemesterAndCurricularYearAndName\n(DegreeCurricularPlan,CurricularYear,String):List<ExecutionCourse>
+ 	ALT (name != null)
+ 		ExecutionSemester -> StringNormalizer: normalize(String):String
+ 		StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 	END
+ 	LOOP for: getAssociatedExecutionCoursesSet()
+ 		ExecutionSemester -> StringNormalizer: normalize(String):String
+ 		StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 		ExecutionSemester -> ExecutionCourse: getNome():String
+ 	END
+ END
+ LOOP for: executionCourses
+ 	LOOP for: executionCourse.getAssociatedShifts()
+ 		ReadShiftsByExecutionPeriodAndExecutionDegreeAndCurricularYear -> InfoShift: InfoShift(Shift)
+ 		InfoShift -> InfoShift: getShift():Shift
+ 		InfoShift -> Shift: getShiftGroupingProperties():ShiftGroupingProperties
+ 		ALT groupingProperties != null
+ 			InfoShift -> ShiftGroupingProperties_Base: getCapacity():Integer
+ 		END
+ 	END
+ END
+ @enduml

@@ -1,0 +1,83 @@
+@startuml
+ participant "JSP\nJSPPublishMarks" as JSPPublishMarks order 0
+ participant "services.teacher\nPublishMarks" as PublishMarks order 1
+ participant "domain\nEvaluation_Base" as Evaluation_Base order 25
+ participant "core.signals\nSignal" as Signal order 26
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 43
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 44
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 45
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 46
+ participant "services.teacher.PublishMarks\nMarkPublishingBean" as MarkPublishingBean order 47
+ participant "domain\nMark_Base" as Mark_Base order 48
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 49
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 64
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 65
+ participant "domain\nExecutionCourse" as ExecutionCourse order 70
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 71
+ participant "core.security\nAuthenticate" as Authenticate order 72
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 75
+ JSPPublishMarks -> PublishMarks: getConnection()
+ JSPPublishMarks <- PublishMarks: returnConnection()
+ JSPPublishMarks -> PublishMarks: executeAction()
+ PublishMarks -> PublishMarks: runPublishMarks\n(String,String,String,Boolean,String):Object
+ PublishMarks -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ PublishMarks -> PublishMarks: run(String,String,String,String):Object
+ PublishMarks -> FenixFramework: getDomainObject(String):T
+ PublishMarks -> FenixFramework: getDomainObject(String):T
+ ALT publishmentMessage == null || publishmentMessage.length() == 0
+ 	PublishMarks -> Evaluation_Base: setPublishmentMessage(String):void
+ ELSE else
+ 	PublishMarks -> Evaluation_Base: setPublishmentMessage(String):void
+ END
+ PublishMarks -> Signal: emit(String,Object):void
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ PublishMarks -> MarkPublishingBean: MarkPublishingBean(ExecutionCourse,Evaluation,String)
+ LOOP for: evaluation.getMarksSet()
+ 	OPT !mark.getMark().equals(mark.getPublishedMark())
+ 		PublishMarks -> Mark_Base: setPublishedMark(String):void
+ 		PublishMarks -> Mark_Base: getMark():String
+ 	END
+ END
+ @enduml

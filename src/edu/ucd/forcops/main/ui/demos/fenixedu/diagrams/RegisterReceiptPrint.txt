@@ -1,0 +1,33 @@
+@startuml
+ participant "JSP\nJSPRegisterReceiptPrint" as JSPRegisterReceiptPrint order 0
+ participant "services.accounting\nRegisterReceiptPrint" as RegisterReceiptPrint order 1
+ participant "domain.accounting\nReceipt" as Receipt order 7
+ participant "domain.accounting\nReceiptPrintVersion" as ReceiptPrintVersion order 10
+ participant "org.joda.time\nDateTime" as DateTime order 31
+ participant "core.domain\nBennu" as Bennu order 32
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 39
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 40
+ JSPRegisterReceiptPrint -> RegisterReceiptPrint: getConnection()
+ JSPRegisterReceiptPrint <- RegisterReceiptPrint: returnConnection()
+ JSPRegisterReceiptPrint -> RegisterReceiptPrint: executeAction()
+ RegisterReceiptPrint -> RegisterReceiptPrint: run(Receipt,Person):void
+ RegisterReceiptPrint -> Receipt: registerReceiptPrint(Person):void
+ OPT getState().isToRegisterPrint()
+ 	Receipt -> ReceiptPrintVersion: ReceiptPrintVersion(Receipt,Person)
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: ReceiptPrintVersion()
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: ReceiptPrintVersion_Base()
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: setRootDomainObject(Bennu):void
+ 	ReceiptPrintVersion -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: init(Receipt,Person):void
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: checkParameters(Receipt,Person):void
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: setWhenCreated(DateTime):void
+ 	ReceiptPrintVersion -> DateTime: DateTime()
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: setReceipt(Receipt):void
+ 	ReceiptPrintVersion -> ReceiptPrintVersion: setPerson(Person):void
+ END
+ @enduml

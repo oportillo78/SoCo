@@ -1,0 +1,16 @@
+@startuml
+ participant "JSP\nJSPReadNotClosedExecutionPeriods" as JSPReadNotClosedExecutionPeriods order 0
+ participant "services.commons\nReadNotClosedExecutionPeriods" as ReadNotClosedExecutionPeriods order 1
+ participant "dto\nInfoExecutionPeriod" as InfoExecutionPeriod order 7
+ JSPReadNotClosedExecutionPeriods -> ReadNotClosedExecutionPeriods: getConnection()
+ JSPReadNotClosedExecutionPeriods <- ReadNotClosedExecutionPeriods: returnConnection()
+ JSPReadNotClosedExecutionPeriods -> ReadNotClosedExecutionPeriods: executeAction()
+ ReadNotClosedExecutionPeriods -> ReadNotClosedExecutionPeriods: run():List<InfoExecutionPeriod>
+ LOOP for: ExecutionSemester.readNotClosedExecutionPeriods()
+ 	ReadNotClosedExecutionPeriods -> InfoExecutionPeriod: newInfoFromDomain(ExecutionSemester):InfoExecutionPeriod
+ 	ALT executionSemester == null
+ 	ELSE else
+ 		InfoExecutionPeriod -> InfoExecutionPeriod: InfoExecutionPeriod(ExecutionSemester)
+ 	END
+ END
+ @enduml

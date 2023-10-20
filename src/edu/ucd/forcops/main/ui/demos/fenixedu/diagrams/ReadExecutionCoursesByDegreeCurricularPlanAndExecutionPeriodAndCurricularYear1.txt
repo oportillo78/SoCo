@@ -1,0 +1,39 @@
+@startuml
+ participant "JSP\nJSPReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear" as JSPReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear order 0
+ participant "services.coordinator\nReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear" as ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 25
+ participant "service.filter.coordinator\nDegreeCurricularPlanAuthorizationFilter" as DegreeCurricularPlanAuthorizationFilter order 26
+ participant "core.security\nAuthenticate" as Authenticate order 29
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 35
+ participant "service.filter\nResourceAllocationManagerAuthorizationFilter" as ResourceAllocationManagerAuthorizationFilter order 36
+ JSPReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear: getConnection()
+ JSPReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear <- ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear: returnConnection()
+ JSPReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear: executeAction()
+ ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear: runReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear\n(String,String,String):List<ExecutionCourse>
+ ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> DegreeCurricularPlanAuthorizationFilter: execute(String):void
+ DegreeCurricularPlanAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear: run\n(String,String,String):List<ExecutionCourse>
+ ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ OPT curricularYearID != null
+ 	ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ END
+ OPT NotAuthorizedException ex1
+ 	ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> ResourceAllocationManagerAuthorizationFilter: execute():void
+ 	ResourceAllocationManagerAuthorizationFilter -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear: run\n(String,String,String):List<ExecutionCourse>
+ 	ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ 	ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ 	OPT curricularYearID != null
+ 		ReadExecutionCoursesByDegreeCurricularPlanAndExecutionPeriodAndCurricularYear -> FenixFramework: getDomainObject(String):T
+ 	END
+ END
+ @enduml

@@ -1,0 +1,42 @@
+@startuml
+ participant "JSP\nJSPReadClassesByExecutionCourse" as JSPReadClassesByExecutionCourse order 0
+ participant "services.resourceAllocationManager\nReadClassesByExecutionCourse" as ReadClassesByExecutionCourse order 1
+ participant "domain\nExecutionCourse" as ExecutionCourse order 17
+ participant "domain\nShift_Base" as Shift_Base order 20
+ participant "dto\nInfoClass" as InfoClass order 21
+ participant "service.filter\nResourceAllocationManagerAuthorizationFilter" as ResourceAllocationManagerAuthorizationFilter order 24
+ participant "core.security\nAuthenticate" as Authenticate order 27
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 33
+ participant "service.filter\nStudentAuthorizationFilter" as StudentAuthorizationFilter order 34
+ JSPReadClassesByExecutionCourse -> ReadClassesByExecutionCourse: getConnection()
+ JSPReadClassesByExecutionCourse <- ReadClassesByExecutionCourse: returnConnection()
+ JSPReadClassesByExecutionCourse -> ReadClassesByExecutionCourse: executeAction()
+ ReadClassesByExecutionCourse -> ReadClassesByExecutionCourse: runReadClassesByExecutionCourse(ExecutionCourse):List<InfoClass>
+ ReadClassesByExecutionCourse -> ResourceAllocationManagerAuthorizationFilter: execute():void
+ ResourceAllocationManagerAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ReadClassesByExecutionCourse -> ReadClassesByExecutionCourse: run(ExecutionCourse):List<InfoClass>
+ ReadClassesByExecutionCourse -> ExecutionCourse: findSchoolClasses():Set<SchoolClass>
+ LOOP for: getAssociatedShifts()
+ 	ExecutionCourse -> Shift_Base: getAssociatedClassesSet():Set<SchoolClass>
+ END
+ LOOP for: classes
+ 	ReadClassesByExecutionCourse -> InfoClass: newInfoFromDomain(SchoolClass):InfoClass
+ 	ALT schoolClass == null
+ 	ELSE else
+ 		InfoClass -> InfoClass: InfoClass(SchoolClass)
+ 	END
+ END
+ OPT NotAuthorizedException ex1
+ 	ReadClassesByExecutionCourse -> StudentAuthorizationFilter: execute():void
+ 	StudentAuthorizationFilter -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	ReadClassesByExecutionCourse -> ReadClassesByExecutionCourse: run(ExecutionCourse):List<InfoClass>
+ END
+ @enduml

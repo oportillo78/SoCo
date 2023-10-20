@@ -1,0 +1,33 @@
+@startuml
+ participant "JSP\nJSPRegisterAlumniData" as JSPRegisterAlumniData order 0
+ participant "services.alumni\nRegisterAlumniData" as RegisterAlumniData order 1
+ participant "domain\nAlumniManager" as AlumniManager order 9
+ participant "domain\nAlumni" as Alumni order 12
+ participant "org.joda.time\nDateTime" as DateTime order 31
+ participant "core.domain\nBennu" as Bennu order 32
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 39
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 40
+ JSPRegisterAlumniData -> RegisterAlumniData: getConnection()
+ JSPRegisterAlumniData <- RegisterAlumniData: returnConnection()
+ JSPRegisterAlumniData -> RegisterAlumniData: executeAction()
+ RegisterAlumniData -> RegisterAlumniData: run(Student):Alumni
+ RegisterAlumniData -> AlumniManager: AlumniManager()
+ RegisterAlumniData -> AlumniManager: registerAlumni(Student):Alumni
+ AlumniManager -> Alumni: Alumni(Student)
+ Alumni -> Alumni: Alumni(Student,UUID,Boolean)
+ Alumni -> Alumni: Alumni_Base()
+ Alumni -> Alumni: setStudent(Student):void
+ OPT uuid != null
+ 	Alumni -> Alumni: setUrlRequestToken(UUID):void
+ END
+ Alumni -> Alumni: setRegisteredWhen(DateTime):void
+ Alumni -> DateTime: DateTime()
+ Alumni -> Alumni: setRegistered(Boolean):void
+ Alumni -> Alumni: setRootDomainObject(Bennu):void
+ Alumni -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ @enduml

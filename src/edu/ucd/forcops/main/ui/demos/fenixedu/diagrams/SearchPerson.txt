@@ -1,0 +1,128 @@
+@startuml
+ participant "JSP\nJSPSearchPerson" as JSPSearchPerson order 0
+ participant "services.person\nSearchPerson" as SearchPerson order 1
+ participant "util\nCollectionPager" as CollectionPager order 45
+ participant "domain\nPerson" as Person order 46
+ participant "core.domain\nUserProfile" as UserProfile order 63
+ participant "core.domain\nNameIndex" as NameIndex order 68
+ participant "StringNormalizer" as StringNormalizer order 71
+ participant "domain.contacts\nEmailAddress" as EmailAddress order 72
+ participant "domain.contacts\nPartyContact_Base" as PartyContact_Base order 73
+ participant "domain.person\nIdDocument_Base" as IdDocument_Base order 74
+ participant "core.domain\nUser" as User order 75
+ participant "core.domain\nUser_Base" as User_Base order 86
+ participant "services.person.SearchPerson\nSearchParameters" as SearchParameters order 87
+ participant "domain.student\nStudent" as Student order 88
+ participant "domain.student\nStudentNumber_Base" as StudentNumber_Base order 91
+ participant "domain.student\nStudent_Base" as Student_Base order 92
+ participant "domain\nPerson_Base" as Person_Base order 93
+ participant "domain.accounting\nPaymentCode" as PaymentCode order 94
+ participant "core.domain\nBennu" as Bennu order 99
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 106
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 107
+ participant "core.domain\nBennu" as Bennu order 108
+ participant "domain.accounting\nPaymentCode_Base" as PaymentCode_Base order 109
+ participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 110
+ participant "util\nCollectionPager" as CollectionPager order 113
+ JSPSearchPerson -> SearchPerson: getConnection()
+ JSPSearchPerson <- SearchPerson: returnConnection()
+ JSPSearchPerson -> SearchPerson: executeAction()
+ SearchPerson -> SearchPerson: run\n(SearchParameters,Predicate):CollectionPager<Person>
+ OPT searchParameters.emptyParameters()
+ 	SearchPerson -> CollectionPager: CollectionPager(Collection<T>,int)
+ END
+ ALT searchParameters.getUsername() != null && searchParameters.getUsername().length() > 0
+ 	SearchPerson -> Person: readPersonByUsername(String):Person
+ 	Person -> User: findByUsername(String):User
+ 	ALT ?
+ 		User -> User: manualFind(String):User
+ 		LOOP for: ?
+ 			User -> User: cacheUser(User):void
+ 		END
+ 	END
+ 	OPT ?
+ 		User -> User: findByUsername(String):User
+ 		ALT ?
+ 			User -> User: manualFind(String):User
+ 		END
+ 		OPT ?
+ 			User -> User: findByUsername(String):User
+ 		END
+ 	END
+ 	ALT user == null
+ 	ELSE else
+ 		Person -> User_Base: getPerson():Person
+ 	END
+ 	SearchPerson -> SearchParameters: getUsername():String
+ ELSE else
+ 	ALT searchParameters.getDocumentIdNumber() != null && searchParameters.getDocumentIdNumber().length() > 0
+ 		SearchPerson -> Person: findPersonByDocumentID(String):Collection<Person>
+ 		OPT !StringUtils.isEmpty(documentIDValue)
+ 			LOOP for: IdDocument.find(documentIDValue)
+ 				Person -> IdDocument_Base: getPerson():Person
+ 			END
+ 		END
+ 		SearchPerson -> SearchParameters: getDocumentIdNumber():String
+ 	ELSE else
+ 		ALT searchParameters.getStudentNumber() != null
+ 			SearchPerson -> Student: readStudentByNumber(Integer):Student
+ 			LOOP for: Bennu.getInstance().getStudentNumbersSet()
+ 				OPT sn.getNumber().equals(number)
+ 					Student -> StudentNumber_Base: getStudent():Student
+ 				END
+ 			END
+ 			SearchPerson -> SearchParameters: getStudentNumber():Integer
+ 			OPT student != null
+ 				SearchPerson -> Student_Base: getPerson():Person
+ 			END
+ 		ELSE else
+ 			ALT searchParameters.getEmail() != null && searchParameters.getEmail().length() > 0
+ 				SearchPerson -> Person: readPersonByEmailAddress(String):Person
+ 				Person -> EmailAddress: find(String):EmailAddress
+ 				ALT emailAddress != null && emailAddress.getParty().isPerson()
+ 					Person -> PartyContact_Base: getParty():Party
+ 				END
+ 				SearchPerson -> SearchParameters: getEmail():String
+ 			ELSE else
+ 				ALT searchParameters.getName() != null
+ 					SearchPerson -> Person: findPerson(String):Collection<Person>
+ 					Person -> Person: findPerson(String,int):Collection<Person>
+ 					Person -> Person: findPersonStream(String,int):Stream<Person>
+ 					Person -> UserProfile: searchByName(String,int):Stream<UserProfile>
+ 					OPT ?
+ 						UserProfile -> NameIndex: search(String,int):Stream<UserProfile>
+ 						NameIndex -> StringNormalizer: normalizeAndRemoveAccents(String):String
+ 					END
+ 					UserProfile -> NameIndex: search(String,int):Stream<UserProfile>
+ 					SearchPerson -> SearchParameters: getName():String
+ 					SearchPerson -> SearchParameters: getRole():RoleType
+ 					SearchPerson -> SearchParameters: getDepartment():Department
+ 					OPT department != null
+ 						LOOP for:peopleIterator.hasNext()
+ 							SearchPerson -> Person_Base: getTeacher():Teacher
+ 						END
+ 					END
+ 				ELSE else
+ 					ALT !StringUtils.isEmpty(searchParameters.getPaymentCode())
+ 						SearchPerson -> PaymentCode: readByCode(String):PaymentCode
+ 						PaymentCode -> Bennu: getInstance():Bennu
+ 						OPT ?
+ 							Bennu -> Bennu: initialize():Bennu
+ 						END
+ 						Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 						Bennu -> DomainRoot: getBennu():Bennu
+ 						PaymentCode -> Bennu: getPaymentCodesSet():Set<PaymentCode>
+ 						SearchPerson -> SearchParameters: getPaymentCode():String
+ 						OPT paymentCode != null && paymentCode.getPerson() != null
+ 							SearchPerson -> PaymentCode_Base: getPerson():Person
+ 						END
+ 					END
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ SearchPerson -> CollectionUtils: select(Collection,Predicate):Collection
+ CollectionUtils -> CollectionUtils: select(Collection,Predicate,Collection):void
+ SearchPerson -> CollectionPager: CollectionPager(Collection<T>,int)
+ @enduml

@@ -1,0 +1,48 @@
+@startuml
+ participant "JSP\nJSPSearchRaidesDegreeDesignations" as JSPSearchRaidesDegreeDesignations order 0
+ participant "services.commons.searchers\nSearchRaidesDegreeDesignations" as SearchRaidesDegreeDesignations order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 27
+ participant "StringNormalizer" as StringNormalizer order 30
+ participant "java.text\nNormalizer" as Normalizer order 37
+ participant "core.domain\nBennu" as Bennu order 38
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 49
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 50
+ participant "core.domain\nBennu" as Bennu order 51
+ participant "domain.organizationalStructure\nUnit_Base" as Unit_Base order 52
+ participant "domain.raides\nDegreeDesignation_Base" as DegreeDesignation_Base order 53
+ JSPSearchRaidesDegreeDesignations -> SearchRaidesDegreeDesignations: getConnection()
+ JSPSearchRaidesDegreeDesignations <- SearchRaidesDegreeDesignations: returnConnection()
+ JSPSearchRaidesDegreeDesignations -> SearchRaidesDegreeDesignations: executeAction()
+ SearchRaidesDegreeDesignations -> SearchRaidesDegreeDesignations: getSearchResults\n(Map<String,String>,String,int):Collection<DegreeDesignation>
+ SearchRaidesDegreeDesignations -> SearchRaidesDegreeDesignations: getSize(Map<String,String>):int
+ SearchRaidesDegreeDesignations -> SearchRaidesDegreeDesignations: getFilterUnit(Map<String,String>):Unit
+ SearchRaidesDegreeDesignations -> FenixFramework: getDomainObject(String):T
+ SearchRaidesDegreeDesignations -> SearchRaidesDegreeDesignations: getFilterSchoolLevel(Map<String,String>):SchoolLevelType
+ SearchRaidesDegreeDesignations -> StringNormalizer: normalize(String):String
+ StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ StringNormalizer -> Normalizer: normalize(CharSequence,Form):String
+ ALT unit == null
+ 	SearchRaidesDegreeDesignations -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: Bennu()
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	SearchRaidesDegreeDesignations -> Bennu: getDegreeDesignationsSet():Set<DegreeDesignation>
+ ELSE else
+ 	SearchRaidesDegreeDesignations -> Unit_Base: getDegreeDesignationSet():Set<DegreeDesignation>
+ END
+ OPT schoolLevel != null
+ 	SearchRaidesDegreeDesignations -> SearchRaidesDegreeDesignations: filterDesignationsBySchoolLevel\n(Collection<DegreeDesignation>,SchoolLevelType):Collection<DegreeDesignation>
+ END
+ LOOP for: possibleDesignations
+ 	SearchRaidesDegreeDesignations -> StringNormalizer: normalize(String):String
+ 	StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 	SearchRaidesDegreeDesignations -> DegreeDesignation_Base: getDescription():String
+ END
+ @enduml

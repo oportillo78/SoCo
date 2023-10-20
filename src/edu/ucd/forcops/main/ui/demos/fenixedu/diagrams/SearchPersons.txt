@@ -1,0 +1,54 @@
+@startuml
+participant "JSP\nJSPSearchPersons" as JSPSearchPersons order 0
+participant "services.commons.searchers\nSearchPersons" as SearchPersons order 1
+participant "services.person\nPersonSearcher" as PersonSearcher order 15
+participant "java.util.stream\nStream" as Stream order 56
+participant "core.domain\nUser" as User order 57
+participant "java.util.stream\nStream" as Stream order 58
+participant "core.domain\nUserProfile" as UserProfile order 59
+participant "java.util.stream\nStream" as Stream order 60
+participant "java.util.stream\nStream" as Stream order 61
+participant "core.domain\nBennu" as Bennu order 62
+participant "core.domain\nBennu" as Bennu order 63
+participant "java.util.stream\nStream" as Stream order 64
+participant "java.util.stream\nStream" as Stream order 65
+participant "java.util.stream\nCollectors" as Collectors order 66
+JSPSearchPersons -> SearchPersons: getConnection()
+JSPSearchPersons <- SearchPersons: returnConnection()
+JSPSearchPersons -> SearchPersons: executeAction()
+SearchPersons -> SearchPersons: getSearchResults\n(Map<String,String>,String,int):Collection<Person>
+SearchPersons -> PersonSearcher: newPersonSearcher()
+SearchPersons -> PersonSearcher: bestEffortQuery(String):PersonSearcher
+SearchPersons -> PersonSearcher: search(int):Stream<Person>
+alt !Strings.isNullOrEmpty(query)
+	PersonSearcher -> Stream: concat\n(Stream<? extends T>,Stream<? extends T>):Stream<T>
+	PersonSearcher -> Stream: of(T):Stream<T>
+	PersonSearcher -> User: findByUsername(String):User
+	PersonSearcher -> Stream: filter(Predicate<? super T>):Stream<T>
+	PersonSearcher -> Stream: map\n(Function<? super T,? extends R>):Stream<R>
+	PersonSearcher -> UserProfile: searchByName(String,int):Stream<UserProfile>
+	PersonSearcher -> Stream: limit(long):Stream<T>
+else else
+	alt !Strings.isNullOrEmpty(username)
+		PersonSearcher -> Stream: of(T):Stream<T>
+		PersonSearcher -> User: findByUsername(String):User
+		PersonSearcher -> Stream: filter(Predicate<? super T>):Stream<T>
+		PersonSearcher -> Stream: map\n(Function<? super T,? extends R>):Stream<R>
+	else else
+		alt !Strings.isNullOrEmpty(name)
+			PersonSearcher -> UserProfile: searchByName(String,int):Stream<UserProfile>
+		else else
+			PersonSearcher -> Bennu: getInstance():Bennu
+			PersonSearcher -> Bennu: getUserSet():Set<User>
+			PersonSearcher -> Bennu: stream():Stream<E>
+			PersonSearcher -> Bennu: map\n(Function<? super T,? extends R>):Stream<R>
+		end
+	end
+end
+PersonSearcher -> Stream: filter(Predicate<? super T>):Stream<T>
+PersonSearcher -> Stream: map\n(Function<? super T,? extends R>):Stream<R>
+PersonSearcher -> Stream: filter(Predicate<? super T>):Stream<T>
+PersonSearcher -> Stream: limit(long):Stream<T>
+SearchPersons -> Collectors: toSet():Collector<T,?,Set<T>>
+SearchPersons -> PersonSearcher: collect(Collector<? super T,A,R>):R
+@enduml

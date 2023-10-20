@@ -1,0 +1,62 @@
+@startuml
+ participant "JSP\nJSPStorePersonalPhoto" as JSPStorePersonalPhoto order 0
+ participant "services.fileManager\nStorePersonalPhoto" as StorePersonalPhoto order 1
+ participant "domain\nPerson" as Person order 13
+ participant "domain\nPhotograph" as Photograph order 22
+ participant "domain\nPhotograph" as Photograph order 23
+ participant "core.domain\nBennu" as Bennu order 40
+ participant "org.joda.time\nDateTime" as DateTime order 41
+ participant "domain.photograph\nPictureOriginal" as PictureOriginal order 42
+ participant "domain\nPerson" as Person order 53
+ participant "core.domain\nUser" as User order 58
+ participant "core.domain\nUser_Base" as User_Base order 69
+ JSPStorePersonalPhoto -> StorePersonalPhoto: getConnection()
+ JSPStorePersonalPhoto <- StorePersonalPhoto: returnConnection()
+ JSPStorePersonalPhoto -> StorePersonalPhoto: executeAction()
+ StorePersonalPhoto -> StorePersonalPhoto: run(byte[],ContentType,String):void
+ StorePersonalPhoto -> Person: readPersonByUsername(String):Person
+ Person -> User: findByUsername(String):User
+ ALT ?
+ 	User -> User: manualFind(String):User
+ 	LOOP for: ?
+ 		User -> User: cacheUser(User):void
+ 	END
+ END
+ OPT ?
+ 	User -> User: findByUsername(String):User
+ 	ALT ?
+ 		User -> User: manualFind(String):User
+ 	END
+ 	OPT ?
+ 		User -> User: findByUsername(String):User
+ 	END
+ END
+ ALT user == null
+ ELSE else
+ 	Person -> User_Base: getPerson():Person
+ END
+ StorePersonalPhoto -> StorePersonalPhoto: storePersonalPhoto(byte[],ContentType,Person):void
+ StorePersonalPhoto -> Person: setPersonalPhoto(Photograph):void
+ OPT super.getPersonalPhoto() != null
+ 	Person -> Photograph: setPrevious(Photograph):void
+ 	Person -> Person: getPersonalPhoto():Photograph
+ END
+ Person -> Person: setPersonalPhoto(Photograph):void
+ OPT photo != null
+ 	Person -> Photograph: logCreate(Person):void
+ END
+ StorePersonalPhoto -> Photograph: Photograph(PhotoType,ContentType,byte[])
+ Photograph -> Photograph: Photograph()
+ Photograph -> Photograph: Photograph_Base()
+ Photograph -> Photograph: setRootDomainObject(Bennu):void
+ Photograph -> Bennu: getInstance():Bennu
+ Photograph -> Photograph: setSubmission(DateTime):void
+ Photograph -> DateTime: DateTime()
+ Photograph -> Photograph: setPhotoType(PhotoType):void
+ Photograph -> PictureOriginal: PictureOriginal(Photograph,byte[],ContentType)
+ PictureOriginal -> PictureOriginal: PictureOriginal()
+ PictureOriginal -> PictureOriginal: setPhotograph(Photograph):void
+ PictureOriginal -> PictureOriginal: setPictureData(byte[]):void
+ PictureOriginal -> PictureOriginal: setPictureFileFormat(ContentType):void
+ PictureOriginal -> PictureOriginal: setupPictureMetadata(byte[]):void
+ @enduml

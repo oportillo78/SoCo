@@ -1,0 +1,24 @@
+@startuml
+ participant "JSP\nJSPRemoveForumEmailSubscriber" as JSPRemoveForumEmailSubscriber order 0
+ participant "services.messaging\nRemoveForumEmailSubscriber" as RemoveForumEmailSubscriber order 1
+ participant "domain.messaging\nForum" as Forum order 7
+ participant "domain.messaging\nForumSubscription" as ForumSubscription order 16
+ JSPRemoveForumEmailSubscriber -> RemoveForumEmailSubscriber: getConnection()
+ JSPRemoveForumEmailSubscriber <- RemoveForumEmailSubscriber: returnConnection()
+ JSPRemoveForumEmailSubscriber -> RemoveForumEmailSubscriber: executeAction()
+ RemoveForumEmailSubscriber -> RemoveForumEmailSubscriber: run(Forum,Person):void
+ RemoveForumEmailSubscriber -> Forum: removeEmailSubscriber(Person):void
+ Forum -> Forum: getPersonSubscription(Person):ForumSubscription
+ OPT subscription != null
+ 	ALT subscription.getFavorite() == false
+ 		Forum -> Forum: removeForumSubscriptions(ForumSubscription):void
+ 		Forum -> ForumSubscription: delete():void
+ 		ForumSubscription -> ForumSubscription: setPerson(Person):void
+ 		ForumSubscription -> ForumSubscription: setForum(Forum):void
+ 		ForumSubscription -> ForumSubscription: setRootDomainObject(Bennu):void
+ 		ForumSubscription -> ForumSubscription: deleteDomainObject():void
+ 	ELSE else
+ 		Forum -> ForumSubscription: setReceivePostsByEmail(Boolean):void
+ 	END
+ END
+ @enduml

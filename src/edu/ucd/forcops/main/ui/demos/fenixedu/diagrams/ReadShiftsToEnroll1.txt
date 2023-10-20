@@ -1,0 +1,90 @@
+@startuml
+ participant "JSP\nJSPReadShiftsToEnroll" as JSPReadShiftsToEnroll order 0
+ participant "services.enrollment.shift\nReadShiftsToEnroll" as ReadShiftsToEnroll order 1
+ participant "dto\nShiftToEnrol" as ShiftToEnrol order 31
+ participant "domain\nAttends" as Attends order 32
+ participant "service.filter.enrollment\nClassEnrollmentAuthorizationFilter" as ClassEnrollmentAuthorizationFilter order 33
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 56
+ participant "domain\nDegreeCurricularPlanEquivalencePlan_Base" as DegreeCurricularPlanEquivalencePlan_Base order 57
+ participant "core.security\nAuthenticate" as Authenticate order 58
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 61
+ participant "core.domain\nUser" as User order 62
+ participant "domain.student\nRegistration" as Registration order 63
+ participant "domain.student\nStudent" as Student order 73
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nClassEnrollmentCondition" as ClassEnrollmentCondition order 74
+ participant "domain\nPerson" as Person order 75
+ participant "domain\nExecutionSemester" as ExecutionSemester order 77
+ participant "core.domain\nBennu" as Bennu order 86
+ participant "core.domain\nBennu" as Bennu order 87
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 100
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 101
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 102
+ participant "core.domain\nBennu" as Bennu order 103
+ JSPReadShiftsToEnroll -> ReadShiftsToEnroll: getConnection()
+ JSPReadShiftsToEnroll <- ReadShiftsToEnroll: returnConnection()
+ JSPReadShiftsToEnroll -> ReadShiftsToEnroll: executeAction()
+ ReadShiftsToEnroll -> ReadShiftsToEnroll: runReadShiftsToEnroll(Registration):List
+ ReadShiftsToEnroll -> ClassEnrollmentAuthorizationFilter: execute(Registration):void
+ ClassEnrollmentAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ClassEnrollmentAuthorizationFilter -> User: getPerson():Person
+ OPT RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(person.getUser())
+ 	ClassEnrollmentAuthorizationFilter -> Registration: getPerson():Person
+ 	Registration -> Registration: getStudent():Student
+ 	Registration -> Student: getPerson():Person
+ END
+ LOOP for: conditions
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentCondition: verify(Registration):void
+ END
+ ClassEnrollmentAuthorizationFilter -> Person: getActiveStudentCurricularPlansSortedByDegreeTypeAndDegreeName\n():SortedSet<StudentCurricularPlan>
+ LOOP for: getStudentsSet()
+ 	Person -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	ALT isActive()
+ 		Registration -> Registration: getLastStudentCurricularPlan():StudentCurricularPlan
+ 		Registration -> Registration: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ 	END
+ END
+ LOOP for: activeStudentCurricularPlans
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verify\n(StudentCurricularPlan,ExecutionSemester):FenixServiceException
+ 	ClassEnrollmentAuthorizationFilter -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	LOOP for: degreeCurricularPlan.getTargetEquivalencePlansSet()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlanEquivalencePlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	END
+ 	ClassEnrollmentAuthorizationFilter -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 	ExecutionSemester -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ END
+ ReadShiftsToEnroll -> ReadShiftsToEnroll: run(Registration,ExecutionSemester):List
+ ReadShiftsToEnroll -> ReadShiftsToEnroll: checkStudentRestrictionsForShiftsEnrolments\n(Registration):void
+ LOOP for: registration.readAttendsByExecutionPeriod(executionSemester)
+ 	ReadShiftsToEnroll -> ReadShiftsToEnroll: buildShiftToEnrol(Attends):ShiftToEnrol
+ 	ReadShiftsToEnroll -> ShiftToEnrol: ShiftToEnrol()
+ 	ReadShiftsToEnroll -> ReadShiftsToEnroll: findShiftTypesFromExecutionCourse(Attends,ShiftToEnrol):void
+ 	ReadShiftsToEnroll -> ReadShiftsToEnroll: findShiftsForExecutionCourseShiftTypesFromStudentEnroledShifts\n(Attends,ShiftToEnrol):void
+ 	LOOP for: attend.getRegistration().getShiftsSet()
+ 		ReadShiftsToEnroll -> ReadShiftsToEnroll: setShiftInformation(Attends,ShiftToEnrol,Shift):void
+ 	END
+ 	ReadShiftsToEnroll -> ShiftToEnrol: setExecutionCourse(ExecutionCourse):void
+ 	ReadShiftsToEnroll -> Attends: getExecutionCourse():ExecutionCourse
+ 	ReadShiftsToEnroll -> ShiftToEnrol: setEnrolled(boolean):void
+ 	ReadShiftsToEnroll -> Attends: getEnrolment():Enrolment
+ END
+ ReadShiftsToEnroll -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ ExecutionSemester -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ @enduml

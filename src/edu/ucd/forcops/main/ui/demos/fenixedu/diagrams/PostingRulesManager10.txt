@@ -1,0 +1,41 @@
+@startuml
+ participant "JSP\nJSPPostingRulesManager" as JSPPostingRulesManager order 0
+ participant "services.accounting\nPostingRulesManager" as PostingRulesManager order 1
+ participant "domain.accounting\nServiceAgreementTemplate" as ServiceAgreementTemplate order 27
+ participant "domain.accounting\nPostingRule" as PostingRule order 30
+ participant "org.joda.time\nDateTime" as DateTime order 35
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 36
+ participant "dto.accounting.postingRule\nCreatePostingRuleBean" as CreatePostingRuleBean order 37
+ participant "domain.accounting.postingRules.gratuity\nPartialRegimePR" as PartialRegimePR order 38
+ JSPPostingRulesManager -> PostingRulesManager: getConnection()
+ JSPPostingRulesManager <- PostingRulesManager: returnConnection()
+ JSPPostingRulesManager -> PostingRulesManager: executeAction()
+ PostingRulesManager -> PostingRulesManager: createPartialRegimePR(CreatePartialRegimePRBean):void
+ ALT bean.getRule() == PartialRegimePR.class
+ 	LOOP for: bean.getDegreeCurricularPlans()
+ 		PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		PostingRulesManager -> PostingRulesManager: deactivateExistingPartialRegimePR\n(EventType,DateTime,ServiceAgreementTemplate,boolean):void
+ 		PostingRulesManager -> ServiceAgreementTemplate: findPostingRuleByEventTypeAndDate(EventType,DateTime):PostingRule
+ 		ServiceAgreementTemplate -> ServiceAgreementTemplate: getPostingRuleByEventTypeAndDate(EventType,DateTime):PostingRule
+ 		OPT existingPostingRule != null && existingPostingRule.isForAliens() == forAliens
+ 			PostingRulesManager -> PostingRule: deactivate(DateTime):void
+ 			PostingRule -> PostingRule: setEndDate(DateTime):void
+ 			PostingRule -> DateTime: minus(long):DateTime
+ 		END
+ 		PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 		PostingRulesManager -> CreatePostingRuleBean: isForAliens():boolean
+ 		PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 		PostingRulesManager -> CreatePostingRuleBean: getAmount():Money
+ 		PostingRulesManager -> CreatePostingRuleBean: getNumberOfDaysToStartApplyingInterest():Integer
+ 		PostingRulesManager -> CreatePostingRuleBean: isForAliens():boolean
+ 		PostingRulesManager -> PartialRegimePR: PartialRegimePR\n(DateTime,DateTime,ServiceAgreementTemplate,Money,Integer,boolean)
+ 		PartialRegimePR -> PartialRegimePR: setNumberOfDaysToStartApplyingInterest(Integer):void
+ 		PartialRegimePR -> PartialRegimePR: setAmount(Money):void
+ 		PartialRegimePR -> PartialRegimePR: setForAliens(boolean):void
+ 		PartialRegimePR -> PartialRegimePR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 		PartialRegimePR -> PartialRegimePR: init\n(EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 		PartialRegimePR -> PartialRegimePR: checkParameters(EntryType):void
+ 		PartialRegimePR -> PartialRegimePR: setEntryType(EntryType):void
+ 	END
+ END
+ @enduml

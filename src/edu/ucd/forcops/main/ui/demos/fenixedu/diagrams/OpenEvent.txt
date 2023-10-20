@@ -1,0 +1,42 @@
+@startuml
+ participant "JSP\nJSPOpenEvent" as JSPOpenEvent order 0
+ participant "services.accounting\nOpenEvent" as OpenEvent order 1
+ participant "domain.accounting\nEvent" as Event order 7
+ participant "core.signals\nSignal" as Signal order 24
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 41
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 42
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 43
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 44
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 45
+ participant "domain.accounting.EventState\nChangeStateEvent" as ChangeStateEvent order 46
+ participant "org.joda.time\nDateTime" as DateTime order 47
+ JSPOpenEvent -> OpenEvent: getConnection()
+ JSPOpenEvent <- OpenEvent: returnConnection()
+ JSPOpenEvent -> OpenEvent: executeAction()
+ OpenEvent -> OpenEvent: run(Event):void
+ OpenEvent -> Event: open():void
+ Event -> Event: changeState(EventState,DateTime):void
+ Event -> Signal: emit(String,Object):void
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ Event -> ChangeStateEvent: ChangeStateEvent(EventState,Event,DateTime)
+ Event -> Event: setEventState(EventState):void
+ Event -> Event: setEventStateDate(DateTime):void
+ Event -> DateTime: DateTime()
+ Event -> Event: setResponsibleForCancel(Person):void
+ Event -> Event: setCancelJustification(String):void
+ @enduml

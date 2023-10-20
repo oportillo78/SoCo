@@ -1,0 +1,67 @@
+@startuml
+ participant "JSP\nJSPPayResidenceEvent" as JSPPayResidenceEvent order 0
+ participant "services.residenceManagement\nPayResidenceEvent" as PayResidenceEvent order 1
+ participant "domain.accounting\nEvent" as Event order 15
+ participant "domain.accounting\nPostingRule" as PostingRule order 40
+ participant "dto.accounting\nEntryDTO" as EntryDTO order 51
+ participant "org.joda.time\nDateTime" as DateTime order 52
+ participant "org.joda.time\nDateTime" as DateTime order 53
+ participant "org.joda.time\nDateTime" as DateTime order 56
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 59
+ participant "org.joda.time\nChronology" as Chronology order 74
+ participant "org.joda.time\nDateTime" as DateTime order 75
+ participant "domain.accounting\nPaymentMethod" as PaymentMethod order 76
+ participant "core.domain\nBennu" as Bennu order 81
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 94
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 95
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 96
+ participant "core.domain\nBennu" as Bennu order 97
+ participant "dto.accounting\nAccountingTransactionDetailDTO" as AccountingTransactionDetailDTO order 98
+ JSPPayResidenceEvent -> PayResidenceEvent: getConnection()
+ JSPPayResidenceEvent <- PayResidenceEvent: returnConnection()
+ JSPPayResidenceEvent -> PayResidenceEvent: executeAction()
+ PayResidenceEvent -> PayResidenceEvent: run(User,ResidenceEvent,YearMonthDay):void
+ PayResidenceEvent -> Event: process\n(User,Collection<EntryDTO>,AccountingTransactionDetailDTO):Set<Entry>
+ Event -> Event: checkConditionsToProcessEvent(AccountingTransactionDetailDTO):void
+ Event -> Event: internalProcess\n(User,Collection<EntryDTO>,AccountingTransactionDetailDTO):Set<Entry>
+ Event -> Event: getPostingRule():PostingRule
+ Event -> Event: getFromAccount():Account
+ Event -> Event: getToAccount():Account
+ Event -> PostingRule: process\n(User,Collection<EntryDTO>,Event,Account,Account,AccountingTransactionDetailDTO):Set<Entry>
+ PostingRule -> PostingRule: internalProcess\n(User,Collection<EntryDTO>,Event,Account,Account,AccountingTransactionDetailDTO):Set<AccountingTransaction>
+ PostingRule -> PostingRule: makeAccountingTransaction\n(User,Event,Account,Account,EntryType,Money,AccountingTransactionDetailDTO):AccountingTransaction
+ PostingRule -> PostingRule: getEntryType():EntryType
+ PostingRule -> EntryDTO: getAmountToPay():Money
+ PostingRule -> PostingRule: getResultingEntries(Set<AccountingTransaction>):Set<Entry>
+ Event -> Event: recalculateState(DateTime):void
+ Event -> Event: internalRecalculateState(DateTime):void
+ Event -> DateTime: plusSeconds(int):DateTime
+ Event -> DateTime: DateTime()
+ DateTime -> DateTime: BaseDateTime()
+ PayResidenceEvent -> Event: calculateEntries():List<EntryDTO>
+ Event -> Event: calculateEntries(DateTime):List<EntryDTO>
+ Event -> DateTime: DateTime()
+ DateTime -> DateTime: BaseDateTime()
+ PayResidenceEvent -> YearMonthDay: toDateTimeAtMidnight():DateTime
+ YearMonthDay -> YearMonthDay: toDateTimeAtMidnight(DateTimeZone):DateTime
+ YearMonthDay -> YearMonthDay: getChronology():Chronology
+ YearMonthDay -> Chronology: withZone(DateTimeZone):Chronology
+ YearMonthDay -> YearMonthDay: getYear():int
+ YearMonthDay -> YearMonthDay: getMonthOfYear():int
+ YearMonthDay -> YearMonthDay: getDayOfMonth():int
+ YearMonthDay -> DateTime: DateTime(int,int,int,int,int,int,int,Chronology)
+ PayResidenceEvent -> PaymentMethod: getCashPaymentMethod():PaymentMethod
+ PaymentMethod -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: Bennu()
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ PaymentMethod -> Bennu: getCashPaymentMethod():PaymentMethod
+ PayResidenceEvent -> AccountingTransactionDetailDTO: AccountingTransactionDetailDTO(DateTime,PaymentMethod,String,String)
+ @enduml

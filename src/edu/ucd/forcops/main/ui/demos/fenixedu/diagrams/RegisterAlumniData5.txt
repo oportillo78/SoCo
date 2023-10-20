@@ -1,0 +1,140 @@
+@startuml
+ participant "JSP\nJSPRegisterAlumniData" as JSPRegisterAlumniData order 0
+ participant "services.alumni\nRegisterAlumniData" as RegisterAlumniData order 1
+ participant "dto.alumni\nAlumniJobBean" as AlumniJobBean order 161
+ participant "domain\nAlumni" as Alumni order 162
+ participant "domain\nJob" as Job order 163
+ participant "dto.alumni\nAlumniJobBean" as AlumniJobBean order 194
+ participant "domain\nJob" as Job order 195
+ participant "domain\nJob" as Job order 196
+ participant "domain\nJob" as Job order 197
+ participant "domain\nJob" as Job order 198
+ participant "domain\nJob" as Job order 199
+ participant "domain\nJob" as Job order 200
+ participant "domain\nJob" as Job order 201
+ participant "domain\nJob" as Job order 202
+ participant "domain\nJob" as Job order 203
+ participant "domain\nJob" as Job order 204
+ participant "domain\nJob" as Job order 205
+ participant "domain.contacts\nPhysicalAddress" as PhysicalAddress order 206
+ participant "dto.alumni\nAlumniAddressBean" as AlumniAddressBean order 209
+ participant "domain.contacts\nPhysicalAddressData" as PhysicalAddressData order 210
+ participant "domain.contacts\nPhysicalAddress_Base" as PhysicalAddress_Base order 211
+ participant "domain.contacts\nPhone" as Phone order 212
+ participant "domain.contacts\nPhone" as Phone order 215
+ participant "dto.alumni.publicAccess\nAlumniPublicAccessBean" as AlumniPublicAccessBean order 216
+ participant "domain\nAlumni" as Alumni order 217
+ participant "domain\nAlumni" as Alumni order 218
+ JSPRegisterAlumniData -> RegisterAlumniData: getConnection()
+ JSPRegisterAlumniData <- RegisterAlumniData: returnConnection()
+ JSPRegisterAlumniData -> RegisterAlumniData: executeAction()
+ RegisterAlumniData -> RegisterAlumniData: run(AlumniPublicAccessBean,Boolean):void
+ RegisterAlumniData -> AlumniPublicAccessBean: getAlumni():Alumni
+ RegisterAlumniData -> Alumni: getStudent():Student
+ RegisterAlumniData -> Alumni: getPerson():Person
+ RegisterAlumniData -> RegisterAlumniData: processAlumniPhone(AlumniPublicAccessBean,Person):void
+ ALT alumniBean.getCurrentPhone() == null
+ 	RegisterAlumniData -> Phone: createPhone\n(Party,String,PartyContactType,boolean):Phone
+ 	ALT (!StringUtils.isEmpty(number))
+ 		Phone -> Phone: Phone(Party,PartyContactType,boolean,String)
+ 	END
+ 	RegisterAlumniData -> AlumniPublicAccessBean: getPhone():String
+ ELSE else
+ 	RegisterAlumniData -> AlumniPublicAccessBean: getCurrentPhone():Phone
+ 	RegisterAlumniData -> AlumniPublicAccessBean: getPhone():String
+ 	RegisterAlumniData -> Phone: setNumber(String):void
+ END
+ RegisterAlumniData -> RegisterAlumniData: processAlumniAddress(AlumniPublicAccessBean,Person):void
+ RegisterAlumniData -> AlumniPublicAccessBean: getAddressBean():AlumniAddressBean
+ ALT alumniBean.getCurrentPhysicalAddress() == null
+ 	RegisterAlumniData -> PhysicalAddress: createPhysicalAddress\n(Party,PhysicalAddressData,PartyContactType,Boolean):PhysicalAddress
+ 	PhysicalAddress -> PhysicalAddress: PhysicalAddress\n(Party,PartyContactType,boolean,PhysicalAddress\nData)
+ 	RegisterAlumniData -> AlumniAddressBean: getAddress():String
+ 	RegisterAlumniData -> AlumniAddressBean: getAreaCode():String
+ 	RegisterAlumniData -> AlumniAddressBean: getAreaOfAreaCode():String
+ 	RegisterAlumniData -> PhysicalAddressData: PhysicalAddressData(String,String,String,String)
+ ELSE else
+ 	RegisterAlumniData -> AlumniPublicAccessBean: getCurrentPhysicalAddress():PhysicalAddress
+ 	RegisterAlumniData -> PhysicalAddress_Base: setAddress(String):void
+ 	RegisterAlumniData -> AlumniAddressBean: getAddress():String
+ 	RegisterAlumniData -> PhysicalAddress_Base: setAreaCode(String):void
+ 	RegisterAlumniData -> AlumniAddressBean: getAreaCode():String
+ 	RegisterAlumniData -> PhysicalAddress_Base: setAreaOfAreaCode(String):void
+ 	RegisterAlumniData -> AlumniAddressBean: getAreaOfAreaCode():String
+ 	RegisterAlumniData -> PhysicalAddress_Base: setCountryOfResidence(Country):void
+ 	RegisterAlumniData -> AlumniAddressBean: getCountry():Country
+ END
+ OPT isEmployed
+ 	RegisterAlumniData -> RegisterAlumniData: processAlumniJob(AlumniPublicAccessBean):void
+ 	ALT alumniBean.getCurrentJob() == null
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getJobBean():AlumniJobBean
+ 		RegisterAlumniData -> AlumniJobBean: getAlumni():Alumni
+ 		RegisterAlumniData -> Alumni: getStudent():Student
+ 		RegisterAlumniData -> Alumni: getPerson():Person
+ 		RegisterAlumniData -> AlumniJobBean: getEmployerName():String
+ 		RegisterAlumniData -> AlumniJobBean: getCity():String
+ 		RegisterAlumniData -> AlumniJobBean: getCountry():Country
+ 		RegisterAlumniData -> AlumniJobBean: getChildBusinessArea():BusinessArea
+ 		RegisterAlumniData -> AlumniJobBean: getParentBusinessArea():BusinessArea
+ 		RegisterAlumniData -> AlumniJobBean: getPosition():String
+ 		RegisterAlumniData -> AlumniJobBean: getBeginDateAsLocalDate():LocalDate
+ 		RegisterAlumniData -> AlumniJobBean: getEndDateAsLocalDate():LocalDate
+ 		RegisterAlumniData -> AlumniJobBean: getApplicationType():JobApplicationType
+ 		RegisterAlumniData -> AlumniJobBean: getContractType():ContractType
+ 		RegisterAlumniData -> AlumniJobBean: getSalary():Double
+ 		RegisterAlumniData -> Job: Job\n(Person,String,String,Country,BusinessArea,BusinessArea,String,LocalDate,LocalDate,Job\nApplicationType,ContractType,Double)
+ 		Job -> Job: Job()
+ 		Job -> Job: checkParameters\n(Person,String,String,Country,BusinessArea,BusinessArea,String,LocalDate,LocalDate,JobApplicationType,ContractType,Double):void
+ 		Job -> Job: checkValidDates(LocalDate,LocalDate):void
+ 		Job -> Job: setPerson(Person):void
+ 		Job -> Job: setEmployerName(String):void
+ 		Job -> Job: setCity(String):void
+ 		Job -> Job: setCountry(Country):void
+ 		Job -> Job: setBusinessArea(BusinessArea):void
+ 		Job -> Job: setParentBusinessArea(BusinessArea):void
+ 		Job -> Job: setPosition(String):void
+ 		Job -> Job: setBeginDate(LocalDate):void
+ 		Job -> Job: setEndDate(LocalDate):void
+ 		Job -> Job: setJobApplicationType(JobApplicationType):void
+ 		Job -> Job: setContractType(ContractType):void
+ 		Job -> Job: setSalary(Double):void
+ 	ELSE else
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getJobBean():AlumniJobBean
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getEmployerName():String
+ 		RegisterAlumniData -> Job: setEmployerName(String):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getCity():String
+ 		RegisterAlumniData -> Job: setCity(String):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getCountry():Country
+ 		RegisterAlumniData -> Job: setCountry(Country):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getChildBusinessArea():BusinessArea
+ 		RegisterAlumniData -> Job: setBusinessArea(BusinessArea):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getParentBusinessArea():BusinessArea
+ 		RegisterAlumniData -> Job: setParentBusinessArea(BusinessArea):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getPosition():String
+ 		RegisterAlumniData -> Job: setPosition(String):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getBeginDateAsLocalDate():LocalDate
+ 		RegisterAlumniData -> Job: setBeginDate(LocalDate):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getEndDateAsLocalDate():LocalDate
+ 		RegisterAlumniData -> Job: setEndDate(LocalDate):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getApplicationType():JobApplicationType
+ 		RegisterAlumniData -> Job: setJobApplicationType(JobApplicationType):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getContractType():ContractType
+ 		RegisterAlumniData -> Job: setContractType(ContractType):void
+ 		RegisterAlumniData -> AlumniPublicAccessBean: getCurrentJob():Job
+ 		RegisterAlumniData -> AlumniJobBean: getSalary():Double
+ 		RegisterAlumniData -> Job: setSalary(Double):void
+ 	END
+ END
+ RegisterAlumniData -> AlumniPublicAccessBean: getAlumni():Alumni
+ RegisterAlumniData -> Alumni: setIsEmployed(Boolean):void
+ @enduml

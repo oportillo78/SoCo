@@ -1,0 +1,36 @@
+@startuml
+participant "JSP\nJSPReadStudentCurriculum" as JSPReadStudentCurriculum order 0
+participant "services.commons.student\nReadStudentCurriculum" as ReadStudentCurriculum order 1
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 19
+participant "java.util\nArrayList" as ArrayList order 20
+participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 21
+participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 26
+participant "java.util\nHashSet" as HashSet order 33
+participant "domain.studentCurriculum\nCurriculumModule" as CurriculumModule order 34
+participant "java.util\nSet" as Set order 35
+participant "dto\nInfoEnrolment" as InfoEnrolment order 36
+JSPReadStudentCurriculum -> ReadStudentCurriculum: getConnection()
+JSPReadStudentCurriculum <- ReadStudentCurriculum: returnConnection()
+JSPReadStudentCurriculum -> ReadStudentCurriculum: executeAction()
+ReadStudentCurriculum -> ReadStudentCurriculum: runReadStudentCurriculum(String,String):List
+ReadStudentCurriculum -> ReadStudentCurriculum: run(String,String):List
+ReadStudentCurriculum -> FenixFramework: getDomainObject(String):T
+ReadStudentCurriculum -> ArrayList: newArrayList(int)
+ReadStudentCurriculum -> StudentCurricularPlan: getEnrolmentsSet():Set<Enrolment>
+StudentCurricularPlan -> StudentCurricularPlan: getRoot():RootCurriculumGroup
+StudentCurricularPlan -> RootCurriculumGroup: getEnrolmentsSet():Set<Enrolment>
+RootCurriculumGroup -> HashSet: newHashSet()
+loop for: this.getCurriculumModulesSet()
+	RootCurriculumGroup -> HashSet: addAll(Collection<? extends E>):boolean
+	RootCurriculumGroup -> CurriculumModule: getEnrolments():List<Enrolment>
+end
+ReadStudentCurriculum -> Set: size():int
+loop for: studentCurricularPlan.getEnrolmentsSet()
+	ReadStudentCurriculum -> ArrayList: add(E):boolean
+	ReadStudentCurriculum -> InfoEnrolment: newInfoFromDomain(Enrolment):InfoEnrolment
+	alt (enrolment != null)
+		InfoEnrolment -> InfoEnrolment: newInfoEnrolment(Enrolment)
+	else else
+	end
+end
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+ participant "JSP\nJSPPostingRulesManager" as JSPPostingRulesManager order 0
+ participant "services.accounting\nPostingRulesManager" as PostingRulesManager order 1
+ participant "domain.accounting\nPostingRule" as PostingRule order 7
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 24
+ participant "domain.exceptions\nDomainException" as DomainException order 25
+ JSPPostingRulesManager -> PostingRulesManager: getConnection()
+ JSPPostingRulesManager <- PostingRulesManager: returnConnection()
+ JSPPostingRulesManager -> PostingRulesManager: executeAction()
+ PostingRulesManager -> PostingRulesManager: deletePostingRule(PostingRule):void
+ PostingRulesManager -> PostingRule: delete():void
+ PostingRule -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ PostingRule -> PostingRule: getDeletionBlockers():Collection<String>
+ PostingRule -> PostingRule: checkForDeletionBlockers(Collection<String>):void
+ LOOP for: ?
+ 	PostingRule -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ END
+ PostingRule -> PostingRule: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ PostingRule -> PostingRule: setRootDomainObject(Bennu):void
+ PostingRule -> PostingRule: removeOtherRelations():void
+ PostingRule -> PostingRule: deleteDomainObject():void
+ @enduml

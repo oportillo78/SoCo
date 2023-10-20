@@ -1,0 +1,24 @@
+@startuml
+ participant "JSP\nJSPReadCoordinationResponsibility" as JSPReadCoordinationResponsibility order 0
+ participant "services.coordinator\nReadCoordinationResponsibility" as ReadCoordinationResponsibility order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 15
+ participant "domain\nExecutionDegree" as ExecutionDegree order 16
+ participant "core.domain\nUser_Base" as User_Base order 17
+ participant "service.filter\nDegreeCoordinatorAuthorizationFilter" as DegreeCoordinatorAuthorizationFilter order 18
+ participant "core.security\nAuthenticate" as Authenticate order 21
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 24
+ JSPReadCoordinationResponsibility -> ReadCoordinationResponsibility: getConnection()
+ JSPReadCoordinationResponsibility <- ReadCoordinationResponsibility: returnConnection()
+ JSPReadCoordinationResponsibility -> ReadCoordinationResponsibility: executeAction()
+ ReadCoordinationResponsibility -> ReadCoordinationResponsibility: runReadCoordinationResponsibility(String,User):Boolean
+ ReadCoordinationResponsibility -> DegreeCoordinatorAuthorizationFilter: execute(String):void
+ DegreeCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ReadCoordinationResponsibility -> ReadCoordinationResponsibility: run(String,User):Boolean
+ ReadCoordinationResponsibility -> FenixFramework: getDomainObject(String):T
+ ReadCoordinationResponsibility -> ExecutionDegree: getCoordinatorByTeacher(Person):Coordinator
+ ReadCoordinationResponsibility -> User_Base: getPerson():Person
+ @enduml

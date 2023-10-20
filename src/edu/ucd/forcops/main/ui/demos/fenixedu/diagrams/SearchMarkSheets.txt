@@ -1,0 +1,79 @@
+@startuml
+scale .70
+participant "JSP\nJSPSearchMarkSheets" as JSPSearchMarkSheets order 0
+participant "services.administrativeOffice\n.gradeSubmission\nSearchMarkSheets" as SearchMarkSheets order 1
+participant "domain\nMarkSheet_Base" as MarkSheet_Base order 57
+participant "dto.degreeAdministrativeOffice\n.gradeSubmission\nMarkSheetSearchResultBean" as MarkSheetSearchResultBean order 58
+participant "java.util\nSet" as Set order 59
+participant "dto.degreeAdministrativeOffice\n.gradeSubmission\nMarkSheetManagementBaseBean" as MarkSheetManagementBaseBean order 60
+participant "dto.degreeAdministrativeOffice\n.gradeSubmission\nCurricularCourseMarksheetManagementBean" as CurricularCourseMarksheetManagementBean order 65
+participant "domain\nTeacher" as Teacher order 66
+participant "core.domain\nUser" as User order 73
+participant "core.domain\nUser_Base" as User_Base order 74
+participant "domain\nPerson" as Person order 75
+participant "domain\nCurricularCourse" as CurricularCourse order 76
+participant "java.util\nHashSet" as HashSet order 81
+participant "java.util\nTreeMap" as TreeMap order 82
+participant "java.util.Map\nEntry" as Entry order 83
+participant "dto.degreeAdministrativeOffice\n.gradeSubmission\nMarkSheetSearchResultBean" as MarkSheetSearchResultBean order 84
+participant "domain\nMarkSheet_Base" as MarkSheet_Base order 89
+participant "java.util\nSet" as Set order 90
+participant "domain\nEvaluationSeason" as EvaluationSeason order 91
+JSPSearchMarkSheets -> SearchMarkSheets: getConnection()
+JSPSearchMarkSheets <- SearchMarkSheets: returnConnection()
+JSPSearchMarkSheets -> SearchMarkSheets: executeAction()
+SearchMarkSheets -> SearchMarkSheets: run\n(MarkSheetManagementSearchBean)\n:Map<EvaluationSeason,MarkSheetSearchResultBean>
+opt searchBean.getTeacherId() != null
+	SearchMarkSheets -> MarkSheetManagementBaseBean: setTeacher(Teacher):void
+	SearchMarkSheets -> Teacher: readByIstId(String):Teacher
+	Teacher -> User: findByUsername(String):User
+	alt user != null
+		Teacher -> User_Base: getPerson():Person
+		Teacher -> Person: getTeacher():Teacher
+	else else
+	end
+	SearchMarkSheets -> MarkSheetManagementBaseBean: getTeacherId():String
+end
+SearchMarkSheets -> MarkSheetManagementBaseBean: getCurricularCourse():CurricularCourse
+MarkSheetManagementBaseBean -> MarkSheetManagementBaseBean: getCurricularCourseBean()\n:CurricularCourseMarksheetManagementBean
+MarkSheetManagementBaseBean -> CurricularCourseMarksheetManagementBean: getCurricularCourse():CurricularCourse
+SearchMarkSheets -> CurricularCourse: searchMarkSheets\n(ExecutionSemester,Teacher,Date,\nMarkSheetState,EvaluationSeason):Collection<MarkSheet>
+CurricularCourse -> HashSet: newHashSet()
+loop for: getMarkSheetsSet()
+	CurricularCourse -> HashSet: add(E):boolean
+end
+SearchMarkSheets -> MarkSheetManagementBaseBean: getExecutionPeriod():ExecutionSemester
+SearchMarkSheets -> MarkSheetManagementBaseBean: getTeacher():Teacher
+SearchMarkSheets -> MarkSheetManagementBaseBean: getEvaluationDate():Date
+SearchMarkSheets -> MarkSheetManagementBaseBean: getMarkSheetState():MarkSheetState
+SearchMarkSheets -> MarkSheetManagementBaseBean: getEvaluationSeason():EvaluationSeason
+SearchMarkSheets -> TreeMap: newTreeMap()
+loop for: markSheets
+	SearchMarkSheets -> SearchMarkSheets: addToMap\n(Map<EvaluationSeason,MarkSheetSearchResultBean>,\nMarkSheet):void
+	SearchMarkSheets -> SearchMarkSheets: getResultBeanForSeason\n(Map<EvaluationSeason,MarkSheetSearchResultBean>,\nEvaluationSeason):MarkSheetSearchResultBean
+	SearchMarkSheets -> MarkSheet_Base: getEvaluationSeason():EvaluationSeason
+	SearchMarkSheets -> MarkSheetSearchResultBean: addMarkSheet(MarkSheet):void
+end
+loop for: result.entrySet()
+	SearchMarkSheets -> Entry: getValue():V
+	SearchMarkSheets -> MarkSheetSearchResultBean: setShowStatistics(boolean):void
+	SearchMarkSheets -> Entry: getKey():K
+	SearchMarkSheets -> EvaluationSeason: isSpecialAuthorization():boolean
+	EvaluationSeason -> EvaluationSeason: getSpecialAuthorization()\n:boolean
+	opt searchResultBean.isShowStatistics()
+		SearchMarkSheets -> MarkSheetSearchResultBean: setTotalNumberOfStudents(int):void
+		SearchMarkSheets -> SearchMarkSheets: getNumberOfStudentsNotEnrolled\n(MarkSheetManagementSearchBean,CurricularCourse,\nEntry<EvaluationSeason,MarkSheetSearchResultBean>):int
+		SearchMarkSheets -> CurricularCourse: getEnrolmentsNotInAnyMarkSheet\n(EvaluationSeason,ExecutionSemester):Set<Enrolment>
+		SearchMarkSheets -> Entry: getKey():K
+		SearchMarkSheets -> MarkSheetManagementBaseBean: getExecutionPeriod():ExecutionSemester
+		SearchMarkSheets -> Set: size():int
+		SearchMarkSheets -> MarkSheetSearchResultBean: getNumberOfEnroledStudents():int
+		
+		loop for: getMarkSheets()
+			opt !isRectificationMarkSheet\n(markSheet.getMarkSheetState())
+				MarkSheetSearchResultBean -> MarkSheet_Base: getEnrolmentEvaluationsSet()\n:Set<EnrolmentEvaluation>
+				MarkSheetSearchResultBean -> Set: size():int
+			end
+		end
+end
+@enduml

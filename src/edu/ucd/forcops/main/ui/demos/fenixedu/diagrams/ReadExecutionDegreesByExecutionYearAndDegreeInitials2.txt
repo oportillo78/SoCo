@@ -1,0 +1,25 @@
+@startuml
+ participant "JSP\nJSPReadExecutionDegreesByExecutionYearAndDegreeInitials" as JSPReadExecutionDegreesByExecutionYearAndDegreeInitials order 0
+ participant "services.publico\nReadExecutionDegreesByExecutionYearAndDegreeInitials" as ReadExecutionDegreesByExecutionYearAndDegreeInitials order 1
+ participant "dto\nInfoExecutionDegree" as InfoExecutionDegree order 15
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 18
+ participant "domain\nExecutionDegree" as ExecutionDegree order 19
+ participant "dto\nInfoExecutionYear" as InfoExecutionYear order 20
+ participant "domain\nExecutionYear" as ExecutionYear order 25
+ JSPReadExecutionDegreesByExecutionYearAndDegreeInitials -> ReadExecutionDegreesByExecutionYearAndDegreeInitials: getConnection()
+ JSPReadExecutionDegreesByExecutionYearAndDegreeInitials <- ReadExecutionDegreesByExecutionYearAndDegreeInitials: returnConnection()
+ JSPReadExecutionDegreesByExecutionYearAndDegreeInitials -> ReadExecutionDegreesByExecutionYearAndDegreeInitials: executeAction()
+ ReadExecutionDegreesByExecutionYearAndDegreeInitials -> ReadExecutionDegreesByExecutionYearAndDegreeInitials: run\n(InfoExecutionYear,String,String):InfoExecutionDegree
+ ReadExecutionDegreesByExecutionYearAndDegreeInitials -> DegreeCurricularPlan: readByNameAndDegreeSigla(String,String):DegreeCurricularPlan
+ ReadExecutionDegreesByExecutionYearAndDegreeInitials -> ExecutionDegree: getByDegreeCurricularPlanAndExecutionYear\n(DegreeCurricularPlan,String):ExecutionDegree
+ ReadExecutionDegreesByExecutionYearAndDegreeInitials -> InfoExecutionYear: getYear():String
+ InfoExecutionYear -> InfoExecutionYear: getExecutionYear():ExecutionYear
+ InfoExecutionYear -> ExecutionYear: getYear():String
+ ExecutionYear -> ExecutionYear: getName():String
+ ReadExecutionDegreesByExecutionYearAndDegreeInitials -> ReadExecutionDegreesByExecutionYearAndDegreeInitials: getInfoExecutionDegree(ExecutionDegree):InfoExecutionDegree
+ ReadExecutionDegreesByExecutionYearAndDegreeInitials -> InfoExecutionDegree: newInfoFromDomain(ExecutionDegree):InfoExecutionDegree
+ ALT executionDegree == null
+ ELSE else
+ 	InfoExecutionDegree -> InfoExecutionDegree: InfoExecutionDegree(ExecutionDegree)
+ END
+ @enduml

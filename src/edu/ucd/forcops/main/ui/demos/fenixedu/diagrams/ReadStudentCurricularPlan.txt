@@ -1,0 +1,16 @@
+@startuml
+participant "JSP\nJSPReadStudentCurricularPlan" as JSPReadStudentCurricularPlan order 0
+participant "services.commons.student\nReadStudentCurricularPlan" as ReadStudentCurricularPlan order 1
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 9
+participant "dto\nInfoStudentCurricularPlan" as InfoStudentCurricularPlan order 10
+JSPReadStudentCurricularPlan -> ReadStudentCurricularPlan: getConnection()
+JSPReadStudentCurricularPlan <- ReadStudentCurricularPlan: returnConnection()
+JSPReadStudentCurricularPlan -> ReadStudentCurricularPlan: executeAction()
+ReadStudentCurricularPlan -> ReadStudentCurricularPlan: run(String):InfoStudentCurricularPlan
+ReadStudentCurricularPlan -> FenixFramework: getDomainObject(String):T
+ReadStudentCurricularPlan -> InfoStudentCurricularPlan: newInfoFromDomain\n(StudentCurricularPlan):InfoStudentCurricularPlan
+alt studentCurricularPlan == null
+else else
+	InfoStudentCurricularPlan -> InfoStudentCurricularPlan: newInfoStudentCurricularPlan(StudentCurricularPlan)
+end
+@enduml

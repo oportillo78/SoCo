@@ -1,0 +1,79 @@
+@startuml
+ participant "JSP\nJSPUnEnrollStudentInWrittenEvaluation" as JSPUnEnrollStudentInWrittenEvaluation order 0
+ participant "services.student\nUnEnrollStudentInWrittenEvaluation" as UnEnrollStudentInWrittenEvaluation order 1
+ participant "services.student\nEnrolStudentInWrittenEvaluation" as EnrolStudentInWrittenEvaluation order 7
+ participant "domain\nAttends" as Attends order 26
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 29
+ participant "core.security\nAuthenticate" as Authenticate order 34
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 37
+ participant "core.domain\nUser" as User order 38
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 41
+ participant "domain\nPerson" as Person order 43
+ participant "core.domain\nUser" as User order 48
+ participant "core.domain\nUser_Base" as User_Base order 59
+ participant "domain\nPerson_Base" as Person_Base order 60
+ participant "domain\nEvaluation_Base" as Evaluation_Base order 61
+ participant "domain\nWrittenEvaluationEnrolment" as WrittenEvaluationEnrolment order 64
+ participant "core.domain\nBennu" as Bennu order 77
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 83
+ JSPUnEnrollStudentInWrittenEvaluation -> UnEnrollStudentInWrittenEvaluation: getConnection()
+ JSPUnEnrollStudentInWrittenEvaluation <- UnEnrollStudentInWrittenEvaluation: returnConnection()
+ JSPUnEnrollStudentInWrittenEvaluation -> UnEnrollStudentInWrittenEvaluation: executeAction()
+ UnEnrollStudentInWrittenEvaluation -> UnEnrollStudentInWrittenEvaluation: runUnEnrollStudentInWrittenEvaluation(String,String):void
+ UnEnrollStudentInWrittenEvaluation -> EnrolStudentInWrittenEvaluation: run(String,String):void
+ EnrolStudentInWrittenEvaluation -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ User -> User: getUsername():String
+ EnrolStudentInWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+ EnrolStudentInWrittenEvaluation -> Person: readPersonByUsername(String):Person
+ Person -> User: findByUsername(String):User
+ ALT ?
+ 	User -> User: manualFind(String):User
+ 	LOOP for: ?
+ 		User -> User: cacheUser(User):void
+ 	END
+ END
+ OPT ?
+ 	User -> User: findByUsername(String):User
+ 	ALT ?
+ 		User -> User: manualFind(String):User
+ 	END
+ 	OPT ?
+ 		User -> User: findByUsername(String):User
+ 	END
+ END
+ ALT user == null
+ ELSE else
+ 	Person -> User_Base: getPerson():Person
+ END
+ EnrolStudentInWrittenEvaluation -> Person_Base: getStudent():Student
+ EnrolStudentInWrittenEvaluation -> EnrolStudentInWrittenEvaluation: findCorrectRegistration\n(Student,Set<ExecutionCourse>):Registration
+ LOOP for: student.getRegistrationsSet()
+ 	OPT registration.isActive()
+ 		LOOP for: registration.getAssociatedAttendsSet()
+ 			EnrolStudentInWrittenEvaluation -> Attends: getExecutionCourse():ExecutionCourse
+ 			Attends -> Attends: getDisciplinaExecucao():ExecutionCourse
+ 		END
+ 	END
+ END
+ EnrolStudentInWrittenEvaluation -> Evaluation_Base: getAssociatedExecutionCoursesSet():Set<ExecutionCourse>
+ EnrolStudentInWrittenEvaluation -> EnrolStudentInWrittenEvaluation: enrolmentAction(WrittenEvaluation,Registration):void
+ EnrolStudentInWrittenEvaluation -> Evaluation_Base: enrolStudent(Registration):void
+ Evaluation_Base -> WrittenEvaluationEnrolment: WrittenEvaluationEnrolment(WrittenEvaluation,Registration)
+ WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: WrittenEvaluationEnrolment()
+ WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: WrittenEvaluationEnrolment_Base()
+ WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: setRootDomainObject(Bennu):void
+ WrittenEvaluationEnrolment -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: setWrittenEvaluation(WrittenEvaluation):void
+ WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: setStudent(Registration):void
+ @enduml

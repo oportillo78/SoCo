@@ -1,0 +1,57 @@
+@startuml
+ participant "JSP\nJSPSearchExecutionCourses" as JSPSearchExecutionCourses order 0
+ participant "services.resourceAllocationManager\nSearchExecutionCourses" as SearchExecutionCourses order 1
+ participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 27
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 30
+ participant "dto\nInfoExecutionPeriod" as InfoExecutionPeriod order 31
+ participant "domain\nExecutionSemester" as ExecutionSemester order 36
+ participant "dto\nInfoExecutionDegree" as InfoExecutionDegree order 37
+ participant "domain\nExecutionDegree" as ExecutionDegree order 42
+ participant "dto\nInfoCurricularYear" as InfoCurricularYear order 43
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 46
+ participant "domain\nExecutionSemester" as ExecutionSemester order 47
+ participant "StringNormalizer" as StringNormalizer order 54
+ participant "java.text\nNormalizer" as Normalizer order 61
+ participant "domain\nExecutionCourse" as ExecutionCourse order 62
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 63
+ JSPSearchExecutionCourses -> SearchExecutionCourses: getConnection()
+ JSPSearchExecutionCourses <- SearchExecutionCourses: returnConnection()
+ JSPSearchExecutionCourses -> SearchExecutionCourses: executeAction()
+ SearchExecutionCourses -> SearchExecutionCourses: run\n(InfoExecutionPeriod,InfoExecutionDegree,InfoCurricularYear,String):List<InfoExecutionCourse>
+ SearchExecutionCourses -> FenixFramework: getDomainObject(String):T
+ SearchExecutionCourses -> InfoExecutionPeriod: getExternalId():String
+ InfoExecutionPeriod -> InfoExecutionPeriod: getExecutionPeriod():ExecutionSemester
+ InfoExecutionPeriod -> ExecutionSemester: getExternalId():String
+ OPT infoExecutionDegree != null
+ 	SearchExecutionCourses -> FenixFramework: getDomainObject(String):T
+ 	SearchExecutionCourses -> InfoExecutionDegree: getExternalId():String
+ 	InfoExecutionDegree -> InfoExecutionDegree: getExecutionDegree():ExecutionDegree
+ 	InfoExecutionDegree -> ExecutionDegree: getExternalId():String
+ END
+ OPT infoCurricularYear != null
+ 	SearchExecutionCourses -> FenixFramework: getDomainObject(String):T
+ 	SearchExecutionCourses -> InfoCurricularYear: getExternalId():String
+ 	ALT curricularYear == null
+ 	ELSE else
+ 		InfoCurricularYear -> AbstractDomainObject: getExternalId():String
+ 	END
+ END
+ OPT executionSemester != null
+ 	SearchExecutionCourses -> ExecutionSemester: getExecutionCoursesByDegreeCurricularPlanAndSemesterAndCurricularYearAndName\n(DegreeCurricularPlan,CurricularYear,String):List<ExecutionCourse>
+ 	ALT (name != null)
+ 		ExecutionSemester -> StringNormalizer: normalize(String):String
+ 		StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 		StringNormalizer -> Normalizer: normalize(CharSequence,Form):String
+ 	END
+ 	LOOP for: getAssociatedExecutionCoursesSet()
+ 		ExecutionSemester -> StringNormalizer: normalize(String):String
+ 		StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 		ExecutionSemester -> ExecutionCourse: getNome():String
+ 	END
+ 	SearchExecutionCourses -> ExecutionDegree_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ END
+ SearchExecutionCourses -> SearchExecutionCourses: fillInfoExecutionCourses\n(AcademicInterval,List<ExecutionCourse>):List<InfoExecutionCourse>
+ SearchExecutionCourses -> CollectionUtils: collect(Collection,Transformer):Collection
+ CollectionUtils -> CollectionUtils: collect\n(Collection,Transformer,Collection):Collection
+ SearchExecutionCourses -> ExecutionSemester: getAcademicInterval():AcademicInterval
+ @enduml

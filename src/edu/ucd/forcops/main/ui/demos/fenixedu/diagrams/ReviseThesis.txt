@@ -1,0 +1,26 @@
+@startuml
+participant "JSP\nJSPReviseThesis" as JSPReviseThesis order 0
+participant "services.thesis\nReviseThesis" as ReviseThesis order 1
+participant "domain.thesis\nThesis" as Thesis order 7
+JSPReviseThesis -> ReviseThesis: getConnection()
+JSPReviseThesis <- ReviseThesis: returnConnection()
+JSPReviseThesis -> ReviseThesis: executeAction()
+ReviseThesis -> ReviseThesis: run(Thesis):void
+ReviseThesis -> Thesis: allowRevision():void
+Thesis -> Thesis: setConfirmation(DateTime):void
+Thesis -> Thesis: setConfirmer(Person):void
+Thesis -> Thesis: setParticipation(Person,ThesisParticipationType):void
+Thesis -> Thesis: setState(ThesisState):void
+Thesis -> Thesis: setConfirmmedDocuments(DateTime):void
+Thesis -> Thesis: setState(ThesisState):void
+opt getState() != ThesisState.REVISION
+	Thesis -> Thesis: setConfirmation(DateTime):void
+	Thesis -> Thesis: setConfirmer(Person):void
+	Thesis -> Thesis: setParticipation(Person,ThesisParticipationType):void
+	Thesis -> Thesis: setState(ThesisState):void
+	opt state == ThesisState.REVISION
+	Thesis -> Thesis: setConfirmmedDocuments(DateTime):void
+	end
+	Thesis -> Thesis: setState(ThesisState):void
+end
+@enduml

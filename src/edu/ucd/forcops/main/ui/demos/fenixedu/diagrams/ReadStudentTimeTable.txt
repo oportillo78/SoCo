@@ -1,0 +1,110 @@
+@startuml
+ participant "JSP\nJSPReadStudentTimeTable" as JSPReadStudentTimeTable order 0
+ participant "services.student\nReadStudentTimeTable" as ReadStudentTimeTable order 1
+ participant "domain\nExecutionSemester" as ExecutionSemester order 9
+ participant "core.domain\nBennu" as Bennu order 14
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 21
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 22
+ participant "core.domain\nBennu" as Bennu order 23
+ participant "dto\nInfoLessonInstanceAggregation" as InfoLessonInstanceAggregation order 24
+ participant "org.joda.time\nLocalDate" as LocalDate order 99
+ participant "org.joda.time.chrono\nISOChronology" as ISOChronology order 104
+ participant "org.joda.time\nDateMidnight" as DateMidnight order 105
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 106
+ participant "org.joda.time\nDateMidnight" as DateMidnight order 107
+ participant "domain\nLesson_Base" as Lesson_Base order 108
+ participant "domain.space\nLessonSpaceOccupation" as LessonSpaceOccupation order 117
+ participant "domain\nLessonInstance" as LessonInstance order 118
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 119
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 120
+ participant "domain\nSpace" as Space order 121
+ participant "domain\nLessonInstance_Base" as LessonInstance_Base order 122
+ participant "org.joda.time\nDateTime" as DateTime order 123
+ participant "domain\nLessonInstance_Base" as LessonInstance_Base order 124
+ participant "org.joda.time\nDateTime" as DateTime order 125
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 126
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 127
+ participant "domain\nSpace" as Space order 128
+ participant "domain\nLessonInstance" as LessonInstance order 129
+ JSPReadStudentTimeTable -> ReadStudentTimeTable: getConnection()
+ JSPReadStudentTimeTable <- ReadStudentTimeTable: returnConnection()
+ JSPReadStudentTimeTable -> ReadStudentTimeTable: executeAction()
+ ReadStudentTimeTable -> ReadStudentTimeTable: run\n(Registration,ExecutionSemester):List<InfoShowOccupation>
+ OPT executionSemester == null
+ 	ReadStudentTimeTable -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 	ExecutionSemester -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ END
+ LOOP for: registration.getShiftsFor(executionSemester)
+ 	ReadStudentTimeTable -> InfoLessonInstanceAggregation: getAggregations\n(Shift):Collection<InfoLessonInstanceAggregation>
+ 	LOOP for: shift.getAssociatedLessonsSet()
+ 		LOOP for: lesson.getLessonInstancesSet()
+ 			InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: key(LessonInstance):String
+ 			InfoLessonInstanceAggregation -> LessonInstance_Base: getBeginDateTime():DateTime
+ 			InfoLessonInstanceAggregation -> DateTime: getDayOfWeek():int
+ 			InfoLessonInstanceAggregation -> LessonInstance_Base: getStartTime():HourMinuteSecond
+ 			InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 			InfoLessonInstanceAggregation -> LessonInstance_Base: getEndTime():HourMinuteSecond
+ 			InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 			ALT instance.getRoom() == null
+ 			ELSE else
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getRoom():Space
+ 				InfoLessonInstanceAggregation -> Space: getExternalId():String
+ 			END
+ 			OPT !result.containsKey(key)
+ 				InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: InfoLessonInstanceAggregation(Shift,LessonInstance)
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getBeginDateTime():DateTime
+ 				InfoLessonInstanceAggregation -> DateTime: getDayOfWeek():int
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getStartTime():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getEndTime():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getRoom():Space
+ 			END
+ 			InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: register(YearMonthDay):void
+ 			InfoLessonInstanceAggregation -> LessonInstance: getDay():YearMonthDay
+ 		END
+ 		LOOP for: lesson.getAllLessonDatesWithoutInstanceDates()
+ 			InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: key(Lesson,YearMonthDay):String
+ 			InfoLessonInstanceAggregation -> YearMonthDay: toDateMidnight():DateMidnight
+ 			InfoLessonInstanceAggregation -> DateMidnight: getDayOfWeek():int
+ 			InfoLessonInstanceAggregation -> Lesson_Base: getBeginHourMinuteSecond():HourMinuteSecond
+ 			InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 			InfoLessonInstanceAggregation -> Lesson_Base: getEndHourMinuteSecond():HourMinuteSecond
+ 			InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 			ALT lesson.getSala() == null
+ 			ELSE else
+ 				InfoLessonInstanceAggregation -> Lesson_Base: getSala():Space
+ 				ALT getLessonSpaceOccupation() != null
+ 					Lesson_Base -> Lesson_Base: getLessonSpaceOccupation():LessonSpaceOccupation
+ 					Lesson_Base -> LessonSpaceOccupation: getRoom():Space
+ 				ELSE else
+ 					OPT hasAnyLessonInstances() && wasFinished()
+ 						Lesson_Base -> Lesson_Base: getLastLessonInstance():LessonInstance
+ 						Lesson_Base -> LessonInstance: getRoom():Space
+ 					END
+ 				END
+ 				InfoLessonInstanceAggregation -> Space: getExternalId():String
+ 			END
+ 			OPT !result.containsKey(key)
+ 				InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: InfoLessonInstanceAggregation(Shift,Lesson,YearMonthDay)
+ 				InfoLessonInstanceAggregation -> YearMonthDay: toDateMidnight():DateMidnight
+ 				InfoLessonInstanceAggregation -> DateMidnight: getDayOfWeek():int
+ 				InfoLessonInstanceAggregation -> Lesson_Base: getBeginHourMinuteSecond():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> Lesson_Base: getEndHourMinuteSecond():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> Lesson_Base: getSala():Space
+ 			END
+ 			InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: register(YearMonthDay):void
+ 			InfoLessonInstanceAggregation -> YearMonthDay: getYear():int
+ 			InfoLessonInstanceAggregation -> YearMonthDay: getMonthOfYear():int
+ 			InfoLessonInstanceAggregation -> YearMonthDay: getDayOfMonth():int
+ 			InfoLessonInstanceAggregation -> LocalDate: LocalDate(int,int,int)
+ 			LocalDate -> LocalDate: LocalDate(int,int,int,Chronology)
+ 			LocalDate -> ISOChronology: getInstanceUTC():ISOChronology
+ 		END
+ 	END
+ END
+ @enduml

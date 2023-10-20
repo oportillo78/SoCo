@@ -1,0 +1,112 @@
+@startuml
+ participant "JSP\nJSPThesisServiceWithMailNotification" as JSPThesisServiceWithMailNotification order 0
+ participant "services.scientificCouncil.thesis\nThesisServiceWithMailNotification" as ThesisServiceWithMailNotification order 1
+ participant "core.domain\nMessage" as Message order 29
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 32
+ participant "predicate\nAccessControl" as AccessControl order 35
+ participant "core.security\nAuthenticate" as Authenticate order 40
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 45
+ participant "core.domain\nUser_Base" as User_Base order 46
+ participant "domain\nPerson" as Person order 47
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 52
+ participant "i18n\nLocalizedString" as LocalizedString order 142
+ participant "core.domain\nMessage" as Message order 143
+ participant "core.domain\nMessagingSystem" as MessagingSystem order 161
+ participant "org.joda.time\nDateTime" as DateTime order 162
+ participant "com.google.common.base\nStrings" as Strings order 163
+ participant "core.domain.MessagingSystem\nUtil" as Util order 164
+ participant "core.domain.Message\nTemplateMessageBuilder" as TemplateMessageBuilder order 165
+ participant "i18n\nLocalizedString" as LocalizedString order 166
+ participant "i18n\nI18N" as I18N order 167
+ JSPThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: getConnection()
+ JSPThesisServiceWithMailNotification <- ThesisServiceWithMailNotification: returnConnection()
+ JSPThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: executeAction()
+ ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: run(Thesis):void
+ ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: process(Thesis):void
+ ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: sendEmail(Thesis):void
+ ThesisServiceWithMailNotification -> Message: from(Sender):MessageBuilder
+ Message -> MessageBuilder: MessageBuilder(Sender)
+ MessageBuilder -> MessageBuilder: from(Sender):MessageBuilder
+ ThesisServiceWithMailNotification -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ ThesisServiceWithMailNotification -> Person: getSender():Sender
+ Person -> Person: getSender():Sender
+ Person -> Person: getSender():Sender
+ ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: getReceiversEmails(Thesis):Collection<String>
+ ThesisServiceWithMailNotification -> MessageBuilder: singleBcc(Collection<String>):MessageBuilder
+ MessageBuilder -> MessageBuilder: builderSetCopy(Collection<T>,Predicate<T>,Set<T>):void
+ MessageBuilder -> MessageBuilder: builderSetAdd(Stream<T>,Predicate<T>,Set<T>):void
+ ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: getSubject(Thesis):String
+ ThesisServiceWithMailNotification -> MessageBuilder: subject(String):MessageBuilder
+ MessageBuilder -> MessageBuilder: subject(String,Locale):MessageBuilder
+ ALT ?
+ 	MessageBuilder -> LocalizedString: without(Locale):LocalizedString
+ ELSE else
+ 	MessageBuilder -> LocalizedString: with(Locale,String):LocalizedString
+ END
+ MessageBuilder -> I18N: getLocale():Locale
+ ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: getMessage(Thesis):String
+ ThesisServiceWithMailNotification -> MessageBuilder: textBody(String):MessageBuilder
+ MessageBuilder -> MessageBuilder: textBody(String,Locale):MessageBuilder
+ ALT ?
+ 	MessageBuilder -> LocalizedString: without(Locale):LocalizedString
+ ELSE else
+ 	MessageBuilder -> LocalizedString: with(Locale,String):LocalizedString
+ END
+ MessageBuilder -> I18N: getLocale():Locale
+ ThesisServiceWithMailNotification -> MessageBuilder: send():Message
+ MessageBuilder -> Message: Message()
+ Message -> Message: Message_Base()
+ Message -> Message: AbstractDomainObject()
+ Message -> MessagingSystem: getInstance():MessagingSystem
+ Message -> Message: setMessagingSystem(MessagingSystem):void
+ Message -> Message: setMessagingSystemFromPendingDispatch(MessagingSystem):void
+ Message -> Message: setCreated(DateTime):void
+ Message -> DateTime: DateTime()
+ Message -> Message: setCreator(User):void
+ Message -> Authenticate: getUser():User
+ MessageBuilder -> Message: setSender(Sender):void
+ MessageBuilder -> Message: setReplyTo(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ MessageBuilder -> Message: setPreferredLocale(Locale):void
+ MessageBuilder -> Message: setSingleBccs(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ MessageBuilder -> Message: setSingleTos(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ OPT ?
+ 	MessageBuilder -> MessageBuilder: template(String):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> Authenticate: getUser():User
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: and():MessageBuilder
+ END
+ MessageBuilder -> Message: setSubject(LocalizedString):void
+ MessageBuilder -> Message: setTextBody(LocalizedString):void
+ MessageBuilder -> Message: setHtmlBody(LocalizedString):void
+ @enduml

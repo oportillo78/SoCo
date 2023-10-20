@@ -1,0 +1,42 @@
+@startuml
+participant "JSP\nJSPRejectThesisDeclaration" as JSPRejectThesisDeclaration order 0
+participant "services.thesis\nRejectThesisDeclaration" as RejectThesisDeclaration order 1
+participant "domain.thesis\nThesis" as Thesis order 11
+participant "domain.thesis\nThesisFile" as ThesisFile order 28
+participant "domain.thesis\nThesisFile" as ThesisFile order 31
+participant "service.filter.student.thesis\nStudentThesisAuthorizationFilter" as StudentThesisAuthorizationFilter order 34
+participant "core.security\nAuthenticate" as Authenticate order 47
+participant "core.domain\nUser_Base" as User_Base order 48
+participant "domain\nPerson" as Person order 49
+JSPRejectThesisDeclaration -> RejectThesisDeclaration: getConnection()
+JSPRejectThesisDeclaration <- RejectThesisDeclaration: returnConnection()
+JSPRejectThesisDeclaration -> RejectThesisDeclaration: executeAction()
+RejectThesisDeclaration -> RejectThesisDeclaration: runRejectThesisDeclaration(Thesis):void
+RejectThesisDeclaration -> StudentThesisAuthorizationFilter: execute(Thesis):void
+StudentThesisAuthorizationFilter -> StudentThesisAuthorizationFilter: getStudent():Student
+StudentThesisAuthorizationFilter -> Authenticate: getUser():User
+StudentThesisAuthorizationFilter -> User_Base: getPerson():Person
+StudentThesisAuthorizationFilter -> Person: getStudent():Student
+opt student == null
+	StudentThesisAuthorizationFilter -> StudentThesisAuthorizationFilter: abort():void
+end
+opt thesis.getStudent() != student
+	StudentThesisAuthorizationFilter -> StudentThesisAuthorizationFilter: abort():void
+end
+RejectThesisDeclaration -> RejectThesisDeclaration: run(Thesis):void
+RejectThesisDeclaration -> Thesis: rejectDeclaration():void
+Thesis -> Thesis: setDeclarationAccepted(Boolean):void
+Thesis -> Thesis: setVisibility(ThesisVisibilityType):void
+Thesis -> Thesis: setDocumentsAvailableAfter(DateTime):void
+Thesis -> Thesis: setDeclarationAcceptedTime(DateTime):void
+opt getDissertation() != null
+	Thesis -> Thesis: getDissertation():ThesisFile
+	Thesis -> ThesisFile: delete():void
+	ThesisFile -> ThesisFile: deleteWithoutStateCheck():void
+end
+opt getExtendedAbstract() != null
+	Thesis -> Thesis: getExtendedAbstract():ThesisFile
+	Thesis -> ThesisFile: delete():void
+	ThesisFile -> ThesisFile: deleteWithoutStateCheck():void
+end
+@enduml

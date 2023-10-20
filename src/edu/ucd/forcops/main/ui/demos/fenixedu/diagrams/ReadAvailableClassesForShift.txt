@@ -1,0 +1,60 @@
+@startuml
+ participant "JSP\nJSPReadAvailableClassesForShift" as JSPReadAvailableClassesForShift order 0
+ participant "services.resourceAllocationManager\nReadAvailableClassesForShift" as ReadAvailableClassesForShift order 1
+ participant "predicate\nAccessControl" as AccessControl order 23
+ participant "core.security\nAuthenticate" as Authenticate order 28
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 31
+ participant "core.domain\nUser_Base" as User_Base order 32
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 33
+ participant "domain\nPerson" as Person order 34
+ participant "core.domain\nUser" as User order 39
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 40
+ participant "domain\nShift" as Shift order 41
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 48
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 49
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 50
+ participant "dto\nInfoClass" as InfoClass order 51
+ JSPReadAvailableClassesForShift -> ReadAvailableClassesForShift: getConnection()
+ JSPReadAvailableClassesForShift <- ReadAvailableClassesForShift: returnConnection()
+ JSPReadAvailableClassesForShift -> ReadAvailableClassesForShift: executeAction()
+ ReadAvailableClassesForShift -> ReadAvailableClassesForShift: run(String):List
+ ReadAvailableClassesForShift -> ReadAvailableClassesForShift: check(AccessControlPredicate<?>):void
+ ReadAvailableClassesForShift -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ ReadAvailableClassesForShift -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		ReadAvailableClassesForShift -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ ReadAvailableClassesForShift -> FenixFramework: getDomainObject(String):T
+ ReadAvailableClassesForShift -> Shift: getDisciplinaExecucao():ExecutionCourse
+ Shift -> Shift: getExecutionCourse():ExecutionCourse
+ Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ ALT courseLoad != null
+ 	Shift -> CourseLoad_Base: getExecutionCourse():ExecutionCourse
+ END
+ ReadAvailableClassesForShift -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ ReadAvailableClassesForShift -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ LOOP for: availableSchoolClasses
+ 	ReadAvailableClassesForShift -> InfoClass: newInfoFromDomain(SchoolClass):InfoClass
+ 	ALT schoolClass == null
+ 	ELSE else
+ 		InfoClass -> InfoClass: InfoClass(SchoolClass)
+ 	END
+ END
+ @enduml

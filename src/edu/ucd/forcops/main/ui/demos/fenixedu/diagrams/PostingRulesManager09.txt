@@ -1,0 +1,61 @@
+@startuml
+ participant "JSP\nJSPPostingRulesManager" as JSPPostingRulesManager order 0
+ participant "services.accounting\nPostingRulesManager" as PostingRulesManager order 1
+ participant "domain.accounting\nServiceAgreementTemplate" as ServiceAgreementTemplate order 37
+ participant "domain.accounting\nPostingRule" as PostingRule order 42
+ participant "org.joda.time\nDateTime" as DateTime order 51
+ participant "dto.accounting.postingRule\nCreatePostingRuleBean" as CreatePostingRuleBean order 52
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 53
+ participant "domain.accounting.postingRules.gratuity\nGratuityWithPaymentPlanPR" as GratuityWithPaymentPlanPR order 54
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 67
+ participant "domain.accounting.postingRules.gratuity\nPastDegreeGratuityPR" as PastDegreeGratuityPR order 68
+ JSPPostingRulesManager -> PostingRulesManager: getConnection()
+ JSPPostingRulesManager <- PostingRulesManager: returnConnection()
+ JSPPostingRulesManager -> PostingRulesManager: executeAction()
+ PostingRulesManager -> PostingRulesManager: createGraduationGratuityPostingRule(CreateGratuityPostingRuleBean):void
+ ALT bean.getRule() == GratuityWithPaymentPlanPR.class
+ 	LOOP for: bean.getDegreeCurricularPlans()
+ 		PostingRulesManager -> PostingRulesManager: deactivateExistingPostingRule\n(EventType,DateTime,ServiceAgreementTemplate):void
+ 		PostingRulesManager -> ServiceAgreementTemplate: findPostingRuleByEventTypeAndDate(EventType,DateTime):PostingRule
+ 		ServiceAgreementTemplate -> ServiceAgreementTemplate: getPostingRuleByEventTypeAndDate(EventType,DateTime):PostingRule
+ 		OPT existingPostingRule != null
+ 			PostingRulesManager -> PostingRule: deactivate(DateTime):void
+ 			PostingRule -> PostingRule: setEndDate(DateTime):void
+ 			PostingRule -> DateTime: minus(long):DateTime
+ 		END
+ 		PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 		PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 		PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		PostingRulesManager -> GratuityWithPaymentPlanPR: GratuityWithPaymentPlanPR\n(DateTime,DateTime,ServiceAgreementTemplate)
+ 		GratuityWithPaymentPlanPR -> GratuityWithPaymentPlanPR: GratuityWithPaymentPlanPR\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate)
+ 		GratuityWithPaymentPlanPR -> GratuityWithPaymentPlanPR: GratuityWithPaymentPlanPR()
+ 		GratuityWithPaymentPlanPR -> GratuityWithPaymentPlanPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 		GratuityWithPaymentPlanPR -> GratuityWithPaymentPlanPR: init\n(EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 		GratuityWithPaymentPlanPR -> GratuityWithPaymentPlanPR: checkParameters(EntryType):void
+ 		GratuityWithPaymentPlanPR -> GratuityWithPaymentPlanPR: setEntryType(EntryType):void
+ 	END
+ ELSE else
+ 	ALT bean.getRule() == PastDegreeGratuityPR.class
+ 		LOOP for: bean.getDegreeCurricularPlans()
+ 			PostingRulesManager -> PostingRulesManager: deactivateExistingPostingRule\n(EventType,DateTime,ServiceAgreementTemplate):void
+ 			PostingRulesManager -> ServiceAgreementTemplate: findPostingRuleByEventTypeAndDate(EventType,DateTime):PostingRule
+ 			ServiceAgreementTemplate -> ServiceAgreementTemplate: getPostingRuleByEventTypeAndDate(EventType,DateTime):PostingRule
+ 			OPT existingPostingRule != null
+ 				PostingRulesManager -> PostingRule: deactivate(DateTime):void
+ 				PostingRule -> PostingRule: setEndDate(DateTime):void
+ 				PostingRule -> DateTime: minus(long):DateTime
+ 			END
+ 			PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 			PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 			PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 			PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 			PostingRulesManager -> PastDegreeGratuityPR: PastDegreeGratuityPR\n(DateTime,DateTime,DegreeCurricularPlanServiceAgreementTemplate)
+ 			PastDegreeGratuityPR -> PastDegreeGratuityPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 			PastDegreeGratuityPR -> PastDegreeGratuityPR: init\n(EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 			PastDegreeGratuityPR -> PastDegreeGratuityPR: checkParameters(EntryType):void
+ 			PastDegreeGratuityPR -> PastDegreeGratuityPR: setEntryType(EntryType):void
+ 		END
+ 	END
+ END
+ @enduml

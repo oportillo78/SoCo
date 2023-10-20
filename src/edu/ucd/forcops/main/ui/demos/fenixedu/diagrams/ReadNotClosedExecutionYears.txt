@@ -1,0 +1,16 @@
+@startuml
+ participant "JSP\nJSPReadNotClosedExecutionYears" as JSPReadNotClosedExecutionYears order 0
+ participant "services.commons\nReadNotClosedExecutionYears" as ReadNotClosedExecutionYears order 1
+ participant "dto\nInfoExecutionYear" as InfoExecutionYear order 7
+ JSPReadNotClosedExecutionYears -> ReadNotClosedExecutionYears: getConnection()
+ JSPReadNotClosedExecutionYears <- ReadNotClosedExecutionYears: returnConnection()
+ JSPReadNotClosedExecutionYears -> ReadNotClosedExecutionYears: executeAction()
+ ReadNotClosedExecutionYears -> ReadNotClosedExecutionYears: run():List<InfoExecutionYear>
+ LOOP for: ExecutionYear.readNotClosedExecutionYears()
+ 	ReadNotClosedExecutionYears -> InfoExecutionYear: newInfoFromDomain(ExecutionYear):InfoExecutionYear
+ 	ALT executionYear == null
+ 	ELSE else
+ 		InfoExecutionYear -> InfoExecutionYear: InfoExecutionYear(ExecutionYear)
+ 	END
+ END
+ @enduml

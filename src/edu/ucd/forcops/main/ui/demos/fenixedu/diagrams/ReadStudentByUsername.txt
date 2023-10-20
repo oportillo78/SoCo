@@ -1,0 +1,58 @@
+@startuml
+participant "JSP\nJSPReadStudentByUsername" as JSPReadStudentByUsername order 0
+participant "services.student.enrolment\nReadStudentByUsername" as ReadStudentByUsername order 1
+participant "predicate\nAccessControl" as AccessControl order 15
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 16
+participant "domain\nPerson" as Person order 17
+participant "domain.student\nRegistration" as Registration order 18
+participant "domain\nPerson" as Person order 21
+participant "core.domain\nUser" as User order 26
+participant "java.util\nMap" as Map order 39
+participant "core.domain\nUser_Base" as User_Base order 40
+JSPReadStudentByUsername -> ReadStudentByUsername: getConnection()
+JSPReadStudentByUsername <- ReadStudentByUsername: returnConnection()
+JSPReadStudentByUsername -> ReadStudentByUsername: executeAction()
+alt if cookiesNotFound
+     JSPReadStudentByUsername <-- ReadStudentByUsername: showImpliedConsentCookieBanner(msg)
+     alt clickOnAcceptCookiesBtn
+          JSPReadStudentByUsername -> ReadStudentByUsername: acceptAllCookies(sessionID)
+     else clickOnCloseBtn
+          JSPReadStudentByUsername -> ReadStudentByUsername: keepDefaultCookies()
+     end
+else else
+	ReadStudentByUsername -> ReadStudentByUsername: run(String):Registration
+	ReadStudentByUsername -> ReadStudentByUsername: check(AccessControlPredicate<?>):void
+	ReadStudentByUsername -> AccessControl: getPerson():Person
+	ReadStudentByUsername -> AccessControlPredicate: evaluate(E):boolean
+	opt !result
+		alt requester == null
+		else else
+			ReadStudentByUsername -> Person: getUsername():String
+		end
+	end
+	ReadStudentByUsername -> Registration: readByUsername(String):Registration
+	Registration -> Person: readPersonByUsername(String):Person
+	Person -> User: findByUsername(String):User
+	alt ?
+		User -> User: manualFind(String):User
+		else else
+	end
+	opt ?
+		User -> Map: remove(Object,Object):boolean
+		User -> User: findByUsername(String):User
+		alt ?
+			User -> User: manualFind(String):User
+		else else
+		end
+		opt ?
+			User -> Map: remove(Object,Object):boolean
+			User -> User: findByUsername(String):User
+		end
+	end
+	alt user == null
+	else else
+		Person -> User_Base: getPerson():Person
+	end
+    JSPReadStudentByUsername <- ReadStudentByUsername: showPersonalizedPage(cookies)
+end
+@enduml

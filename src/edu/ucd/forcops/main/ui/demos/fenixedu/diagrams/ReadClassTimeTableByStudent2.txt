@@ -1,0 +1,140 @@
+@startuml
+ participant "JSP\nJSPReadClassTimeTableByStudent" as JSPReadClassTimeTableByStudent order 0
+ participant "services.enrollment.shift\nReadClassTimeTableByStudent" as ReadClassTimeTableByStudent order 1
+ participant "domain.student\nRegistration" as Registration order 17
+ participant "domain\nAttends" as Attends order 24
+ participant "dto\nInfoLessonInstanceAggregation" as InfoLessonInstanceAggregation order 33
+ participant "domain\nLessonInstance_Base" as LessonInstance_Base order 116
+ participant "org.joda.time\nDateTime" as DateTime order 117
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 118
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 119
+ participant "domain\nSpace" as Space order 120
+ participant "domain\nLessonInstance_Base" as LessonInstance_Base order 121
+ participant "org.joda.time\nDateTime" as DateTime order 122
+ participant "org.joda.time\nLocalDate" as LocalDate order 123
+ participant "org.joda.time\nDateMidnight" as DateMidnight order 124
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 125
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 126
+ participant "domain\nSpace" as Space order 127
+ participant "org.joda.time\nDateMidnight" as DateMidnight order 128
+ participant "domain\nLesson_Base" as Lesson_Base order 129
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 130
+ participant "org.joda.time\nLocalDate" as LocalDate order 131
+ participant "domain\nLessonInstance" as LessonInstance order 132
+ participant "service.filter.enrollment\nClassEnrollmentAuthorizationFilter" as ClassEnrollmentAuthorizationFilter order 133
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 153
+ participant "domain\nDegreeCurricularPlanEquivalencePlan_Base" as DegreeCurricularPlanEquivalencePlan_Base order 154
+ participant "core.security\nAuthenticate" as Authenticate order 155
+ participant "core.domain\nUser" as User order 156
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nClassEnrollmentCondition" as ClassEnrollmentCondition order 157
+ participant "domain\nPerson" as Person order 158
+ JSPReadClassTimeTableByStudent -> ReadClassTimeTableByStudent: getConnection()
+ JSPReadClassTimeTableByStudent <- ReadClassTimeTableByStudent: returnConnection()
+ JSPReadClassTimeTableByStudent -> ReadClassTimeTableByStudent: executeAction()
+ ReadClassTimeTableByStudent -> ReadClassTimeTableByStudent: runReadClassTimeTableByStudent\n(Registration,SchoolClass,ExecutionCourse,ExecutionSemester):List<InfoShowOccupation>
+ ReadClassTimeTableByStudent -> ClassEnrollmentAuthorizationFilter: execute(Registration,ExecutionSemester):void
+ ClassEnrollmentAuthorizationFilter -> Authenticate: getUser():User
+ ClassEnrollmentAuthorizationFilter -> User: getPerson():Person
+ OPT RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(person.getUser())
+ 	ClassEnrollmentAuthorizationFilter -> Registration: getPerson():Person
+ END
+ LOOP for: conditions
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentCondition: verify(Registration):void
+ END
+ ClassEnrollmentAuthorizationFilter -> Person: getActiveStudentCurricularPlansSortedByDegreeTypeAndDegreeName\n():SortedSet<StudentCurricularPlan>
+ LOOP for: getStudentsSet()
+ 	Person -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ END
+ LOOP for: activeStudentCurricularPlans
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verify\n(StudentCurricularPlan,ExecutionSemester):FenixServiceException
+ 	ClassEnrollmentAuthorizationFilter -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	LOOP for: degreeCurricularPlan.getTargetEquivalencePlansSet()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlanEquivalencePlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	END
+ END
+ ReadClassTimeTableByStudent -> ReadClassTimeTableByStudent: run\n(Registration,SchoolClass,ExecutionCourse,ExecutionSemester):List<InfoShowOccupation>
+ ReadClassTimeTableByStudent -> ReadClassTimeTableByStudent: getOccupations\n(Registration,SchoolClass,ExecutionCourse,ExecutionSemester):List<InfoShowOccupation>
+ ALT executionSemester != null
+ 	ReadClassTimeTableByStudent -> Registration: getAttendingExecutionCoursesFor(ExecutionSemester):List<ExecutionCourse>
+ 	LOOP for: getAssociatedAttendsSet()
+ 		OPT attends.isFor(executionSemester)
+ 			Registration -> Attends: getExecutionCourse():ExecutionCourse
+ 			Attends -> Attends: getDisciplinaExecucao():ExecutionCourse
+ 			Attends -> Attends: getExecutionCourse():ExecutionCourse
+ 		END
+ 	END
+ ELSE else
+ 	ReadClassTimeTableByStudent -> Registration: getAttendingExecutionCoursesForCurrentExecutionPeriod\n():Set<ExecutionCourse>
+ 	LOOP for: getAssociatedAttendsSet()
+ 		OPT attends.getExecutionCourse().getExecutionPeriod().getState().equals(PeriodState.CURRENT)
+ 			Registration -> Attends: getExecutionCourse():ExecutionCourse
+ 			Attends -> Attends: getDisciplinaExecucao():ExecutionCourse
+ 			Attends -> Attends: getExecutionCourse():ExecutionCourse
+ 		END
+ 	END
+ END
+ LOOP for: schoolClass.getAssociatedShiftsSet()
+ 	OPT (executionCourse == null || executionCourse == shift.getDisciplinaExecucao())                    && attendingExecutionCourses.contains(shift.getDisciplinaExecucao())
+ 		ReadClassTimeTableByStudent -> InfoLessonInstanceAggregation: getAggregations\n(Shift):Collection<InfoLessonInstanceAggregation>
+ 		LOOP for: shift.getAssociatedLessonsSet()
+ 			LOOP for: lesson.getLessonInstancesSet()
+ 				InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: key(LessonInstance):String
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getBeginDateTime():DateTime
+ 				InfoLessonInstanceAggregation -> DateTime: getDayOfWeek():int
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getStartTime():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 				InfoLessonInstanceAggregation -> LessonInstance_Base: getEndTime():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 				ALT instance.getRoom() == null
+ 				ELSE else
+ 					InfoLessonInstanceAggregation -> LessonInstance_Base: getRoom():Space
+ 					InfoLessonInstanceAggregation -> Space: getExternalId():String
+ 				END
+ 				OPT !result.containsKey(key)
+ 					InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: InfoLessonInstanceAggregation(Shift,LessonInstance)
+ 					InfoLessonInstanceAggregation -> LessonInstance_Base: getBeginDateTime():DateTime
+ 					InfoLessonInstanceAggregation -> DateTime: getDayOfWeek():int
+ 					InfoLessonInstanceAggregation -> LessonInstance_Base: getStartTime():HourMinuteSecond
+ 					InfoLessonInstanceAggregation -> LessonInstance_Base: getEndTime():HourMinuteSecond
+ 					InfoLessonInstanceAggregation -> LessonInstance_Base: getRoom():Space
+ 				END
+ 				InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: register(YearMonthDay):void
+ 				InfoLessonInstanceAggregation -> YearMonthDay: getYear():int
+ 				InfoLessonInstanceAggregation -> YearMonthDay: getMonthOfYear():int
+ 				InfoLessonInstanceAggregation -> YearMonthDay: getDayOfMonth():int
+ 				InfoLessonInstanceAggregation -> LocalDate: LocalDate(int,int,int)
+ 				InfoLessonInstanceAggregation -> LessonInstance: getDay():YearMonthDay
+ 			END
+ 			LOOP for: lesson.getAllLessonDatesWithoutInstanceDates()
+ 				InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: key(Lesson,YearMonthDay):String
+ 				InfoLessonInstanceAggregation -> YearMonthDay: toDateMidnight():DateMidnight
+ 				InfoLessonInstanceAggregation -> DateMidnight: getDayOfWeek():int
+ 				InfoLessonInstanceAggregation -> Lesson_Base: getBeginHourMinuteSecond():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 				InfoLessonInstanceAggregation -> Lesson_Base: getEndHourMinuteSecond():HourMinuteSecond
+ 				InfoLessonInstanceAggregation -> HourMinuteSecond: toString(String):String
+ 				ALT lesson.getSala() == null
+ 				ELSE else
+ 					InfoLessonInstanceAggregation -> Lesson_Base: getSala():Space
+ 					InfoLessonInstanceAggregation -> Space: getExternalId():String
+ 				END
+ 				OPT !result.containsKey(key)
+ 					InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: InfoLessonInstanceAggregation(Shift,Lesson,YearMonthDay)
+ 					InfoLessonInstanceAggregation -> YearMonthDay: toDateMidnight():DateMidnight
+ 					InfoLessonInstanceAggregation -> DateMidnight: getDayOfWeek():int
+ 					InfoLessonInstanceAggregation -> Lesson_Base: getBeginHourMinuteSecond():HourMinuteSecond
+ 					InfoLessonInstanceAggregation -> Lesson_Base: getEndHourMinuteSecond():HourMinuteSecond
+ 					InfoLessonInstanceAggregation -> Lesson_Base: getSala():Space
+ 				END
+ 				InfoLessonInstanceAggregation -> InfoLessonInstanceAggregation: register(YearMonthDay):void
+ 				InfoLessonInstanceAggregation -> YearMonthDay: getYear():int
+ 				InfoLessonInstanceAggregation -> YearMonthDay: getMonthOfYear():int
+ 				InfoLessonInstanceAggregation -> YearMonthDay: getDayOfMonth():int
+ 				InfoLessonInstanceAggregation -> LocalDate: LocalDate(int,int,int)
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

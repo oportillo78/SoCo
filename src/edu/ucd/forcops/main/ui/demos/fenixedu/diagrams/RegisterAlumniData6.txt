@@ -1,0 +1,48 @@
+@startuml
+ participant "JSP\nJSPRegisterAlumniData" as JSPRegisterAlumniData order 0
+ participant "services.alumni\nRegisterAlumniData" as RegisterAlumniData order 1
+ participant "core.domain\nMessage" as Message order 39
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 40
+ participant "core.i18n\nBundleUtil" as BundleUtil order 41
+ participant "domain.organizationalStructure\nUnit" as Unit order 42
+ participant "domain.student\nStudent" as Student order 43
+ participant "domain\nPerson" as Person order 44
+ participant "domain\nAlumniManager" as AlumniManager order 45
+ participant "domain\nAlumni_Base" as Alumni_Base order 54
+ participant "domain.contacts\nEmailAddress" as EmailAddress order 61
+ participant "domain.organizationalStructure\nParty" as Party order 66
+ participant "domain.student\nStudent" as Student order 67
+ JSPRegisterAlumniData -> RegisterAlumniData: getConnection()
+ JSPRegisterAlumniData <- RegisterAlumniData: returnConnection()
+ JSPRegisterAlumniData -> RegisterAlumniData: executeAction()
+ RegisterAlumniData -> RegisterAlumniData: run(Integer,String,String):Alumni
+ RegisterAlumniData -> AlumniManager: AlumniManager()
+ RegisterAlumniData -> AlumniManager: registerAlumni(Integer,String,String):Alumni
+ AlumniManager -> AlumniManager: checkRulesToRegisterAlumni(Integer,String):void
+ AlumniManager -> AlumniManager: getAlumni(Integer):Alumni
+ AlumniManager -> Alumni_Base: setUrlRequestToken(UUID):void
+ AlumniManager -> Alumni_Base: addIfNotExistsEmail(String):void
+ Alumni_Base -> EmailAddress: createEmailAddress\n(Party,String,PartyContactType,boolean):EmailAddress
+ EmailAddress -> EmailAddress: createEmailAddress\n(Supplier<EmailAddress>,Party,String):EmailAddress
+ ALT StringUtils.isEmpty(email)
+ ELSE else
+ 	EmailAddress -> Party: getEmailAddressStream():Stream<EmailAddress>
+ END
+ Alumni_Base -> Alumni_Base: getStudent():Student
+ Alumni_Base -> Student: getPerson():Person
+ RegisterAlumniData -> RegisterAlumniData: sendPublicAccessMail(Alumni,String):void
+ RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ RegisterAlumniData -> Unit: getInstitutionAcronym():String
+ RegisterAlumniData -> Alumni_Base: getStudent():Student
+ RegisterAlumniData -> Student: getPerson():Person
+ RegisterAlumniData -> BundleUtil: getString(String,String,String[]):String
+ RegisterAlumniData -> Person: getFirstAndLastName():String
+ RegisterAlumniData -> RegisterAlumniData: getRegisterConclusionURL(Alumni):String
+ RegisterAlumniData -> RegisterAlumniData: sendEmail(String,String,String):void
+ RegisterAlumniData -> Message: fromSystem():MessageBuilder
+ RegisterAlumniData -> MessageBuilder: replyToSender():MessageBuilder
+ RegisterAlumniData -> MessageBuilder: singleBcc(String[]):MessageBuilder
+ RegisterAlumniData -> MessageBuilder: subject(String):MessageBuilder
+ RegisterAlumniData -> MessageBuilder: textBody(String):MessageBuilder
+ RegisterAlumniData -> MessageBuilder: send():Message
+ @enduml

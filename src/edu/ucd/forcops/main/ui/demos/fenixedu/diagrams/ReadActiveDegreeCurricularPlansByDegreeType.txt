@@ -1,0 +1,21 @@
+@startuml
+ participant "JSP\nJSPReadActiveDegreeCurricularPlansByDegreeType" as JSPReadActiveDegreeCurricularPlansByDegreeType order 0
+ participant "services.commons\nReadActiveDegreeCurricularPlansByDegreeType" as ReadActiveDegreeCurricularPlansByDegreeType order 1
+ participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 9
+ participant "org.apache.commons.collections\nTransformer" as Transformer order 16
+ JSPReadActiveDegreeCurricularPlansByDegreeType -> ReadActiveDegreeCurricularPlansByDegreeType: getConnection()
+ JSPReadActiveDegreeCurricularPlansByDegreeType <- ReadActiveDegreeCurricularPlansByDegreeType: returnConnection()
+ JSPReadActiveDegreeCurricularPlansByDegreeType -> ReadActiveDegreeCurricularPlansByDegreeType: executeAction()
+ ReadActiveDegreeCurricularPlansByDegreeType -> ReadActiveDegreeCurricularPlansByDegreeType: run\n(Predicate<DegreeType>):Collection<InfoDegreeCurricularPlan>
+ ReadActiveDegreeCurricularPlansByDegreeType -> ReadActiveDegreeCurricularPlansByDegreeType: getActiveDegreeCurricularPlansByDegreeType\n(Predicate<DegreeType>,AccessControlPredicate<Object>):Collection<InfoDegreeCurricularPlan>
+ ReadActiveDegreeCurricularPlansByDegreeType -> CollectionUtils: collect(Collection,Transformer):Collection
+ CollectionUtils -> CollectionUtils: collect\n(Collection,Transformer,Collection):Collection
+ OPT ?
+ 	CollectionUtils -> CollectionUtils: collect\n(Iterator,Transformer,Collection):Collection
+ 	OPT ?
+ 		LOOP while: ?
+ 			CollectionUtils -> Transformer: transform(Object):Object
+ 		END
+ 	END
+ END
+ @enduml

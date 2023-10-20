@@ -1,0 +1,66 @@
+@startuml
+ participant "JSP\nJSPPostingRulesManager" as JSPPostingRulesManager order 0
+ participant "services.accounting\nPostingRulesManager" as PostingRulesManager order 1
+ participant "dto.accounting.postingRule\nCreatePostingRuleBean" as CreatePostingRuleBean order 59
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 60
+ participant "domain.accounting.postingRules.gratuity\nGratuityWithPaymentPlanPR" as GratuityWithPaymentPlanPR order 61
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 62
+ participant "domain.accounting.postingRules.gratuity\nPastDegreeGratuityPR" as PastDegreeGratuityPR order 63
+ participant "dto.accounting.postingRule\nCreateGratuityPostingRuleBean" as CreateGratuityPostingRuleBean order 64
+ participant "dto.accounting.paymentPlan\nPaymentPlanBean" as PaymentPlanBean order 65
+ participant "dto.accounting.paymentPlan\nInstallmentBean" as InstallmentBean order 67
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 68
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 69
+ participant "services.accounting.gratuity.paymentPlan\nGratuityPaymentPlanManager" as GratuityPaymentPlanManager order 70
+ JSPPostingRulesManager -> PostingRulesManager: getConnection()
+ JSPPostingRulesManager <- PostingRulesManager: returnConnection()
+ JSPPostingRulesManager -> PostingRulesManager: executeAction()
+ PostingRulesManager -> PostingRulesManager: createDEAGratuityPostingRule(PaymentPlanBean):void
+ PostingRulesManager -> CreateGratuityPostingRuleBean: CreateGratuityPostingRuleBean()
+ PostingRulesManager -> CreateGratuityPostingRuleBean: setExecutionYear(ExecutionYear):void
+ PostingRulesManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ PostingRulesManager -> CreateGratuityPostingRuleBean: setDegreeCurricularPlans(List<DegreeCurricularPlan>):void
+ PostingRulesManager -> PaymentPlanBean: getDegreeCurricularPlans():List<DegreeCurricularPlan>
+ LOOP for: paymentPlanBean.getInstallments()
+ 	OPT minStartDate == null
+ 		PostingRulesManager -> InstallmentBean: getStartDate():YearMonthDay
+ 		PostingRulesManager -> YearMonthDay: toDateMidnight():DateMidnight
+ 		PostingRulesManager -> YearMonthDay: toDateTime():DateTime
+ 	END
+ 	OPT installmentBean.getStartDate().toDateMidnight().toDateTime().isBefore(minStartDate)
+ 		PostingRulesManager -> InstallmentBean: getStartDate():YearMonthDay
+ 		PostingRulesManager -> YearMonthDay: toDateMidnight():DateMidnight
+ 		PostingRulesManager -> YearMonthDay: toDateTime():DateTime
+ 	END
+ END
+ PostingRulesManager -> CreateGratuityPostingRuleBean: setStartDate(DateTime):void
+ PostingRulesManager -> CreateGratuityPostingRuleBean: setRule(Class<? extends PostingRule>):void
+ PostingRulesManager -> PostingRulesManager: createGraduationGratuityPostingRule(CreateGratuityPostingRuleBean):void
+ ALT bean.getRule() == GratuityWithPaymentPlanPR.class
+ 	LOOP for: bean.getDegreeCurricularPlans()
+ 		PostingRulesManager -> PostingRulesManager: deactivateExistingPostingRule\n(EventType,DateTime,ServiceAgreementTemplate):void
+ 		PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 		PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 		PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		PostingRulesManager -> GratuityWithPaymentPlanPR: GratuityWithPaymentPlanPR\n(DateTime,DateTime,ServiceAgreementTemplate)
+ 	END
+ ELSE else
+ 	ALT bean.getRule() == PastDegreeGratuityPR.class
+ 		LOOP for: bean.getDegreeCurricularPlans()
+ 			PostingRulesManager -> PostingRulesManager: deactivateExistingPostingRule\n(EventType,DateTime,ServiceAgreementTemplate):void
+ 			PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 			PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 			PostingRulesManager -> CreatePostingRuleBean: getStartDate():DateTime
+ 			PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 			PostingRulesManager -> PastDegreeGratuityPR: PastDegreeGratuityPR\n(DateTime,DateTime,DegreeCurricularPlanServiceAgreementTemplate)
+ 		END
+ 	END
+ END
+ PostingRulesManager -> GratuityPaymentPlanManager: create(PaymentPlanBean):void
+ LOOP for: paymentPlanBean.getDegreeCurricularPlans()
+ 	GratuityPaymentPlanManager -> GratuityPaymentPlanManager: createInstallments(PaymentPlan,List<InstallmentBean>):void
+ 	GratuityPaymentPlanManager -> GratuityPaymentPlanManager: makePaymentPlan\n(PaymentPlanBean,DegreeCurricularPlan):PaymentPlan
+ 	GratuityPaymentPlanManager -> PaymentPlanBean: getInstallments():List<InstallmentBean>
+ END
+ @enduml

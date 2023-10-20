@@ -1,0 +1,149 @@
+@startuml
+scale .5
+participant "JSP\nJSPRegistrationConclusionProcess" as JSPRegistrationConclusionProcess order 0
+participant "services.administrativeOffice.student\nRegistrationConclusionProcess" as RegistrationConclusionProcess order 1
+participant "domain.student\nRegistration" as Registration order 67
+participant "dto.student\nRegistrationConclusionBean" as RegistrationConclusionBean order 68
+participant "domain.degreeStructure\nProgramConclusion" as ProgramConclusion order 83
+participant "domain.studentCurriculum\nCurriculumGroup" as CurriculumGroup order 84
+participant "domain.student\nRegistration" as Registration order 85
+participant "domain.degreeStructure\nCourseGroup" as CourseGroup order 102
+participant "domain.student.registrationStates\nRegistrationState" as RegistrationState order 103
+participant "org.joda.time\nDateTime" as DateTime order 104
+participant "domain.degreeStructure\nProgramConclusion_Base" as ProgramConclusion_Base order 105
+participant "domain\nDegree" as Degree order 106
+participant "domain.studentCurriculum\nCurriculumGroup" as CurriculumGroup order 107
+participant "domain.student.curriculum\nConclusionProcess" as ConclusionProcess order 122
+participant "domain.student.curriculum\nConclusionProcess" as ConclusionProcess order 123
+participant "org.joda.time\nYearMonthDay" as YearMonthDay order 124
+participant "domain.student.curriculum\nConclusionProcess" as ConclusionProcess order 125
+participant "org.joda.time\nYearMonthDay" as YearMonthDay order 126
+participant "domain\nGrade" as Grade order 127
+participant "java.util\nMap" as Map order 164
+participant "java.math\nBigDecimal" as BigDecimal order 165
+participant "predicate\nAccessControl" as AccessControl order 166
+participant "core.security\nAuthenticate" as Authenticate order 171
+participant "core.domain\nUser_Base" as User_Base order 172
+JSPRegistrationConclusionProcess -> RegistrationConclusionProcess: getConnection()
+JSPRegistrationConclusionProcess <- RegistrationConclusionProcess: returnConnection()
+JSPRegistrationConclusionProcess -> RegistrationConclusionProcess: executeAction()
+alt if cookiesNotFound
+     JSPRegistrationConclusionProcess <-- RegistrationConclusionProcess: showImpliedConsentCookieBanner(msg)
+     alt clickOnAcceptCookiesBtn
+          JSPRegistrationConclusionProcess -> RegistrationConclusionProcess: acceptAllCookies(sessionID)
+     else clickOnCloseBtn
+          JSPRegistrationConclusionProcess -> RegistrationConclusionProcess: keepDefaultCookies()
+     end
+else else
+	RegistrationConclusionProcess -> RegistrationConclusionProcess: run(RegistrationConclusionBean):void
+	RegistrationConclusionProcess -> RegistrationConclusionBean: getRegistration():Registration
+	RegistrationConclusionProcess -> RegistrationConclusionBean: getCurriculumGroup():CurriculumGroup
+	alt getProgramConclusion() == null
+	else else
+		RegistrationConclusionBean -> RegistrationConclusionBean: getProgramConclusion():ProgramConclusion
+		RegistrationConclusionBean -> RegistrationConclusionBean: getRegistration():Registration
+		RegistrationConclusionBean -> ProgramConclusion: groupFor(Registration)\n:Optional<CurriculumGroup>	
+		RegistrationConclusionBean -> ProgramConclusion: orElse(T):T
+	end
+	RegistrationConclusionProcess -> Registration: conclude(CurriculumGroup):void
+	Registration -> Registration: check(T,AccessControlPredicate<T>):void
+	Registration -> CurriculumGroup: conclude():void
+	Registration -> CurriculumGroup: getDegreeModule():CourseGroup
+	Registration -> CourseGroup: getProgramConclusion():ProgramConclusion
+	opt conclusion != null && conclusion.getTargetState() != null \n&& !conclusion.getTargetState().equals(getActiveStateType())
+		Registration -> RegistrationState: createRegistrationState\n(Registration,Person,DateTime,RegistrationStateType):RegistrationState
+		Registration -> AccessControl: getPerson():Person
+		Registration -> DateTime: newDateTime()
+		Registration -> ProgramConclusion_Base: getTargetState():RegistrationStateType
+	end
+	opt conclusionBean.hasEnteredConclusionDate() || conclusionBean.hasEnteredFinalAverageGrade() || conclusionBean.hasEnteredAverageGrade() || conclusionBean.hasEnteredDescriptiveGrade()
+		RegistrationConclusionProcess -> Registration: getDegree():Degree
+		RegistrationConclusionProcess -> Degree: getGradeScale():GradeScale
+		RegistrationConclusionProcess -> RegistrationConclusionBean: getConclusionDate():YearMonthDay
+		opt isConclusionProcessed()
+			RegistrationConclusionBean -> RegistrationConclusionBean: getCurriculumGroup():CurriculumGroup
+			RegistrationConclusionBean -> CurriculumGroup: getConclusionDate():YearMonthDay
+		end
+		RegistrationConclusionBean -> RegistrationConclusionBean: calculateConclusionDate():YearMonthDay
+		RegistrationConclusionProcess -> CurriculumGroup: getFinalGrade():Grade
+		opt isConclusionProcessed()
+			CurriculumGroup -> CurriculumGroup: getConclusionProcess()\n:ConclusionProcess
+			CurriculumGroup -> ConclusionProcess: getFinalGrade():Grade
+		end			
+		RegistrationConclusionProcess -> CurriculumGroup: getRawGrade():Grade	
+		opt isConclusionProcessed()
+			CurriculumGroup -> CurriculumGroup: getConclusionProcess()\n:ConclusionProcess
+			CurriculumGroup -> ConclusionProcess: getRawGrade():Grade
+		end
+		opt conclusionBean.hasEnteredConclusionDate()
+			RegistrationConclusionProcess -> RegistrationConclusionProcess: checkEnteredConclusionDate\n(RegistrationConclusionBean):void
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getRegistration():Registration
+			RegistrationConclusionProcess -> Registration: getStartDate():YearMonthDay
+			RegistrationConclusionProcess -> YearMonthDay: newYearMonthDay(Object)
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getEnteredConclusionDate():LocalDate
+		end
+		opt conclusionBean.hasEnteredFinalAverageGrade()
+			RegistrationConclusionProcess -> RegistrationConclusionProcess: checkGrade(String,GradeScale):void
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getEnteredFinalAverageGrade():String
+			RegistrationConclusionProcess -> Grade: createGrade(String,GradeScale):Grade
+			opt EmptyGrade.qualifiesAsEmpty(value)
+				Grade -> Grade: createEmptyGrade():Grade
+			end
+			Grade -> Map: get(Object):V
+			Grade -> Grade: exportAsString(GradeScale,String):String
+			opt grade == null
+				Grade -> Grade: newGrade(String,GradeScale)
+				Grade -> Map: put(K,V):V
+				Grade -> Grade: exportAsString():String
+			end
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getEnteredFinalAverageGrade():String
+		end
+		opt conclusionBean.hasEnteredAverageGrade()
+			RegistrationConclusionProcess -> RegistrationConclusionProcess: checkGrade(String,GradeScale):void
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getEnteredAverageGrade():String
+			RegistrationConclusionProcess -> Grade: createGrade(String,GradeScale):Grade
+			opt EmptyGrade.qualifiesAsEmpty(value)
+				Grade -> Grade: createEmptyGrade():Grade
+			end
+			Grade -> Map: get(Object):V
+			Grade -> Grade: exportAsString(GradeScale,String):String
+			opt grade == null
+				Grade -> Grade: newGrade(String,GradeScale)
+				Grade -> Map: put(K,V):V
+				Grade -> Grade: exportAsString():String
+			end
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getEnteredAverageGrade():String
+			RegistrationConclusionProcess -> BigDecimal: newBigDecimal(String)
+			RegistrationConclusionProcess -> BigDecimal: setScale(int,RoundingMode):BigDecimal
+			RegistrationConclusionProcess -> BigDecimal: toString():String
+		end
+		opt conclusionBean.hasEnteredDescriptiveGrade()
+			RegistrationConclusionProcess -> RegistrationConclusionProcess: checkGrade(String,GradeScale):void
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getEnteredDescriptiveGrade():String
+			RegistrationConclusionProcess -> Grade: createGrade(String,GradeScale):Grade
+			opt EmptyGrade.qualifiesAsEmpty(value)
+				Grade -> Grade: createEmptyGrade():Grade
+			end
+			Grade -> Map: get(Object):V
+			Grade -> Grade: exportAsString(GradeScale,String):String
+			opt grade == null
+				Grade -> Grade: newGrade(String,GradeScale)
+				Grade -> Map: put(K,V):V
+				Grade -> Grade: exportAsString():String
+			RegistrationConclusionProcess -> RegistrationConclusionBean: getEnteredDescriptiveGrade():String
+		end
+		RegistrationConclusionProcess -> CurriculumGroup: editConclusionInformation\n(Person,Grade,Grade,Grade,YearMonthDay,String):void
+		CurriculumGroup -> CurriculumGroup: getConclusionProcess():ConclusionProcess
+		CurriculumGroup -> YearMonthDay: toLocalDate():LocalDate
+		CurriculumGroup -> ConclusionProcess: update\n(Person,Grade,Grade,Grade,LocalDate,String):void
+		RegistrationConclusionProcess -> AccessControl: getPerson():Person
+		AccessControl -> Authenticate: getUser():User
+		alt userView == null
+		else else
+		AccessControl -> User_Base: getPerson():Person
+		end
+		RegistrationConclusionProcess -> RegistrationConclusionBean: getObservations():String
+	end
+    JSPRegistrationConclusionProcess <- RegistrationConclusionProcess: showPersonalizedPage(cookies)
+end
+@enduml

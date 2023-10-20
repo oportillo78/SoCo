@@ -1,0 +1,138 @@
+@startuml
+ participant "JSP\nJSPValidateAlumniIdentity" as JSPValidateAlumniIdentity order 0
+ participant "services.operator\nValidateAlumniIdentity" as ValidateAlumniIdentity order 1
+ participant "core.domain\nMessage" as Message order 105
+ participant "core.domain\nMessagingSystem" as MessagingSystem order 110
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 111
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 114
+ participant "core.domain\nSender_Base" as Sender_Base order 119
+ participant "core.util\nCoreConfiguration" as CoreConfiguration order 120
+ participant "configuration\nConfigurationInvocationHandler" as ConfigurationInvocationHandler order 123
+ participant "core.util.CoreConfiguration\nConfigurationProperties" as ConfigurationProperties order 124
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 125
+ participant "java.text\nMessageFormat" as MessageFormat order 126
+ participant "core.i18n\nBundleUtil" as BundleUtil order 127
+ participant "i18n\nI18N" as I18N order 160
+ participant "domain.organizationalStructure\nUnit" as Unit order 161
+ participant "core.domain\nBennu" as Bennu order 170
+ participant "core.domain\nBennu" as Bennu order 171
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 184
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 185
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 186
+ participant "core.domain\nBennu" as Bennu order 187
+ participant "domain\nAlumniIdentityCheckRequest_Base" as AlumniIdentityCheckRequest_Base order 188
+ participant "domain\nAlumni" as Alumni order 189
+ participant "domain\nAlumni" as Alumni order 192
+ participant "domain.student\nStudent" as Student order 199
+ participant "domain\nAlumni" as Alumni order 200
+ participant "domain\nAlumni" as Alumni order 201
+ participant "domain\nAlumniIdentityCheckRequest" as AlumniIdentityCheckRequest order 204
+ participant "org.joda.time\nDateTime" as DateTime order 215
+ JSPValidateAlumniIdentity -> ValidateAlumniIdentity: getConnection()
+ JSPValidateAlumniIdentity <- ValidateAlumniIdentity: returnConnection()
+ JSPValidateAlumniIdentity -> ValidateAlumniIdentity: executeAction()
+ ValidateAlumniIdentity -> ValidateAlumniIdentity: runValidateAlumniIdentity\n(AlumniIdentityCheckRequest,Boolean,Person):void
+ ValidateAlumniIdentity -> ValidateAlumniIdentity: run\n(AlumniIdentityCheckRequest,Boolean,Person):void
+ ValidateAlumniIdentity -> AlumniIdentityCheckRequest: validate(Boolean,Person):void
+ AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: validate(Boolean):void
+ AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setApproved(Boolean):void
+ AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setDecisionDateTime(DateTime):void
+ AlumniIdentityCheckRequest -> DateTime: DateTime()
+ DateTime -> DateTime: BaseDateTime()
+ AlumniIdentityCheckRequest -> AlumniIdentityCheckRequest: setOperator(Person):void
+ ValidateAlumniIdentity -> ValidateAlumniIdentity: sendIdentityCheckEmail(AlumniIdentityCheckRequest,Boolean):void
+ ValidateAlumniIdentity -> MessageFormat: format(String,Object[]):String
+ ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ BundleUtil -> I18N: getLocale():Locale
+ ValidateAlumniIdentity -> Unit: getInstitutionAcronym():String
+ Unit -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Unit -> Bennu: getInstitutionUnit():Unit
+ ALT approval
+ 	ValidateAlumniIdentity -> MessageFormat: format(String,Object[]):String
+ 	ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 	ValidateAlumniIdentity -> Alumni: getStudent():Student
+ 	ValidateAlumniIdentity -> Alumni: getPerson():Person
+ 	ValidateAlumniIdentity -> Alumni: getFirstAndLastName():String
+ 	Alumni -> Alumni: getName():String
+ 	ALT case IDENTITY_CHECK:
+ 		ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ 		BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 		BundleUtil -> I18N: getLocale():Locale
+ 	ELSE case PASSWORD_REQUEST:
+ 		ValidateAlumniIdentity -> MessageFormat: format(String,Object[]):String
+ 		ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ 		BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 		BundleUtil -> I18N: getLocale():Locale
+ 		ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 		ValidateAlumniIdentity -> Alumni: getLoginUsername():String
+ 		Alumni -> Alumni: getStudent():Student
+ 		Alumni -> Student: getPerson():Person
+ 		Alumni -> Student: getUsername():String
+ 		ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getExternalId():String
+ 		ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getRequestToken():UUID
+ 	END
+ 	ValidateAlumniIdentity -> MessageFormat: format(String,Object[]):String
+ 	ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 	ValidateAlumniIdentity -> Alumni: getStudent():Student
+ 	ValidateAlumniIdentity -> Alumni: getNumber():Integer
+ 	ValidateAlumniIdentity -> Unit: getInstitutionAcronym():String
+ 	Unit -> Bennu: getInstance():Bennu
+ 	Bennu -> Bennu: initialize():Bennu
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	Unit -> Bennu: getInstitutionUnit():Unit
+ ELSE else
+ 	ValidateAlumniIdentity -> MessageFormat: format(String,Object[]):String
+ 	ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ 	ValidateAlumniIdentity -> Alumni: getStudent():Student
+ 	ValidateAlumniIdentity -> Alumni: getPerson():Person
+ 	ValidateAlumniIdentity -> Alumni: getFirstAndLastName():String
+ 	Alumni -> Alumni: getName():String
+ END
+ ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getComment():String
+ OPT !approval && request.getRequestType().equals(AlumniRequestType.PASSWORD_REQUEST)
+ 	ValidateAlumniIdentity -> MessageFormat: format(String,Object[]):String
+ 	ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	ValidateAlumniIdentity -> ValidateAlumniIdentity: getRegisterConclusionURL(Alumni):String
+ 	ValidateAlumniIdentity -> CoreConfiguration: getConfiguration():ConfigurationProperties
+ 	CoreConfiguration -> ConfigurationInvocationHandler: getConfiguration(Class<T>):T
+ 	ValidateAlumniIdentity -> ConfigurationProperties: applicationUrl():String
+ 	ValidateAlumniIdentity -> MessageFormat: format(String,Object[]):String
+ 	ValidateAlumniIdentity -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	ValidateAlumniIdentity -> AbstractDomainObject: getExternalId():String
+ 	ValidateAlumniIdentity -> AbstractDomainObject: getUrlRequestToken():UUID
+ 	ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getAlumni():Alumni
+ END
+ ValidateAlumniIdentity -> ValidateAlumniIdentity: sendEmail(String,String,String):void
+ ValidateAlumniIdentity -> Message: fromSystem():MessageBuilder
+ Message -> MessagingSystem: systemSender():Sender
+ Message -> MessageBuilder: MessageBuilder(Sender)
+ MessageBuilder -> MessageBuilder: from(Sender):MessageBuilder
+ ValidateAlumniIdentity -> MessageBuilder: replyToSender():MessageBuilder
+ MessageBuilder -> MessageBuilder: replyTo(String[]):MessageBuilder
+ MessageBuilder -> Sender_Base: getReplyTo():String
+ ValidateAlumniIdentity -> MessageBuilder: singleBcc(String[]):MessageBuilder
+ ValidateAlumniIdentity -> MessageBuilder: subject(String):MessageBuilder
+ ValidateAlumniIdentity -> MessageBuilder: textBody(String):MessageBuilder
+ ValidateAlumniIdentity -> MessageBuilder: send():Message
+ ValidateAlumniIdentity -> AlumniIdentityCheckRequest_Base: getContactEmail():String
+ @enduml

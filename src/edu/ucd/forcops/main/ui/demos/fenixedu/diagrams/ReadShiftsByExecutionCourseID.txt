@@ -1,0 +1,56 @@
+@startuml
+ participant "JSP\nJSPReadShiftsByExecutionCourseID" as JSPReadShiftsByExecutionCourseID order 0
+ participant "services.resourceAllocationManager\nReadShiftsByExecutionCourseID" as ReadShiftsByExecutionCourseID order 1
+ participant "dto\nInfoExecutionCourseOccupancy" as InfoExecutionCourseOccupancy order 27
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 28
+ participant "domain\nExecutionCourse" as ExecutionCourse order 29
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 32
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 33
+ participant "domain\nShift_Base" as Shift_Base order 36
+ participant "dto\nInfoShift" as InfoShift order 37
+ participant "domain\nShift" as Shift order 46
+ participant "domain\nShiftGroupingProperties_Base" as ShiftGroupingProperties_Base order 47
+ participant "service.filter\nReadShiftsByExecutionCourseIDAuthorizationFilter" as ReadShiftsByExecutionCourseIDAuthorizationFilter order 48
+ participant "core.security\nAuthenticate" as Authenticate order 51
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 54
+ JSPReadShiftsByExecutionCourseID -> ReadShiftsByExecutionCourseID: getConnection()
+ JSPReadShiftsByExecutionCourseID <- ReadShiftsByExecutionCourseID: returnConnection()
+ JSPReadShiftsByExecutionCourseID -> ReadShiftsByExecutionCourseID: executeAction()
+ ReadShiftsByExecutionCourseID -> ReadShiftsByExecutionCourseID: runReadShiftsByExecutionCourseID(String):InfoExecutionCourseOccupancy
+ ReadShiftsByExecutionCourseID -> ReadShiftsByExecutionCourseIDAuthorizationFilter: execute(String):void
+ ReadShiftsByExecutionCourseIDAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ReadShiftsByExecutionCourseID -> ReadShiftsByExecutionCourseID: run(String):InfoExecutionCourseOccupancy
+ ReadShiftsByExecutionCourseID -> InfoExecutionCourseOccupancy: InfoExecutionCourseOccupancy()
+ ReadShiftsByExecutionCourseID -> InfoExecutionCourseOccupancy: setInfoShifts(List):void
+ ReadShiftsByExecutionCourseID -> FenixFramework: getDomainObject(String):T
+ ReadShiftsByExecutionCourseID -> ExecutionCourse: getAssociatedShifts():Set<Shift>
+ LOOP for: getCourseLoadsSet()
+ 	ExecutionCourse -> CourseLoad_Base: getShiftsSet():Set<Shift>
+ END
+ ReadShiftsByExecutionCourseID -> InfoExecutionCourseOccupancy: setInfoExecutionCourse(InfoExecutionCourse):void
+ ReadShiftsByExecutionCourseID -> InfoExecutionCourse: newInfoFromDomain(ExecutionCourse):InfoExecutionCourse
+ ALT executionCourse == null
+ ELSE else
+ 	InfoExecutionCourse -> InfoExecutionCourse: InfoExecutionCourse(ExecutionCourse)
+ END
+ LOOP for: shifts
+ 	OPT shift.getLotacao() != null && shift.getLotacao().intValue() != 0
+ 		ReadShiftsByExecutionCourseID -> Shift_Base: getLotacao():Integer
+ 	END
+ 	ReadShiftsByExecutionCourseID -> InfoShift: newInfoFromDomain(Shift):InfoShift
+ 	ALT shift == null
+ 	ELSE else
+ 		InfoShift -> InfoShift: InfoShift(Shift)
+ 		InfoShift -> InfoShift: getShift():Shift
+ 		InfoShift -> Shift: getShiftGroupingProperties():ShiftGroupingProperties
+ 		ALT groupingProperties != null
+ 			InfoShift -> ShiftGroupingProperties_Base: getCapacity():Integer
+ 		END
+ 	END
+ 	ReadShiftsByExecutionCourseID -> InfoExecutionCourseOccupancy: getInfoShifts():List
+ END
+ @enduml

@@ -1,0 +1,27 @@
+@startuml
+ participant "JSP\nJSPMultiSemesterEnrolmentReporter" as JSPMultiSemesterEnrolmentReporter order 0
+ participant "services.administrativeOffice.enrolment\nMultiSemesterEnrolmentReporter" as MultiSemesterEnrolmentReporter order 1
+ participant "org.joda.time\nDateTime" as DateTime order 15
+ participant "org.joda.time\nChronology" as Chronology order 26
+ participant "domain\nExecutionSemester" as ExecutionSemester order 27
+ participant "org.joda.time\nDateTime" as DateTime order 32
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 33
+ JSPMultiSemesterEnrolmentReporter -> MultiSemesterEnrolmentReporter: getConnection()
+ JSPMultiSemesterEnrolmentReporter <- MultiSemesterEnrolmentReporter: returnConnection()
+ JSPMultiSemesterEnrolmentReporter -> MultiSemesterEnrolmentReporter: executeAction()
+ MultiSemesterEnrolmentReporter -> MultiSemesterEnrolmentReporter: report(int,int,int,int):void
+ MultiSemesterEnrolmentReporter -> DateTime: DateTime(int,int,int,int,int,int,int)
+ MultiSemesterEnrolmentReporter -> ExecutionSemester: readByDateTime(DateTime):ExecutionSemester
+ ExecutionSemester -> DateTime: toYearMonthDay():YearMonthDay
+ ExecutionSemester -> ExecutionSemester: readByYearMonthDay(YearMonthDay):ExecutionSemester
+ MultiSemesterEnrolmentReporter -> DateTime: plusHours(int):DateTime
+ DateTime -> DateTime: getChronology():Chronology
+ DateTime -> Chronology: hours():DurationField
+ DateTime -> DateTime: getMillis():long
+ DateTime -> Chronology: add(long,int):long
+ DateTime -> DateTime: withMillis(long):DateTime
+ OPT semester.getSemester().intValue() == semesterToReport
+ 	MultiSemesterEnrolmentReporter -> ExecutionSemester_Base: getCurriculumLineLogsSet():Set<CurriculumLineLog>
+ 	MultiSemesterEnrolmentReporter -> ExecutionSemester_Base: getAssociatedExecutionCoursesSet():Set<ExecutionCourse>
+ END
+ @enduml

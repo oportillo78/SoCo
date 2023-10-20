@@ -1,0 +1,58 @@
+@startuml
+ participant "JSP\nJSPMoveLessonPlanning" as JSPMoveLessonPlanning order 0
+ participant "services.teacher\nMoveLessonPlanning" as MoveLessonPlanning order 1
+ participant "domain\nLessonPlanning" as LessonPlanning order 11
+ participant "domain\nExecutionCourse" as ExecutionCourse order 28
+ participant "domain\nLessonPlanning_Base" as LessonPlanning_Base order 29
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 30
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 45
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 46
+ participant "domain\nExecutionCourse" as ExecutionCourse order 51
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 52
+ participant "core.security\nAuthenticate" as Authenticate order 53
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 56
+ JSPMoveLessonPlanning -> MoveLessonPlanning: getConnection()
+ JSPMoveLessonPlanning <- MoveLessonPlanning: returnConnection()
+ JSPMoveLessonPlanning -> MoveLessonPlanning: executeAction()
+ MoveLessonPlanning -> MoveLessonPlanning: runMoveLessonPlanning(String,LessonPlanning,Integer):void
+ MoveLessonPlanning -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ MoveLessonPlanning -> MoveLessonPlanning: run(String,LessonPlanning,Integer):void
+ MoveLessonPlanning -> LessonPlanning: moveTo(Integer):void
+ LessonPlanning -> LessonPlanning: getExecutionCourse():ExecutionCourse
+ LessonPlanning -> LessonPlanning: getLessonType():ShiftType
+ LessonPlanning -> ExecutionCourse: getLessonPlanningsOrderedByOrder(ShiftType):List<LessonPlanning>
+ OPT !lessonPlannings.isEmpty() && order != getOrderOfPlanning() && order <= lessonPlannings.size() && order >= 1
+ 	LessonPlanning -> LessonPlanning_Base: getOrderOfPlanning():Integer
+ 	LessonPlanning -> LessonPlanning_Base: setOrderOfPlanning(Integer):void
+ 	LessonPlanning -> LessonPlanning: getOrderOfPlanning():Integer
+ 	LessonPlanning -> LessonPlanning: setOrderOfPlanning(Integer):void
+ 	LessonPlanning -> LessonPlanning: setOrderOfPlanning(Integer):void
+ END
+ @enduml

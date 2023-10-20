@@ -1,0 +1,77 @@
+@startuml
+ participant "JSP\nJSPReadAvailableShiftsForClass" as JSPReadAvailableShiftsForClass order 0
+ participant "services.resourceAllocationManager\nReadAvailableShiftsForClass" as ReadAvailableShiftsForClass order 1
+ participant "predicate\nAccessControl" as AccessControl order 21
+ participant "core.security\nAuthenticate" as Authenticate order 26
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 29
+ participant "core.domain\nUser_Base" as User_Base order 30
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 31
+ participant "domain\nPerson" as Person order 32
+ participant "core.domain\nUser" as User order 37
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 38
+ participant "dto\nInfoClass" as InfoClass order 39
+ participant "domain\nSchoolClass" as SchoolClass order 44
+ participant "domain\nSchoolClass" as SchoolClass order 45
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 54
+ participant "domain\nExecutionCourse" as ExecutionCourse order 55
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 58
+ participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 59
+ participant "org.apache.commons.collections\nTransformer" as Transformer order 66
+ JSPReadAvailableShiftsForClass -> ReadAvailableShiftsForClass: getConnection()
+ JSPReadAvailableShiftsForClass <- ReadAvailableShiftsForClass: returnConnection()
+ JSPReadAvailableShiftsForClass -> ReadAvailableShiftsForClass: executeAction()
+ ReadAvailableShiftsForClass -> ReadAvailableShiftsForClass: run(InfoClass):Object
+ ReadAvailableShiftsForClass -> ReadAvailableShiftsForClass: check(AccessControlPredicate<?>):void
+ ReadAvailableShiftsForClass -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ ReadAvailableShiftsForClass -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		ReadAvailableShiftsForClass -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ ReadAvailableShiftsForClass -> FenixFramework: getDomainObject(String):T
+ ReadAvailableShiftsForClass -> InfoClass: getExternalId():String
+ InfoClass -> InfoClass: getSchoolClass():SchoolClass
+ InfoClass -> SchoolClass: getExternalId():String
+ ReadAvailableShiftsForClass -> SchoolClass: findAvailableShifts():Set<Shift>
+ SchoolClass -> SchoolClass: getExecutionDegree():ExecutionDegree
+ SchoolClass -> ExecutionDegree_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ LOOP for: degreeCurricularPlan.getCurricularCoursesSet()
+ 	OPT curricularCourse.hasScopeForCurricularYear(getAnoCurricular(), getExecutionPeriod())
+ 		LOOP for: curricularCourse.getAssociatedExecutionCoursesSet()
+ 			OPT executionCourse.getExecutionPeriod() == getExecutionPeriod()
+ 				SchoolClass -> ExecutionCourse: getAssociatedShifts():Set<Shift>
+ 				LOOP for: getCourseLoadsSet()
+ 					ExecutionCourse -> CourseLoad_Base: getShiftsSet():Set<Shift>
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ SchoolClass -> SchoolClass: getAssociatedShiftsSet():Set<Shift>
+ ReadAvailableShiftsForClass -> CollectionUtils: collect(Collection,Transformer):Collection
+ CollectionUtils -> CollectionUtils: collect\n(Collection,Transformer,Collection):Collection
+ OPT ?
+ 	CollectionUtils -> CollectionUtils: collect\n(Iterator,Transformer,Collection):Collection
+ 	OPT ?
+ 		LOOP while: ?
+ 			CollectionUtils -> Transformer: transform(Object):Object
+ 		END
+ 	END
+ END
+ @enduml

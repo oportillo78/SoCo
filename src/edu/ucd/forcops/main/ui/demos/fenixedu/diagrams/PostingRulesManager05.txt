@@ -1,0 +1,37 @@
+@startuml
+ participant "JSP\nJSPPostingRulesManager" as JSPPostingRulesManager order 0
+ participant "services.accounting\nPostingRulesManager" as PostingRulesManager order 1
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 27
+ participant "dto.accounting.paymentPlan\nInstallmentBean" as InstallmentBean order 28
+ participant "org.joda.time\nLocalDate" as LocalDate order 29
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 30
+ participant "domain.accounting.postingRules.gratuity\nStandaloneEnrolmentGratuityPR" as StandaloneEnrolmentGratuityPR order 31
+ JSPPostingRulesManager -> PostingRulesManager: getConnection()
+ JSPPostingRulesManager <- PostingRulesManager: returnConnection()
+ JSPPostingRulesManager -> PostingRulesManager: executeAction()
+ PostingRulesManager -> PostingRulesManager: createDEAStandaloneGratuityPostingRule\n(StandaloneInstallmentBean,DegreeCurricularPlan):void
+ PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ ALT dcpSAT != null
+ 	PostingRulesManager -> InstallmentBean: getStartDate():YearMonthDay
+ 	PostingRulesManager -> LocalDate: LocalDate(int,int,int)
+ 	PostingRulesManager -> YearMonthDay: getYear():int
+ 	PostingRulesManager -> YearMonthDay: getMonthOfYear():int
+ 	PostingRulesManager -> YearMonthDay: getDayOfMonth():int
+ 	PostingRulesManager -> InstallmentBean: getEctsForYear():BigDecimal
+ 	PostingRulesManager -> InstallmentBean: getGratuityFactor():BigDecimal
+ 	PostingRulesManager -> InstallmentBean: getEctsFactor():BigDecimal
+ 	PostingRulesManager -> LocalDate: toDateTimeAtStartOfDay():DateTime
+ 	PostingRulesManager -> StandaloneEnrolmentGratuityPR: StandaloneEnrolmentGratuityPR\n(DateTime,DateTime,ServiceAgreementTemplate,BigDecimal,BigDecimal,BigDecimal)
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: StandaloneEnrolmentGratuityPR()
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: init\n(DateTime,DateTime,ServiceAgreementTemplate,BigDecimal,BigDecimal,BigDecimal):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: checkParameters(BigDecimal,BigDecimal,BigDecimal):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: checkGratuityPR(ServiceAgreementTemplate):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: init\n(EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: checkParameters(EntryType):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: setEntryType(EntryType):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: setEctsForYear(BigDecimal):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: setGratuityFactor(BigDecimal):void
+ 	StandaloneEnrolmentGratuityPR -> StandaloneEnrolmentGratuityPR: setEctsFactor(BigDecimal):void
+ END
+ @enduml

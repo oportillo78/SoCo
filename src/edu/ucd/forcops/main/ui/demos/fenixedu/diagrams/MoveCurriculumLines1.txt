@@ -1,0 +1,136 @@
+@startuml
+ participant "JSP\nJSPMoveCurriculumLines" as JSPMoveCurriculumLines order 0
+ participant "services.student.curriculumLines\nMoveCurriculumLines" as MoveCurriculumLines order 1
+ participant "domain.studentCurriculum.curriculumLine\nMoveCurriculumLinesBean" as MoveCurriculumLinesBean order 13
+ participant "domain.enrolment\nCurriculumModuleMoveWrapper" as CurriculumModuleMoveWrapper order 19
+ participant "domain.studentCurriculum\nCurriculumModule" as CurriculumModule order 28
+ participant "domain.studentCurriculum.curriculumLine\nCurriculumLineLocationBean" as CurriculumLineLocationBean order 29
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 30
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 88
+ participant "domain\nPerson" as Person order 89
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 90
+ participant "domain.accessControl.academicAdministration\nAcademicAccessRule" as AcademicAccessRule order 91
+ participant "domain\nPerson_Base" as Person_Base order 94
+ participant "domain\nPerson" as Person order 95
+ participant "core.domain\nUser" as User order 100
+ participant "domain.studentCurriculum.curriculumLine\nCurriculumLineLocationBean" as CurriculumLineLocationBean order 101
+ participant "domain.studentCurriculum\nCurriculumModule_Base" as CurriculumModule_Base order 102
+ participant "domain\nPerson" as Person order 103
+ participant "domain\nExecutionSemester" as ExecutionSemester order 104
+ participant "core.domain\nBennu" as Bennu order 113
+ participant "core.domain\nBennu" as Bennu order 114
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 127
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 128
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 129
+ participant "core.domain\nBennu" as Bennu order 130
+ participant "predicate\nAccessControl" as AccessControl order 131
+ participant "core.security\nAuthenticate" as Authenticate order 140
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 143
+ participant "core.domain\nUser_Base" as User_Base order 144
+ JSPMoveCurriculumLines -> MoveCurriculumLines: getConnection()
+ JSPMoveCurriculumLines <- MoveCurriculumLines: returnConnection()
+ JSPMoveCurriculumLines -> MoveCurriculumLines: executeAction()
+ MoveCurriculumLines -> MoveCurriculumLines: run(MoveCurriculumLinesBean):void
+ MoveCurriculumLines -> MoveCurriculumLinesBean: getStudentCurricularPlan():StudentCurricularPlan
+ ALT moveCurriculumLinesBean.isWithRules()
+ 	MoveCurriculumLines -> StudentCurricularPlan: moveCurriculumLines(MoveCurriculumLinesBean):void
+ 	StudentCurricularPlan -> StudentCurricularPlan: check(T,AccessControlPredicate<T>):void
+ 	StudentCurricularPlan -> AccessControl: getPerson():Person
+ 	LOOP for: moveCurriculumLinesBean.getCurriculumLineLocations()
+ 		StudentCurricularPlan -> CurriculumLineLocationBean: getCurriculumGroup():CurriculumGroup
+ 		StudentCurricularPlan -> CurriculumLineLocationBean: getCurriculumLine():CurriculumLine
+ 		OPT curriculumLine.getCurriculumGroup() != destination
+ 			StudentCurricularPlan -> StudentCurricularPlan: checkPermission(Person,CurriculumLineLocationBean):void
+ 			StudentCurricularPlan -> CurriculumModule_Base: setCurriculumGroup(CurriculumGroup):void
+ 		END
+ 		StudentCurricularPlan -> CurriculumModule_Base: setCreatedBy(String):void
+ 		ALT responsible != null
+ 			StudentCurricularPlan -> Person: getUsername():String
+ 		ELSE else
+ 			StudentCurricularPlan -> CurriculumModule_Base: getCreatedBy():String
+ 		END
+ 	END
+ 	StudentCurricularPlan -> StudentCurricularPlan: isBolonhaDegree():boolean
+ 	OPT runRules
+ 		StudentCurricularPlan -> StudentCurricularPlan: checkEnrolmentRules\n(Set<IDegreeModuleToEvaluate>,ExecutionSemester):void
+ 		StudentCurricularPlan -> MoveCurriculumLinesBean: getIDegreeModulesToEvaluate\n(ExecutionSemester):Set<IDegreeModuleToEvaluate>
+ 		LOOP for: this.curriculumLineLocations
+ 			MoveCurriculumLinesBean -> CurriculumModuleMoveWrapper: create\n(CurriculumGroup,ExecutionSemester):CurriculumModuleMoveWrapper
+ 			CurriculumModuleMoveWrapper -> CurriculumModuleMoveWrapper: CurriculumModuleMoveWrapper(CurriculumModule,ExecutionSemester)
+ 			CurriculumModuleMoveWrapper -> CurriculumModuleMoveWrapper: EnroledCurriculumModuleWrapper(CurriculumModule,ExecutionSemester)
+ 			CurriculumModuleMoveWrapper -> CurriculumModuleMoveWrapper: checkParameters(CurriculumModule,ExecutionSemester):void
+ 			ALT curriculumModule.isRoot()
+ 			ELSE else
+ 				CurriculumModuleMoveWrapper -> CurriculumModule: isNoCourseGroupCurriculumGroup():boolean
+ 			END
+ 			MoveCurriculumLinesBean -> CurriculumLineLocationBean: getCurriculumGroup():CurriculumGroup
+ 		END
+ 		StudentCurricularPlan -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 		ExecutionSemester -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ 		StudentCurricularPlan -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 		ExecutionSemester -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ 	END
+ ELSE else
+ 	MoveCurriculumLines -> StudentCurricularPlan: moveCurriculumLinesWithoutRules(Person,MoveCurriculumLinesBean):void
+ 	StudentCurricularPlan -> StudentCurricularPlan: check(T,AccessControlPredicate<T>):void
+ 	StudentCurricularPlan -> AccessControl: getPerson():Person
+ 	AccessControl -> Authenticate: getUser():User
+ 	ALT userView == null
+ 	ELSE else
+ 		AccessControl -> User_Base: getPerson():Person
+ 	END
+ 	StudentCurricularPlan -> AccessControlPredicate: evaluate(E):boolean
+ 	OPT !result
+ 		ALT requester == null
+ 		ELSE else
+ 			StudentCurricularPlan -> Person: getUsername():String
+ 		END
+ 		StudentCurricularPlan -> DomainObject: getExternalId():String
+ 	END
+ 	LOOP for: moveCurriculumLinesBean.getCurriculumLineLocations()
+ 		StudentCurricularPlan -> CurriculumLineLocationBean: getCurriculumGroup():CurriculumGroup
+ 		StudentCurricularPlan -> CurriculumLineLocationBean: getCurriculumLine():CurriculumLine
+ 		OPT curriculumLine.getCurriculumGroup() != destination
+ 			StudentCurricularPlan -> StudentCurricularPlan: checkPermission(Person,CurriculumLineLocationBean):void
+ 			StudentCurricularPlan -> AcademicAccessRule: isProgramAccessibleToFunction\n(AcademicOperationType,AcademicProgram,User):boolean
+ 			AcademicAccessRule -> AcademicAccessRule: filter\n(AcademicOperationType):Stream<AcademicAccessRule>
+ 			StudentCurricularPlan -> StudentCurricularPlan: getDegree():Degree
+ 			StudentCurricularPlan -> Person_Base: getUser():User
+ 			StudentCurricularPlan -> CurriculumModule_Base: setCurriculumGroup(CurriculumGroup):void
+ 		END
+ 		StudentCurricularPlan -> CurriculumModule_Base: setCreatedBy(String):void
+ 		ALT responsiblePerson != null
+ 			StudentCurricularPlan -> Person: getUsername():String
+ 			Person -> Person: getUser():User
+ 			ALT user == null
+ 			ELSE else
+ 				Person -> User: getUsername():String
+ 			END
+ 		ELSE else
+ 			StudentCurricularPlan -> CurriculumModule_Base: getCreatedBy():String
+ 		END
+ 	END
+ 	MoveCurriculumLines -> AccessControl: getPerson():Person
+ 	AccessControl -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	ALT userView == null
+ 	ELSE else
+ 		AccessControl -> User_Base: getPerson():Person
+ 	END
+ END
+ @enduml

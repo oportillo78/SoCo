@@ -1,0 +1,75 @@
+@startuml
+ participant "JSP\nJSPPersonSearcher" as JSPPersonSearcher order 0
+ participant "services.person\nPersonSearcher" as PersonSearcher order 1
+ participant "core.domain\nUser" as User order 17
+ participant "core.domain\nUserProfile" as UserProfile order 30
+ participant "core.domain\nNameIndex" as NameIndex order 39
+ participant "StringNormalizer" as StringNormalizer order 44
+ participant "java.text\nNormalizer" as Normalizer order 49
+ participant "core.domain\nBennu" as Bennu order 50
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 63
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 64
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 65
+ participant "core.domain\nBennu" as Bennu order 66
+ JSPPersonSearcher -> PersonSearcher: getConnection()
+ JSPPersonSearcher <- PersonSearcher: returnConnection()
+ JSPPersonSearcher -> PersonSearcher: executeAction()
+ PersonSearcher -> PersonSearcher: search(int):Stream<Person>
+ ALT !Strings.isNullOrEmpty(query)
+ 	PersonSearcher -> User: findByUsername(String):User
+ 	ALT ?
+ 		User -> User: manualFind(String):User
+ 		LOOP for: ?
+ 			User -> User: cacheUser(User):void
+ 		END
+ 	END
+ 	OPT ?
+ 		User -> User: findByUsername(String):User
+ 	END
+ 	PersonSearcher -> UserProfile: searchByName(String,int):Stream<UserProfile>
+ 	OPT ?
+ 		UserProfile -> NameIndex: search(String,int):Stream<UserProfile>
+ 		NameIndex -> StringNormalizer: normalizeAndRemoveAccents(String):String
+ 		StringNormalizer -> Normalizer: normalize(CharSequence,Form):String
+ 	END
+ 	UserProfile -> NameIndex: search(String,int):Stream<UserProfile>
+ ELSE else
+ 	ALT !Strings.isNullOrEmpty(username)
+ 		PersonSearcher -> User: findByUsername(String):User
+ 		ALT ?
+ 			User -> User: manualFind(String):User
+ 			LOOP for: ?
+ 				User -> User: cacheUser(User):void
+ 			END
+ 		END
+ 		OPT ?
+ 			User -> User: findByUsername(String):User
+ 		END
+ 	ELSE else
+ 		ALT !Strings.isNullOrEmpty(name)
+ 			PersonSearcher -> UserProfile: searchByName(String,int):Stream<UserProfile>
+ 			OPT ?
+ 				UserProfile -> NameIndex: search(String,int):Stream<UserProfile>
+ 				NameIndex -> StringNormalizer: normalizeAndRemoveAccents(String):String
+ 				StringNormalizer -> Normalizer: normalize(CharSequence,Form):String
+ 			END
+ 			UserProfile -> NameIndex: search(String,int):Stream<UserProfile>
+ 		ELSE else
+ 			PersonSearcher -> Bennu: getInstance():Bennu
+ 			OPT ?
+ 				Bennu -> Bennu: initialize():Bennu
+ 				OPT ?
+ 					Bennu -> Bennu: Bennu()
+ 				END
+ 				Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 				Bennu -> DomainRoot: getBennu():Bennu
+ 			END
+ 			Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 			Bennu -> DomainRoot: getBennu():Bennu
+ 			PersonSearcher -> Bennu: getUserSet():Set<User>
+ 			Bennu -> Bennu: getUserSet():Set<User>
+ 			Bennu -> Bennu: getUserSet():Set<User>
+ 		END
+ 	END
+ END
+ @enduml

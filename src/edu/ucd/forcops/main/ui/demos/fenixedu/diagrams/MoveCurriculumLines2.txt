@@ -1,0 +1,143 @@
+@startuml
+ participant "JSP\nJSPMoveCurriculumLines" as JSPMoveCurriculumLines order 0
+ participant "services.student.curriculumLines\nMoveCurriculumLines" as MoveCurriculumLines order 1
+ participant "dto.student.OptionalCurricularCoursesLocationBean\nOptionalEnrolmentLocationBean" as OptionalEnrolmentLocationBean order 29
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 30
+ participant "domain\nEnrolment" as Enrolment order 47
+ participant "dto.student.OptionalCurricularCoursesLocationBean\nEnrolmentLocationBean" as EnrolmentLocationBean order 48
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 53
+ participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 58
+ participant "domain.studentCurriculum\nCurriculumGroup" as CurriculumGroup order 61
+ participant "dto.student\nOptionalCurricularCoursesLocationBean" as OptionalCurricularCoursesLocationBean order 64
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 65
+ participant "predicate\nAccessControl" as AccessControl order 82
+ participant "core.security\nAuthenticate" as Authenticate order 87
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 93
+ participant "core.domain\nUser_Base" as User_Base order 94
+ participant "domain\nOptionalEnrolment" as OptionalEnrolment order 95
+ participant "domain.log\nOptionalEnrolmentLog" as OptionalEnrolmentLog order 189
+ participant "domain.studentCurriculum\nCurriculumLine" as CurriculumLine order 196
+ participant "core.domain\nUser" as User order 197
+ participant "domain\nEnrolment_Base" as Enrolment_Base order 198
+ participant "domain.exceptions\nDomainException" as DomainException order 211
+ participant "domain\nEnrolment" as Enrolment order 212
+ JSPMoveCurriculumLines -> MoveCurriculumLines: getConnection()
+ JSPMoveCurriculumLines <- MoveCurriculumLines: returnConnection()
+ JSPMoveCurriculumLines -> MoveCurriculumLines: executeAction()
+ MoveCurriculumLines -> MoveCurriculumLines: run\n(OptionalCurricularCoursesLocationBean):void
+ MoveCurriculumLines -> MoveCurriculumLines: moveEnrolments\n(OptionalCurricularCoursesLocationBean):void
+ LOOP for: bean.getEnrolmentBeans()
+ 	MoveCurriculumLines -> EnrolmentLocationBean: getCurriculumGroup(StudentCurricularPlan):CurriculumGroup
+ 	EnrolmentLocationBean -> StudentCurricularPlan: getCurricularCoursePossibleGroupsWithoutNoCourseGroupCurriculumGroups\n(CurricularCourse):Collection<CurriculumGroup>
+ 	StudentCurricularPlan -> StudentCurricularPlan: getRoot():RootCurriculumGroup
+ 	StudentCurricularPlan -> RootCurriculumGroup: getCurricularCoursePossibleGroupsWithoutNoCourseGroupCurriculumGroups\n(CurricularCourse):Collection<CurriculumGroup>
+ 	LOOP for: this.getCurriculumGroups()
+ 		RootCurriculumGroup -> CurriculumGroup: getCurricularCoursePossibleGroupsWithoutNoCourseGroupCurriculumGroups\n(CurricularCourse):Collection<CurriculumGroup>
+ 		LOOP for: this.getCurriculumGroups()
+ 			CurriculumGroup -> CurriculumGroup: getCurricularCoursePossibleGroupsWithoutNoCourseGroupCurriculumGroups\n(CurricularCourse):Collection<CurriculumGroup>
+ 		END
+ 	END
+ 	EnrolmentLocationBean -> EnrolmentLocationBean: getOptionalCurricularCourse():OptionalCurricularCourse
+ 	MoveCurriculumLines -> OptionalCurricularCoursesLocationBean: getStudentCurricularPlan():StudentCurricularPlan
+ 	MoveCurriculumLines -> OptionalCurricularCoursesLocationBean: getStudentCurricularPlan():StudentCurricularPlan
+ 	MoveCurriculumLines -> EnrolmentLocationBean: getEnrolment():Enrolment
+ 	MoveCurriculumLines -> EnrolmentLocationBean: getOptionalCurricularCourse():OptionalCurricularCourse
+ 	MoveCurriculumLines -> StudentCurricularPlan: convertEnrolmentToOptionalEnrolment\n(Enrolment,CurriculumGroup,OptionalCurricularCourse):OptionalEnrolment
+ 	StudentCurricularPlan -> AccessControl: getPerson():Person
+ 	AccessControl -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	ALT userView == null
+ 	ELSE else
+ 		AccessControl -> User_Base: getPerson():Person
+ 	END
+ 	StudentCurricularPlan -> OptionalEnrolment: createBasedOn\n(Enrolment,CurriculumGroup,OptionalCurricularCourse):OptionalEnrolment
+ 	OptionalEnrolment -> OptionalEnrolment: checkParameters\n(Enrolment,CurriculumGroup,OptionalCurricularCourse):void
+ 	OptionalEnrolment -> OptionalEnrolment: OptionalEnrolment()
+ 	OptionalEnrolment -> OptionalEnrolment: OptionalEnrolment_Base()
+ 	OptionalEnrolment -> OptionalEnrolment: setCurricularCourse(CurricularCourse):void
+ 	OptionalEnrolment -> OptionalEnrolment: setDegreeModule(DegreeModule):void
+ 	OptionalEnrolment -> OptionalEnrolment: setDegreeModule(DegreeModule):void
+ 	OptionalEnrolment -> OptionalEnrolment: resetIsFirstTimeEnrolment():void
+ 	OptionalEnrolment -> CurriculumLine: getCurricularCourse():CurricularCourse
+ 	OptionalEnrolment -> OptionalEnrolment: setWeigth(Double):void
+ 	OptionalEnrolment -> CurriculumLine: getWeigth():Double
+ 	OptionalEnrolment -> OptionalEnrolment: setEnrollmentState(EnrollmentState):void
+ 	OptionalEnrolment -> CurriculumLine: getEnrollmentState():EnrollmentState
+ 	OptionalEnrolment -> OptionalEnrolment: setExecutionPeriod(ExecutionSemester):void
+ 	OptionalEnrolment -> CurriculumLine: getExecutionPeriod():ExecutionSemester
+ 	OptionalEnrolment -> OptionalEnrolment: setEvaluationSeason(EvaluationSeason):void
+ 	OptionalEnrolment -> CurriculumLine: getEvaluationSeason():EvaluationSeason
+ 	OptionalEnrolment -> OptionalEnrolment: setCreatedBy(String):void
+ 	OptionalEnrolment -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	OptionalEnrolment -> User: getUsername():String
+ 	OptionalEnrolment -> OptionalEnrolment: setCreationDateDateTime(DateTime):void
+ 	OptionalEnrolment -> CurriculumLine: getCreationDateDateTime():DateTime
+ 	OptionalEnrolment -> OptionalEnrolment: setEnrolmentCondition(EnrollmentCondition):void
+ 	OptionalEnrolment -> CurriculumLine: getEnrolmentCondition():EnrollmentCondition
+ 	OptionalEnrolment -> OptionalEnrolment: setCurriculumGroup(CurriculumGroup):void
+ 	OptionalEnrolment -> OptionalEnrolment: setOptionalCurricularCourse(OptionalCurricularCourse):void
+ 	OptionalEnrolment -> OptionalEnrolment: getEvaluationsSet():Set<EnrolmentEvaluation>
+ 	OptionalEnrolment -> CurriculumLine: getEvaluationsSet():Set<EnrolmentEvaluation>
+ 	OptionalEnrolment -> OptionalEnrolment: getProgramCertificateRequestsSet():Set<ProgramCertificateRequest>
+ 	OptionalEnrolment -> CurriculumLine: getProgramCertificateRequestsSet():Set<ProgramCertificateRequest>
+ 	OptionalEnrolment -> OptionalEnrolment: getCourseLoadRequestsSet():Set<CourseLoadRequest>
+ 	OptionalEnrolment -> CurriculumLine: getCourseLoadRequestsSet():Set<CourseLoadRequest>
+ 	OptionalEnrolment -> OptionalEnrolment: getExtraExamRequestsSet():Set<ExtraExamRequest>
+ 	OptionalEnrolment -> CurriculumLine: getExtraExamRequestsSet():Set<ExtraExamRequest>
+ 	OptionalEnrolment -> OptionalEnrolment: getEnrolmentWrappersSet():Set<InternalEnrolmentWrapper>
+ 	OptionalEnrolment -> CurriculumLine: getEnrolmentWrappersSet():Set<InternalEnrolmentWrapper>
+ 	OptionalEnrolment -> OptionalEnrolment: getThesesSet():Set<Thesis>
+ 	OptionalEnrolment -> CurriculumLine: getThesesSet():Set<Thesis>
+ 	OptionalEnrolment -> OptionalEnrolment: getExamDateCertificateRequestsSet():Set<ExamDateCertificateRequest>
+ 	OptionalEnrolment -> CurriculumLine: getExamDateCertificateRequestsSet():Set<ExamDateCertificateRequest>
+ 	OptionalEnrolment -> OptionalEnrolment: changeAttends(Enrolment,Enrolment):void
+ 	OptionalEnrolment -> OptionalEnrolment: createCurriculumLineLog(EnrolmentAction):void
+ 	OptionalEnrolment -> OptionalEnrolment: getRegistration():Registration
+ 	OptionalEnrolment -> OptionalEnrolment: getCurricularCourse():CurricularCourse
+ 	OptionalEnrolment -> OptionalEnrolment: getOptionalCurricularCourse():OptionalCurricularCourse
+ 	OptionalEnrolment -> OptionalEnrolment: getExecutionPeriod():ExecutionSemester
+ 	OptionalEnrolment -> OptionalEnrolment: getCurrentUser():String
+ 	OptionalEnrolment -> OptionalEnrolmentLog: OptionalEnrolmentLog\n(EnrolmentAction,Registration,CurricularCourse,OptionalCurricularCourse,ExecutionSemester,String)
+ 	OptionalEnrolmentLog -> OptionalEnrolmentLog: OptionalEnrolmentLog()
+ 	OptionalEnrolmentLog -> OptionalEnrolmentLog: init\n(EnrolmentAction,Registration,DegreeModule,ExecutionSemester,String):void
+ 	OptionalEnrolmentLog -> OptionalEnrolmentLog: setOptionalCurricularCourse(OptionalCurricularCourse):void
+ 	StudentCurricularPlan -> Enrolment_Base: getProgramCertificateRequestsSet():Set<ProgramCertificateRequest>
+ 	StudentCurricularPlan -> Enrolment_Base: getCourseLoadRequestsSet():Set<CourseLoadRequest>
+ 	StudentCurricularPlan -> Enrolment_Base: getExamDateCertificateRequestsSet():Set<ExamDateCertificateRequest>
+ 	StudentCurricularPlan -> Enrolment_Base: delete():void
+ 	Enrolment_Base -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 	Enrolment_Base -> Enrolment_Base: getDeletionBlockers():Collection<String>
+ 	Enrolment_Base -> Enrolment_Base: setDegreeModule(DegreeModule):void
+ 	Enrolment_Base -> Enrolment_Base: setCurriculumGroup(CurriculumGroup):void
+ 	Enrolment_Base -> Enrolment_Base: setRootDomainObject(Bennu):void
+ 	Enrolment_Base -> Enrolment_Base: deleteDomainObject():void
+ 	OPT result.getStudentCurricularPlan() != this
+ 		StudentCurricularPlan -> StudentCurricularPlan: correctInvalidAttends(StudentCurricularPlan):void
+ 		StudentCurricularPlan -> Enrolment: getStudentCurricularPlan():StudentCurricularPlan
+ 	END
+ END
+ MoveCurriculumLines -> MoveCurriculumLines: moveOptionalEnrolments\n(OptionalCurricularCoursesLocationBean):void
+ LOOP for: bean.getOptionalEnrolmentBeans()
+ 	MoveCurriculumLines -> OptionalCurricularCoursesLocationBean: getStudentCurricularPlan():StudentCurricularPlan
+ 	MoveCurriculumLines -> OptionalEnrolmentLocationBean: getEnrolment():OptionalEnrolment
+ 	MoveCurriculumLines -> OptionalEnrolmentLocationBean: getCurriculumGroup():CurriculumGroup
+ 	MoveCurriculumLines -> StudentCurricularPlan: convertOptionalEnrolmentToEnrolment\n(OptionalEnrolment,CurriculumGroup):Enrolment
+ 	StudentCurricularPlan -> AccessControl: getPerson():Person
+ 	StudentCurricularPlan -> Enrolment: createBasedOn\n(OptionalEnrolment,CurriculumGroup):Enrolment
+ 	StudentCurricularPlan -> Enrolment_Base: getProgramCertificateRequestsSet():Set<ProgramCertificateRequest>
+ 	StudentCurricularPlan -> Enrolment_Base: getCourseLoadRequestsSet():Set<CourseLoadRequest>
+ 	StudentCurricularPlan -> Enrolment_Base: getExamDateCertificateRequestsSet():Set<ExamDateCertificateRequest>
+ 	StudentCurricularPlan -> Enrolment_Base: delete():void
+ 	OPT result.getStudentCurricularPlan() != this
+ 		StudentCurricularPlan -> StudentCurricularPlan: correctInvalidAttends(StudentCurricularPlan):void
+ 		StudentCurricularPlan -> Enrolment: getStudentCurricularPlan():StudentCurricularPlan
+ 	END
+ END
+ @enduml

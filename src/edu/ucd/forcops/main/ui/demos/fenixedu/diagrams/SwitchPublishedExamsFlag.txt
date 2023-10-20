@@ -1,0 +1,74 @@
+@startuml
+ participant "JSP\nJSPSwitchPublishedExamsFlag" as JSPSwitchPublishedExamsFlag order 0
+ participant "services.resourceAllocationManager\nSwitchPublishedExamsFlag" as SwitchPublishedExamsFlag order 1
+ participant "predicate\nAccessControl" as AccessControl order 23
+ participant "core.security\nAuthenticate" as Authenticate order 28
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 31
+ participant "core.domain\nUser_Base" as User_Base order 32
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 33
+ participant "domain\nPerson" as Person order 34
+ participant "core.domain\nUser" as User order 39
+ participant "domain\nExecutionDegree" as ExecutionDegree order 42
+ participant "domain.time.calendarStructure\nAcademicInterval" as AcademicInterval order 51
+ participant "domain\nExecutionYear" as ExecutionYear order 52
+ participant "domain.time.calendarStructure\nAcademicCalendarEntry" as AcademicCalendarEntry order 55
+ participant "domain\nExecutionYear_Base" as ExecutionYear_Base order 60
+ participant "domain.time.calendarStructure\nAcademicCalendarEntry_Base" as AcademicCalendarEntry_Base order 61
+ participant "domain\nExecutionInterval" as ExecutionInterval order 62
+ participant "domain\nExecutionDegree" as ExecutionDegree order 63
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 64
+ JSPSwitchPublishedExamsFlag -> SwitchPublishedExamsFlag: getConnection()
+ JSPSwitchPublishedExamsFlag <- SwitchPublishedExamsFlag: returnConnection()
+ JSPSwitchPublishedExamsFlag -> SwitchPublishedExamsFlag: executeAction()
+ SwitchPublishedExamsFlag -> SwitchPublishedExamsFlag: run(AcademicInterval):void
+ SwitchPublishedExamsFlag -> SwitchPublishedExamsFlag: check(AccessControlPredicate<?>):void
+ SwitchPublishedExamsFlag -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ SwitchPublishedExamsFlag -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		SwitchPublishedExamsFlag -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ SwitchPublishedExamsFlag -> ExecutionDegree: filterByAcademicInterval(AcademicInterval):List<ExecutionDegree>
+ ExecutionDegree -> AcademicInterval: getAcademicCalendarEntry():AcademicCalendarEntry
+ LOOP while: !(academicCalendarEntry instanceof AcademicCalendarRootEntry)
+ 	ALT academicCalendarEntry instanceof AcademicYearCE
+ 		ExecutionDegree -> ExecutionYear: getExecutionYear(AcademicYearCE):ExecutionYear
+ 		OPT entry != null
+ 			ExecutionYear -> AcademicCalendarEntry: getOriginalTemplateEntry():AcademicCalendarEntry
+ 			OPT getTemplateEntry() != null
+ 				AcademicCalendarEntry -> AcademicCalendarEntry: getTemplateEntry():AcademicCalendarEntry
+ 				AcademicCalendarEntry -> AcademicCalendarEntry: getOriginalTemplateEntry():AcademicCalendarEntry
+ 			END
+ 		END
+ 		ExecutionDegree -> ExecutionYear_Base: getExecutionDegreesSet():Set<ExecutionDegree>
+ 	ELSE else
+ 		ExecutionDegree -> AcademicCalendarEntry_Base: getParentEntry():AcademicCalendarEntry
+ 	END
+ END
+ SwitchPublishedExamsFlag -> ExecutionInterval: getExecutionInterval(AcademicInterval):ExecutionInterval
+ SwitchPublishedExamsFlag -> ExecutionDegree: getPublishedExamMapsSet():Set<ExecutionSemester>
+ LOOP for: executionDegrees
+ 	ALT isToRemove
+ 		SwitchPublishedExamsFlag -> ExecutionDegree_Base: getPublishedExamMapsSet():Set<ExecutionSemester>
+ 	ELSE else
+ 		SwitchPublishedExamsFlag -> ExecutionDegree_Base: getPublishedExamMapsSet():Set<ExecutionSemester>
+ 	END
+ END
+ @enduml

@@ -1,0 +1,150 @@
+@startuml
+ participant "JSP\nJSPReadShiftsToEnroll" as JSPReadShiftsToEnroll order 0
+ participant "services.enrollment.shift\nReadShiftsToEnroll" as ReadShiftsToEnroll order 1
+ participant "dto\nShiftToEnrol" as ShiftToEnrol order 47
+ participant "domain\nAttends" as Attends order 48
+ participant "service.filter.enrollment\nClassEnrollmentAuthorizationFilter" as ClassEnrollmentAuthorizationFilter order 49
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nCurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan" as CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan order 114
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 115
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 116
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 117
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nOutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan" as OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan order 118
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 121
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nCurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan" as CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan order 122
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 123
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 124
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 125
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nOutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan" as OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan order 126
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 127
+ participant "domain\nDegreeCurricularPlanEquivalencePlan_Base" as DegreeCurricularPlanEquivalencePlan_Base order 128
+ participant "core.security\nAuthenticate" as Authenticate order 129
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 132
+ participant "core.domain\nUser" as User order 133
+ participant "domain.student\nRegistration" as Registration order 134
+ participant "domain.student\nStudent" as Student order 144
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nClassEnrollmentCondition" as ClassEnrollmentCondition order 145
+ participant "domain\nPerson" as Person order 146
+ JSPReadShiftsToEnroll -> ReadShiftsToEnroll: getConnection()
+ JSPReadShiftsToEnroll <- ReadShiftsToEnroll: returnConnection()
+ JSPReadShiftsToEnroll -> ReadShiftsToEnroll: executeAction()
+ ReadShiftsToEnroll -> ReadShiftsToEnroll: runReadShiftsToEnroll(Registration,ExecutionSemester):List
+ ReadShiftsToEnroll -> ClassEnrollmentAuthorizationFilter: execute(Registration,ExecutionSemester):void
+ ClassEnrollmentAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ClassEnrollmentAuthorizationFilter -> User: getPerson():Person
+ OPT RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(person.getUser())
+ 	ClassEnrollmentAuthorizationFilter -> Registration: getPerson():Person
+ 	Registration -> Registration: getStudent():Student
+ 	Registration -> Student: getPerson():Person
+ END
+ LOOP for: conditions
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentCondition: verify(Registration):void
+ END
+ ClassEnrollmentAuthorizationFilter -> Person: getActiveStudentCurricularPlansSortedByDegreeTypeAndDegreeName\n():SortedSet<StudentCurricularPlan>
+ LOOP for: getStudentsSet()
+ 	Person -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	ALT isActive()
+ 		Registration -> Registration: getLastStudentCurricularPlan():StudentCurricularPlan
+ 		Registration -> Registration: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ 	END
+ END
+ LOOP for: activeStudentCurricularPlans
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verify\n(StudentCurricularPlan,ExecutionSemester):FenixServiceException
+ 	ClassEnrollmentAuthorizationFilter -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	ALT scp.getRegistration().getRegistrationProtocol().isMobilityAgreement()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriodMobility\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 	ELSE else
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriod\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 	END
+ 	OPT !enrolmentPeriodInClasses.isPresent() || enrolmentPeriodInClasses.get().getStartDateDateTime() == null                || enrolmentPeriodInClasses.get().getEndDateDateTime() == null
+ 		ClassEnrollmentAuthorizationFilter -> CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan: CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan\n()
+ 	END
+ 	OPT !enrolmentPeriodInClasses.get().isValid()
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getStartDateDateTime():DateTime
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getEndDateDateTime():DateTime
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionPeriod():ExecutionSemester
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionYear():ExecutionYear
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getName():String
+ 		ClassEnrollmentAuthorizationFilter -> OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan: OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan\n(String)
+ 	END
+ 	LOOP for: degreeCurricularPlan.getTargetEquivalencePlansSet()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlanEquivalencePlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 		ALT scp.getRegistration().getRegistrationProtocol().isMobilityAgreement()
+ 			ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriodMobility\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 		ELSE else
+ 			ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriod\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 		END
+ 		OPT !enrolmentPeriodInClasses.isPresent() || enrolmentPeriodInClasses.get().getStartDateDateTime() == null                || enrolmentPeriodInClasses.get().getEndDateDateTime() == null
+ 			ClassEnrollmentAuthorizationFilter -> CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan: CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan\n()
+ 		END
+ 		OPT !enrolmentPeriodInClasses.get().isValid()
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getStartDateDateTime():DateTime
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getEndDateDateTime():DateTime
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionPeriod():ExecutionSemester
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionYear():ExecutionYear
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getName():String
+ 			ClassEnrollmentAuthorizationFilter -> OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan: OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan\n(String)
+ 			OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan -> OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan: FenixServiceException(String,String[])
+ 		END
+ 	END
+ END
+ ReadShiftsToEnroll -> ReadShiftsToEnroll: run(Registration,ExecutionSemester):List
+ ReadShiftsToEnroll -> ReadShiftsToEnroll: checkStudentRestrictionsForShiftsEnrolments\n(Registration):void
+ LOOP for: registration.readAttendsByExecutionPeriod(executionSemester)
+ 	ReadShiftsToEnroll -> ReadShiftsToEnroll: buildShiftToEnrol(Attends):ShiftToEnrol
+ 	ReadShiftsToEnroll -> ShiftToEnrol: ShiftToEnrol()
+ 	ReadShiftsToEnroll -> ReadShiftsToEnroll: findShiftTypesFromExecutionCourse(Attends,ShiftToEnrol):void
+ 	ReadShiftsToEnroll -> ReadShiftsToEnroll: findShiftsForExecutionCourseShiftTypesFromStudentEnroledShifts\n(Attends,ShiftToEnrol):void
+ 	LOOP for: attend.getRegistration().getShiftsSet()
+ 		ReadShiftsToEnroll -> ReadShiftsToEnroll: setShiftInformation(Attends,ShiftToEnrol,Shift):void
+ 		ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.TEORICA)
+ 			ReadShiftsToEnroll -> ShiftToEnrol: setTheoricShift(Shift):void
+ 		ELSE else
+ 			ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.PRATICA)
+ 				ReadShiftsToEnroll -> ShiftToEnrol: setPraticShift(Shift):void
+ 			ELSE else
+ 				ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.LABORATORIAL)
+ 					ReadShiftsToEnroll -> ShiftToEnrol: setLaboratoryShift(Shift):void
+ 				ELSE else
+ 					ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.TEORICO_PRATICA)
+ 						ReadShiftsToEnroll -> ShiftToEnrol: setTheoricoPraticShift(Shift):void
+ 					ELSE else
+ 						ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.FIELD_WORK)
+ 							ReadShiftsToEnroll -> ShiftToEnrol: setFieldWorkShift(Shift):void
+ 						ELSE else
+ 							ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.PROBLEMS)
+ 								ReadShiftsToEnroll -> ShiftToEnrol: setProblemsShift(Shift):void
+ 							ELSE else
+ 								ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.SEMINARY)
+ 									ReadShiftsToEnroll -> ShiftToEnrol: setSeminaryShift(Shift):void
+ 								ELSE else
+ 									ALT shift.getExecutionCourse() == attend.getExecutionCourse() && shift.containsType(ShiftType.TRAINING_PERIOD)
+ 										ReadShiftsToEnroll -> ShiftToEnrol: setTrainingShift(Shift):void
+ 									ELSE else
+ 										OPT shift.getExecutionCourse() == attend.getExecutionCourse()                && shift.containsType(ShiftType.TUTORIAL_ORIENTATION)
+ 											ReadShiftsToEnroll -> ShiftToEnrol: setTutorialOrientationShift(Shift):void
+ 										END
+ 									END
+ 								END
+ 							END
+ 						END
+ 					END
+ 				END
+ 			END
+ 		END
+ 	END
+ 	ReadShiftsToEnroll -> ShiftToEnrol: setExecutionCourse(ExecutionCourse):void
+ 	ReadShiftsToEnroll -> Attends: getExecutionCourse():ExecutionCourse
+ 	ReadShiftsToEnroll -> ShiftToEnrol: setEnrolled(boolean):void
+ 	ReadShiftsToEnroll -> Attends: getEnrolment():Enrolment
+ END
+ @enduml

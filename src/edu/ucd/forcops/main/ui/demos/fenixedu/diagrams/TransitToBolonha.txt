@@ -1,0 +1,133 @@
+@startuml
+ participant "JSP\nJSPTransitToBolonha" as JSPTransitToBolonha order 0
+ participant "services.registration\nTransitToBolonha" as TransitToBolonha order 1
+ participant "domain.student\nRegistration" as Registration order 7
+ participant "domain\nExecutionSemester" as ExecutionSemester order 36
+ participant "domain\nAttends" as Attends order 37
+ participant "domain\nDegreeCurricularPlanEquivalencePlan_Base" as DegreeCurricularPlanEquivalencePlan_Base order 38
+ participant "domain.student\nStudent" as Student order 39
+ participant "domain.student.registrationStates\nRegistrationState" as RegistrationState order 40
+ participant "domain.util.workflow\nStateBean" as StateBean order 133
+ participant "domain.util.workflow\nStateBean" as StateBean order 134
+ participant "domain.student.registrationStates\nRegisteredState" as RegisteredState order 135
+ participant "domain.student\nRegistration_Base" as Registration_Base order 136
+ participant "domain.student\nStudent" as Student order 137
+ participant "domain.util.workflow\nStateBean" as StateBean order 138
+ participant "domain.student\nRegistration" as Registration order 139
+ participant "domain.util.workflow\nStateMachine" as StateMachine order 140
+ participant "domain.util.workflow\nStateBean" as StateBean order 147
+ participant "domain.util.workflow\nIState" as IState order 148
+ participant "domain.student.registrationStates\nRegistrationState_Base" as RegistrationState_Base order 149
+ participant "domain.student.registrationStates\nRegistrationStateType" as RegistrationStateType order 150
+ participant "domain.student\nRegistrationStateLog" as RegistrationStateLog order 151
+ participant "core.i18n\nBundleUtil" as BundleUtil order 166
+ participant "dto.student\nRegistrationStateBean" as RegistrationStateBean order 167
+ JSPTransitToBolonha -> TransitToBolonha: getConnection()
+ JSPTransitToBolonha <- TransitToBolonha: returnConnection()
+ JSPTransitToBolonha -> TransitToBolonha: executeAction()
+ TransitToBolonha -> TransitToBolonha: run(Person,Registration,DateTime):void
+ TransitToBolonha -> Registration: transitToBolonha(Person,DateTime):void
+ Registration -> RegistrationState: createRegistrationState\n(Registration,Person,DateTime,RegistrationStateType):RegistrationState
+ RegistrationState -> RegistrationStateBean: RegistrationStateBean(Registration)
+ RegistrationStateBean -> RegistrationStateBean: StateBean()
+ RegistrationStateBean -> RegistrationStateBean: setStateDate(YearMonthDay):void
+ RegistrationState -> RegistrationStateBean: setResponsible(Person):void
+ RegistrationState -> RegistrationStateBean: setStateDateTime(DateTime):void
+ RegistrationState -> RegistrationStateBean: setStateType(RegistrationStateType):void
+ RegistrationState -> RegistrationState: createRegistrationState(RegistrationStateBean):RegistrationState
+ RegistrationState -> RegistrationStateBean: getRegistration():Registration
+ RegistrationState -> StateBean: getStateDateTime():DateTime
+ RegistrationState -> Registration: getStateInDate(DateTime):RegistrationState
+ ALT previousState == null
+ 	RegistrationState -> RegistrationState: createState\n(Registration,Person,DateTime,RegistrationStateType):RegistrationState
+ 	ALT case REGISTERED:
+ 		RegistrationState -> RegisteredState: RegisteredState(Registration,Person,DateTime)
+ 	ELSE case CANCELED:
+ 		RegistrationState -> RegisteredState: CanceledState(Registration,Person,DateTime)
+ 	END
+ 	RegistrationState -> RegisteredState: ConcludedState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: FlunkedState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: InterruptedState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: SchoolPartConcludedState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: StudyPlanConcludedState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: InternalAbandonState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: ExternalAbandonState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: MobilityState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: TransitionalState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: TransitedState(Registration,Person,DateTime)
+ 	RegistrationState -> RegisteredState: InactiveState(Registration,Person,DateTime)
+ 	RegistrationState -> Registration_Base: getStudent():Student
+ 	RegistrationState -> Student: updateStudentRole():void
+ 	RegistrationState -> StateBean: getRegistration():Registration
+ 	RegistrationState -> StateBean: getStateDateTime():DateTime
+ 	RegistrationState -> StateBean: getStateType():RegistrationStateType
+ ELSE else
+ 	RegistrationState -> StateMachine: execute(IState,StateBean):IState
+ 	StateMachine -> StateBean: getNextState():String
+ 	ALT state.getValidNextStates().contains(nextState)
+ 		StateMachine -> IState: checkConditionsToForward(StateBean):void
+ 		StateMachine -> IState: nextState(StateBean):IState
+ 	END
+ END
+ RegistrationState -> RegistrationState_Base: setRemarks(String):void
+ RegistrationState -> StateBean: getRemarks():String
+ RegistrationState -> RegistrationState_Base: getNext():RegistrationState
+ RegistrationState -> StateBean: getRegistration():Registration
+ RegistrationState -> StateBean: getStateType():RegistrationStateType
+ RegistrationState -> RegistrationStateType: getDescription():String
+ RegistrationState -> StateBean: getRemarks():String
+ RegistrationState -> RegistrationStateLog: createRegistrationStateLog\n(Registration,String,String,String[]):RegistrationStateLog
+ RegistrationStateLog -> RegistrationStateLog: generateLabelDescription(String,String,String[]):String
+ RegistrationStateLog -> BundleUtil: getString(String,String,String[]):String
+ RegistrationStateLog -> RegistrationStateLog: createRegistrationStateLog\n(Registration,String):RegistrationStateLog
+ RegistrationStateLog -> RegistrationStateLog: RegistrationStateLog(Registration,String)
+ RegistrationStateLog -> RegistrationStateLog: RegistrationStateLog_Base()
+ OPT getRegistration() == null
+ 	RegistrationStateLog -> RegistrationStateLog: setRegistration(Registration):void
+ END
+ RegistrationStateLog -> RegistrationStateLog: setDescription(String):void
+ LOOP for: getTargetTransitionRegistrations()
+ 	ALT registration.getDegreeType().isBolonhaDegree()
+ 		Registration -> RegistrationState: createRegistrationState\n(Registration,Person,DateTime,RegistrationStateType):RegistrationState
+ 		RegistrationState -> RegistrationStateBean: RegistrationStateBean(Registration)
+ 		RegistrationStateBean -> RegistrationStateBean: StateBean()
+ 		RegistrationStateBean -> RegistrationStateBean: setStateDate(YearMonthDay):void
+ 		RegistrationState -> StateBean: setResponsible(Person):void
+ 		RegistrationState -> StateBean: setStateDateTime(DateTime):void
+ 		RegistrationState -> StateBean: setStateType(RegistrationStateType):void
+ 		RegistrationState -> RegistrationState: createRegistrationState(RegistrationStateBean):RegistrationState
+ 	ELSE else
+ 		Registration -> RegistrationState: createRegistrationState\n(Registration,Person,DateTime,RegistrationStateType):RegistrationState
+ 		RegistrationState -> RegistrationStateBean: RegistrationStateBean(Registration)
+ 		RegistrationStateBean -> RegistrationStateBean: StateBean()
+ 		RegistrationStateBean -> RegistrationStateBean: setStateDate(YearMonthDay):void
+ 		RegistrationState -> StateBean: setResponsible(Person):void
+ 		RegistrationState -> StateBean: setStateDateTime(DateTime):void
+ 		RegistrationState -> StateBean: setStateType(RegistrationStateType):void
+ 		RegistrationState -> RegistrationState: createRegistrationState(RegistrationStateBean):RegistrationState
+ 	END
+ 	Registration -> Registration: setRegistrationProtocol(RegistrationProtocol):void
+ 	Registration -> Registration: getRegistrationProtocol():RegistrationProtocol
+ 	Registration -> Registration: setSourceRegistration(Registration):void
+ 	Registration -> Registration: changeAttends(Registration,DateTime):void
+ 	Registration -> ExecutionSemester: readByDateTime(DateTime):ExecutionSemester
+ 	LOOP for: getAssociatedAttendsSet()
+ 		OPT attends.getExecutionPeriod().isAfterOrEquals(executionSemester)
+ 			LOOP for: attends.getExecutionCourse().getAssociatedCurricularCoursesSet()
+ 				OPT curricularCourse.getDegreeCurricularPlan() == newRegistration.getLastDegreeCurricularPlan()
+ 					Registration -> Attends: setRegistration(Registration):void
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ OPT !getTargetTransitionRegistrations().isEmpty()
+ 	Registration -> Registration: changeAttends(Registration,DateTime):void
+ 	Registration -> Registration: getTargetTransitionRegistrations():List<Registration>
+ 	LOOP for: getLastDegreeCurricularPlan()                .getTargetEquivalencePlans()
+ 		Registration -> Registration: getStudent():Student
+ 		Registration -> DegreeCurricularPlanEquivalencePlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		Registration -> Student: getTransitionRegistrationFor(DegreeCurricularPlan):Registration
+ 	END
+ END
+ @enduml

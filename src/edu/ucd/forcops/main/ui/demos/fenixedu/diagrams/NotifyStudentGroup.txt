@@ -1,0 +1,160 @@
+@startuml
+ participant "JSP\nJSPNotifyStudentGroup" as JSPNotifyStudentGroup order 0
+ participant "services.teacher\nNotifyStudentGroup" as NotifyStudentGroup order 1
+ participant "predicate\nAccessControl" as AccessControl order 47
+ participant "core.security\nAuthenticate" as Authenticate order 52
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 57
+ participant "core.domain\nUser_Base" as User_Base order 58
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 59
+ participant "domain\nPerson" as Person order 60
+ participant "core.domain\nUser" as User order 65
+ participant "domain\nProjectSubmission_Base" as ProjectSubmission_Base order 66
+ participant "domain\nStudentGroup" as StudentGroup order 67
+ participant "core.i18n\nBundleUtil" as BundleUtil order 68
+ participant "i18n\nLocalizedString" as LocalizedString order 75
+ participant "i18n.LocalizedString\nBuilder" as Builder order 84
+ participant "i18n.LocalizedString\nInternalMap" as InternalMap order 85
+ participant "domain\nStudentGroup" as StudentGroup order 86
+ participant "core.domain\nMessage" as Message order 87
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 90
+ participant "domain\nExecutionCourse" as ExecutionCourse order 93
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 98
+ participant "core.domain\nMessage" as Message order 188
+ participant "core.domain\nMessagingSystem" as MessagingSystem order 204
+ participant "org.joda.time\nDateTime" as DateTime order 205
+ participant "com.google.common.base\nStrings" as Strings order 206
+ participant "core.domain.MessagingSystem\nUtil" as Util order 207
+ participant "com.google.common.base\nJoiner" as Joiner order 212
+ participant "core.domain.Message\nTemplateMessageBuilder" as TemplateMessageBuilder order 217
+ participant "i18n\nI18N" as I18N order 218
+ participant "core.domain\nSender_Base" as Sender_Base order 219
+ participant "domain\nPerson" as Person order 220
+ participant "core.groups\nGroup" as Group order 223
+ participant "core.groups\nUserGroup" as UserGroup order 226
+ participant "core.domain.groups\nNamedGroup" as NamedGroup order 227
+ participant "domain\nProject" as Project order 228
+ JSPNotifyStudentGroup -> NotifyStudentGroup: getConnection()
+ JSPNotifyStudentGroup <- NotifyStudentGroup: returnConnection()
+ JSPNotifyStudentGroup -> NotifyStudentGroup: executeAction()
+ NotifyStudentGroup -> NotifyStudentGroup: run\n(ProjectSubmission,ExecutionCourse,Person):void
+ NotifyStudentGroup -> NotifyStudentGroup: check(AccessControlPredicate<?>):void
+ NotifyStudentGroup -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ NotifyStudentGroup -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		NotifyStudentGroup -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ NotifyStudentGroup -> ProjectSubmission_Base: getStudentGroup():StudentGroup
+ NotifyStudentGroup -> StudentGroup: getAttendsSet():Set<Attends>
+ NotifyStudentGroup -> BundleUtil: getLocalizedString(String,String,String[]):LocalizedString
+ BundleUtil -> LocalizedString: LocalizedString()
+ LocalizedString -> InternalMap: InternalMap()
+ LOOP for: ?
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> LocalizedString: with(Locale,String):LocalizedString
+ 	LocalizedString -> LocalizedString: builder():Builder
+ 	LocalizedString -> Builder: with(Locale,String):Builder
+ 	LocalizedString -> Builder: build():LocalizedString
+ END
+ NotifyStudentGroup -> ProjectSubmission_Base: getStudentGroup():StudentGroup
+ NotifyStudentGroup -> StudentGroup: getGroupNumber():Integer
+ NotifyStudentGroup -> Message: from(Sender):MessageBuilder
+ Message -> MessageBuilder: MessageBuilder(Sender)
+ MessageBuilder -> MessageBuilder: from(Sender):MessageBuilder
+ NotifyStudentGroup -> ExecutionCourse: getSender():Sender
+ ExecutionCourse -> ExecutionCourse: getSender():Sender
+ ExecutionCourse -> ExecutionCourse: getSender():Sender
+ NotifyStudentGroup -> MessageBuilder: replyToSender():MessageBuilder
+ MessageBuilder -> MessageBuilder: replyTo(String[]):MessageBuilder
+ MessageBuilder -> MessageBuilder: builderSetAdd(T[],Predicate<T>,Set<T>):void
+ MessageBuilder -> MessageBuilder: builderSetAdd(Stream<T>,Predicate<T>,Set<T>):void
+ MessageBuilder -> Sender_Base: getReplyTo():String
+ NotifyStudentGroup -> Person: convertToUserGroup(Collection<Person>):Group
+ Person -> Group: users(Stream<User>):Group
+ Group -> UserGroup: UserGroup(Set<User>)
+ NotifyStudentGroup -> NamedGroup: NamedGroup(LocalizedString,Group)
+ NotifyStudentGroup -> MessageBuilder: to(Group[]):MessageBuilder
+ MessageBuilder -> MessageBuilder: builderSetAdd(T[],Predicate<T>,Set<T>):void
+ MessageBuilder -> MessageBuilder: builderSetAdd(Stream<T>,Predicate<T>,Set<T>):void
+ NotifyStudentGroup -> ProjectSubmission_Base: getProject():Project
+ NotifyStudentGroup -> Project: getName():String
+ NotifyStudentGroup -> MessageBuilder: subject(String):MessageBuilder
+ MessageBuilder -> MessageBuilder: subject(String,Locale):MessageBuilder
+ MessageBuilder -> I18N: getLocale():Locale
+ NotifyStudentGroup -> ProjectSubmission_Base: getTeacherObservation():String
+ NotifyStudentGroup -> MessageBuilder: textBody(String):MessageBuilder
+ MessageBuilder -> MessageBuilder: textBody(String,Locale):MessageBuilder
+ MessageBuilder -> I18N: getLocale():Locale
+ NotifyStudentGroup -> MessageBuilder: send():Message
+ MessageBuilder -> Message: Message()
+ Message -> Message: Message_Base()
+ Message -> MessagingSystem: getInstance():MessagingSystem
+ Message -> Message: setMessagingSystem(MessagingSystem):void
+ Message -> Message: setMessagingSystemFromPendingDispatch(MessagingSystem):void
+ Message -> Message: setCreated(DateTime):void
+ Message -> DateTime: DateTime()
+ Message -> Message: setCreator(User):void
+ Message -> Authenticate: getUser():User
+ MessageBuilder -> Message: setSender(Sender):void
+ MessageBuilder -> Message: setReplyTo(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ ALT ?
+ ELSE else
+ 	Util -> Joiner: join(Iterable<?>):String
+ 	Joiner -> Joiner: join(Iterator<?>):String
+ END
+ MessageBuilder -> Message: setPreferredLocale(Locale):void
+ MessageBuilder -> Message: setSingleBccs(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ ALT ?
+ ELSE else
+ 	Util -> Joiner: join(Iterable<?>):String
+ 	Joiner -> Joiner: join(Iterator<?>):String
+ END
+ MessageBuilder -> Message: setSingleTos(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ OPT ?
+ 	MessageBuilder -> MessageBuilder: template(String):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> Authenticate: getUser():User
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: and():MessageBuilder
+ END
+ MessageBuilder -> Message: setSubject(LocalizedString):void
+ MessageBuilder -> Message: setTextBody(LocalizedString):void
+ MessageBuilder -> Message: setHtmlBody(LocalizedString):void
+ @enduml

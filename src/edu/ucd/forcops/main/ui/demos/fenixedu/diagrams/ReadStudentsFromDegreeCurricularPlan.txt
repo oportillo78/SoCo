@@ -1,0 +1,15 @@
+@startuml
+participant "JSP\nJSPReadStudentsFromDegreeCurricularPlan" as JSPReadStudentsFromDegreeCurricularPlan order 0
+participant "services.commons.student\nReadStudentsFromDegreeCurricularPlan" as ReadStudentsFromDegreeCurricularPlan order 1
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 14
+participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 15
+JSPReadStudentsFromDegreeCurricularPlan -> ReadStudentsFromDegreeCurricularPlan: getConnection()
+JSPReadStudentsFromDegreeCurricularPlan <- ReadStudentsFromDegreeCurricularPlan: returnConnection()
+JSPReadStudentsFromDegreeCurricularPlan -> ReadStudentsFromDegreeCurricularPlan: executeAction()
+ReadStudentsFromDegreeCurricularPlan -> ReadStudentsFromDegreeCurricularPlan: runReadStudentsFromDegreeCurricularPlan(String):List
+ReadStudentsFromDegreeCurricularPlan -> ReadStudentsFromDegreeCurricularPlan: run(String):List
+ReadStudentsFromDegreeCurricularPlan -> FenixFramework: getDomainObject(String):T
+ReadStudentsFromDegreeCurricularPlan -> DegreeCurricularPlan_Base: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ReadStudentsFromDegreeCurricularPlan -> CollectionUtils: collect(Collection,Transformer):Collection
+@enduml

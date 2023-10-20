@@ -1,0 +1,42 @@
+@startuml
+ participant "JSP\nJSPPostingRulesManager" as JSPPostingRulesManager order 0
+ participant "services.accounting\nPostingRulesManager" as PostingRulesManager order 1
+ participant "domain.accounting\nServiceAgreementTemplate" as ServiceAgreementTemplate order 31
+ participant "domain.accounting\nPostingRule" as PostingRule order 32
+ participant "org.joda.time\nDateTime" as DateTime order 37
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 38
+ participant "dto.accounting.postingRule\nCreateEnrolmentGratuityPRBean" as CreateEnrolmentGratuityPRBean order 39
+ participant "domain.accounting.postingRules.gratuity\nEnrolmentGratuityPR" as EnrolmentGratuityPR order 40
+ JSPPostingRulesManager -> PostingRulesManager: getConnection()
+ JSPPostingRulesManager <- PostingRulesManager: returnConnection()
+ JSPPostingRulesManager -> PostingRulesManager: executeAction()
+ PostingRulesManager -> PostingRulesManager: createEnrolmentGratuityPR(CreateEnrolmentGratuityPRBean):void
+ ALT bean.getRule() == EnrolmentGratuityPR.class
+ 	LOOP for: bean.getDegreeCurricularPlans()
+ 		PostingRulesManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		PostingRulesManager -> PostingRulesManager: deactivateExistingEnrolmentGratuityPR\n(EventType,DateTime,ServiceAgreementTemplate,boolean):void
+ 		PostingRulesManager -> ServiceAgreementTemplate: findPostingRuleByEventTypeAndDate(EventType,DateTime):PostingRule
+ 		OPT existingPostingRule != null && existingPostingRule.isForAliens() == forAliens
+ 			PostingRulesManager -> PostingRule: deactivate(DateTime):void
+ 			PostingRule -> PostingRule: setEndDate(DateTime):void
+ 			PostingRule -> DateTime: minus(long):DateTime
+ 		END
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: getEventType():EventType
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: getStartDate():DateTime
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: isForAliens():boolean
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: getStartDate():DateTime
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: getEventType():EventType
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: getAmountPerEcts():BigDecimal
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: getNumberOfDaysToStartApplyingInterest():Integer
+ 		PostingRulesManager -> CreateEnrolmentGratuityPRBean: isForAliens():boolean
+ 		PostingRulesManager -> EnrolmentGratuityPR: EnrolmentGratuityPR\n(DateTime,DateTime,EventType,ServiceAgreementTemplate,BigDecimal,Integer,boolean)
+ 		EnrolmentGratuityPR -> EnrolmentGratuityPR: setAmountPerEcts(BigDecimal):void
+ 		EnrolmentGratuityPR -> EnrolmentGratuityPR: setNumberOfDaysToStartApplyingInterest(Integer):void
+ 		EnrolmentGratuityPR -> EnrolmentGratuityPR: setForAliens(boolean):void
+ 		EnrolmentGratuityPR -> EnrolmentGratuityPR: init\n(EntryType,EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 		EnrolmentGratuityPR -> EnrolmentGratuityPR: init\n(EventType,DateTime,DateTime,ServiceAgreementTemplate):void
+ 		EnrolmentGratuityPR -> EnrolmentGratuityPR: checkParameters(EntryType):void
+ 		EnrolmentGratuityPR -> EnrolmentGratuityPR: setEntryType(EntryType):void
+ 	END
+ END
+ @enduml
