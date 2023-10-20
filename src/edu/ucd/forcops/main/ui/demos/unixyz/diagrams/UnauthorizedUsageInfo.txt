@@ -1,0 +1,21 @@
+@startuml
+Browser-> Server: retrievePage(viewStudentRecordURL)
+Browser<- Server: displayCaptureForm()
+Browser-> Server: viewStudentRecordAction(studentID, userID)
+Server-> AuthorizationEngine: checkAuthorization(studentID, userID)
+AuthorizationEngine-> AccessControlList: checkACL(asset, userID)
+AccessControlList-> AccessControlList: checkPolicy(userID, role, permission, operation)
+AuthorizationEngine <-- AccessControlList: userRolePrivileges
+alt if accessGranted
+     Server <-- AuthorizationEngine: accessGranted
+else 
+     Server <-- AuthorizationEngine: accessDenied
+end
+alt if accessGranted
+     Server -> DB: requestStudentRecord(studentID)
+     Server <-- DB: readStudentRecord
+     Browser <- Server: displayStudentRecord(studentRecord)
+else 
+     Browser <- Server: displayError()
+end
+@enduml

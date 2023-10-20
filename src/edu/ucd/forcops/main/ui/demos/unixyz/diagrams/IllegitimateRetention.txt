@@ -1,0 +1,6 @@
+@startuml
+skinparam defaultFontSize 30
+HR->Server: uploadDataItem\n(CVOfCandidate)
+Server->DB: storeCV\n(CVOfCandidate)
+DB->DB: saveDataItem\n(CVOfCandidate)
+@enduml

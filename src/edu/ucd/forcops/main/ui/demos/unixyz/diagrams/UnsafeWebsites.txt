@@ -1,0 +1,8 @@
+@startuml
+participant Browser order 0
+participant Server order 100
+Browser-> Server: getConnection()
+Server-> Browser: returnConnection()
+Browser-> Server: requestURL(url)
+Browser<-- Server: responseURL
+@enduml

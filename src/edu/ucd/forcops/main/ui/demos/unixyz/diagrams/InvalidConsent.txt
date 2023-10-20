@@ -1,0 +1,9 @@
+@startuml
+Visitor-> Website: requestURL(url)
+Visitor<- Website: showInputForm()
+Visitor-> Website: submitForm(personalData)
+Website-> Server: sendData(personalData)
+Server-> DB: storeData(personalData)
+Server-> Marketing: subscribeToMarketing(email)
+Visitor<- Server: sendConfirmationEmail()
+@enduml

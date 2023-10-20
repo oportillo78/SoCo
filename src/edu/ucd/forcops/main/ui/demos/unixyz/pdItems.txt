@@ -1,0 +1,15 @@
+studentRecord,studentRecord
+staffRecord,staffRecord 
+URL,URL 
+Connection,Connection 
+personalData,personalData 
+email,email
+sensitiveData,sensitiveData
+ImpliedConsentCookie,ImpliedConsentCookie
+Cookies,Cookies
+DefaultCookies,DefaultCookies
+userID,userID
+Granted,Granted
+Denied,Denied
+CVOfCandidate,CVOfCandidate
+credentials,credentials

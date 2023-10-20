@@ -1,0 +1,12 @@
+@startuml
+Staff-> SIS: getStudentRecord(studentID)
+SIS -> DB: verifyCredentials(userID, action)
+SIS <-- DB: authenticationResponse
+alt if authenticationResponse=accessGranted
+     SIS -> DB: getStudentRecordFromDB(studentID)
+     SIS <-- DB: returnStudentRecord()
+     Staff <- SIS: displayStudentRecord(studentRecord)
+else 
+     Staff <- SIS: denyAccessToData()
+end
+@enduml

@@ -1,0 +1,10 @@
+The control [Retention Policy]
+With description [An organization's established protocol for retaining information for operational or regulatory compliance needs]
+With new actors [RetentionPolicyManager]
+With sorting [RetentionPolicyManager:1200]
+A pointcut composed of [2] message(s) involving the [store,  save] operations, the [*,  $db] actors, and the [CVOfCandidate] data types. 
+An advice of type [ADD_BETWEEN] with the instructions:
+	$db->RetentionPolicyManager: obtainRetentionPeriod(CVOfCandidate)
+	RetentionPolicyManager->RetentionPolicyManager: getRetentionPeriod(CVOfCandidate)
+	$db<--RetentionPolicyManager: retentionPeriod
+	$db->$db: assignPolicyToDataItem(CVOfCandidate, retentionPeriod)

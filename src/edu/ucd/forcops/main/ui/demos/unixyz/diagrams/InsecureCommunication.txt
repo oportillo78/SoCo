@@ -1,0 +1,4 @@
+@startuml
+Sender -> Receiver: sendMessage(sensitiveData)
+Receiver-> Receiver: readMessage(sensitiveData)
+@enduml

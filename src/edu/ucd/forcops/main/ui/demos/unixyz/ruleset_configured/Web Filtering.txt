@@ -1,0 +1,19 @@
+#2
+The control [Web Filtering]
+With description [Ability to screen an incoming Web page to determine whether some or all of it should not be displayed to the user]
+With new actors [WebFilter]
+With sorting [WebFilter:0]
+A pointcut composed of [4] message(s) involving the [request] operations, the [$view, $service] actors, and the [URL, Connection] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	$view-> WebFilter: getConnection()
+	WebFilter-> $view: returnConnection()
+	$view-> WebFilter: requestURL(url)
+	WebFilter-> WebFilter: validateRequest(IP, url)
+	alt if url!=blackList
+	     WebFilter -> $service: fwdRequest(url)
+	     WebFilter <-- $service: response(url,status)
+	     $view <-- WebFilter: response(url,status)
+	else else
+	     $view <-- WebFilter: deny(url)
+	     $view <-- WebFilter: closeConnection()
+	end

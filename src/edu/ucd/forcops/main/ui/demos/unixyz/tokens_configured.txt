@@ -1,0 +1,3 @@
+$db,DB
+$view,Staff,Browser,Visitor,AcademicStaff
+$service,Server,SIS,Sender,Receiver

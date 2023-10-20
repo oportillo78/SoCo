@@ -1,0 +1,12 @@
+#9
+The control [Single Sign On]
+With description [An authentication process that allows a user to access multiple applications with one set of login credentials as it eliminates further prompts when the user switches applications during the same session]
+With new actors [IdentityProviderSSO]
+With sorting [IdentityProviderSSO:1100]
+A pointcut composed of [3] message(s) involving the [authenticate, verify] operations, the [*, $db] actors, and the [credentials] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	$service-> IdentityProviderSSO: forwardForAuthentication(url)
+	$view <- IdentityProviderSSO: displaySingleSignOnPage()
+	$view -> IdentityProviderSSO: authenticateRequest(credentials)
+	IdentityProviderSSO-> IdentityProviderSSO: verifyCredentials(staffID)
+	$service <-- IdentityProviderSSO: authenticateResponseCredentials

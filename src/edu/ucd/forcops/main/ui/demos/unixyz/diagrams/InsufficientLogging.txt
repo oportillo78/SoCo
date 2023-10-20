@@ -1,0 +1,15 @@
+@startuml
+participant Staff
+participant SIS
+participant DB
+Staff-> SIS: viewStudentRecord(studentID, staffID)
+Staff -> SIS: updateStudentRecord(grades)
+SIS -> DB: verifyCredentials(userID, action)
+SIS <-- DB: authenticationResponse
+alt if authenticationResponse=accessGranted
+     SIS -> DB: updateStudentRecord(grades)
+     SIS -> Staff: confirmUpdate(StudentRecord)      
+else 
+     Staff <- SIS: denyAction()
+end
+@enduml

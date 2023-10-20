@@ -1,0 +1,15 @@
+#4
+The control [Encryption]
+With description [Mechanisms to scramble the contents of a message/file so that it can be read only the authorized view by unscrambling it]
+With new actors [CryptoService]
+With sorting [CryptoService:500]
+A pointcut composed of [1] message(s) involving the [submit] operations, the [$service, *] actors, and the [sensitiveData] data types. 
+An advice of type [ADD_BEFORE] with the instructions:
+	$service -> CryptoService: selectEncryptionAlgorithm()
+	$service <-- CryptoService: encryptionAlgorithm
+	$service -> CryptoService: encrypt(message, algorithm)
+	$service <-- CryptoService: encryptedMessage
+A pointcut composed of [1] message(s) involving the [view] operations, the [*, $service] actors, and the [sensitiveData] data types. 
+An advice of type [ADD_BEFORE] with the instructions:
+	$service-> CryptoService: decrypt(message, algorithm)
+	$service <-- CryptoService: decryptedMessage

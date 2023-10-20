@@ -1,0 +1,13 @@
+@startuml
+Browser-> Server: retrievePage(viewStartPage, sessionID, cookies)
+alt if cookiesNotFound
+     Browser <-- Server: showImpliedConsentCookieBanner(msg)
+     alt clickOnAcceptCookiesBtn
+          Browser -> Server: acceptAllCookies(sessionID)
+     else clickOnCloseBtn
+          Browser -> Server: keepDefaultCookies()
+     end
+else 
+     Browser <- Server: showPersonalizedPage(cookies)
+end
+@enduml

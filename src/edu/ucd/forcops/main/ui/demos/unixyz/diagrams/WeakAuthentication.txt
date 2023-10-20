@@ -1,0 +1,14 @@
+@startuml
+AcademicStaff -> SIS: authenticateRequest(credentials)
+SIS -> DB: authenticateRequest(credentials)
+DB-> DB: verifyCredentials(staffID)
+SIS <-- DB: authenticateResponseCredentials
+AcademicStaff -> SIS: viewMyPayslips(staffID)
+alt if authenticationResponse=accessGranted
+     SIS -> DB: getPayslipsFromDB(staffID)
+     SIS <-- DB: payslips
+     AcademicStaff <- SIS: displayPayslips(payslips)
+else 
+     AcademicStaff <- SIS: denyAccessToData()
+end
+@enduml
