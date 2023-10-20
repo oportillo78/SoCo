@@ -12,7 +12,7 @@
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
                 <attribute name="Rsrc-Main-Class" value="edu.ucd.forcops.main.ui.MainClient"/>
                 <attribute name="Class-Path" value="."/>
-                <attribute name="Rsrc-Class-Path" value="./ apache-ant-1.8.2.jar commons-io-2.6.jar log4j-1.2-api-2.11.1.jar log4j-api-2.11.1.jar log4j-core-2.11.1.jar commons-configuration2-2.4.jar commons-logging-1.2.jar commons-text-1.6.jar commons-lang3-3.8.1.jar string-similarity-1.0.0.jar"/>
+                <attribute name="Rsrc-Class-Path" value="./ apache-ant-1.8.2.jar commons-io-2.6.jar log4j-1.2-api-2.11.1.jar log4j-api-2.11.1.jar log4j-core-2.11.1.jar commons-configuration2-2.4.jar commons-logging-1.2.jar commons-text-1.6.jar commons-lang3-3.8.1.jar string-similarity-1.0.0.jar plantuml.jar"/>
             </manifest>
             <zipfileset src="jar-in-jar-loader.zip"/>
             <fileset dir="${dir.jarfile}/bin"/>
