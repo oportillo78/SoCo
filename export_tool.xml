@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project PrivSecCtrlInjector with Jar-in-Jar Loader">
+    <!--this file was created by Eclipse Runnable JAR file Export Wizard-->
+    <!--ANT 1.7 is required-->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="${dir.buildfile}/.."/>
+    <property name="dir.jarfile" value="${dir.buildfile}"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/soco_tool.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="edu.ucd.forcops.main.ui.MainClient"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ apache-ant-1.8.2.jar commons-io-2.6.jar log4j-1.2-api-2.11.1.jar log4j-api-2.11.1.jar log4j-core-2.11.1.jar commons-configuration2-2.4.jar commons-logging-1.2.jar commons-text-1.6.jar commons-lang3-3.8.1.jar string-similarity-1.0.0.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="${dir.jarfile}/bin"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="apache-ant-1.8.2.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="commons-io-2.6.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="log4j-1.2-api-2.11.1.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="log4j-api-2.11.1.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="log4j-core-2.11.1.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="commons-configuration2-2.4.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="commons-logging-1.2.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="commons-text-1.6.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="commons-lang3-3.8.1.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="string-similarity-1.0.0.jar"/>
+            <zipfileset dir="${dir.jarfile}/lib" includes="plantuml.jar"/>
+        </jar>
+    </target>
+</project>
