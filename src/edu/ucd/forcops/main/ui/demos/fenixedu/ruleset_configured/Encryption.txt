@@ -1,0 +1,14 @@
+#4
+The control [Encryption]
+With description [Mechanisms to scramble the contents of a message/file so that it can be read only the authorized view by unscrambling it]
+With new actors [CryptoService]
+With sorting [CryptoService:500]
+A pointcut composed of [1] message(s) involving the [view] operations, the [*, $accesscontrol] actors, and the [Person] data types.
+An advice of type [REPLACE_ALL] with the instructions:
+	$LASTACTOR1 -> CryptoService: selectEncryptionAlgorithm()
+	$LASTACTOR1 <-- CryptoService: encryptionAlgorithm
+	$LASTACTOR1 -> CryptoService: encrypt(message, algorithm)
+	$LASTACTOR1 <-- CryptoService: encryptedMessage
+	$LASTMSG
+	$accesscontrol-> CryptoService: decrypt(message, algorithm)
+	$accesscontrol <-- CryptoService: decryptedMessages

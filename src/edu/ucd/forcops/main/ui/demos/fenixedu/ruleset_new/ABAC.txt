@@ -1,0 +1,15 @@
+#7
+The control [ABAC]
+With description [A method for fine-grain access control in which access rights are granted through the use of policies made up of attributes working together]
+With new actors []
+With sorting [AuthorizationEngine:400, AccessControlList:401]
+A pointcut composed of [2] message(s) involving the [checkACL, checkPolicy] operations, the [AuthorizationEngine, AccessControlList] actors, and the [userID] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	AuthorizationEngine-> AccessControlList: checkACL(asset, userID, userRole, purpose, userAtts, assetAtts)
+	AccessControlList-> AccessControlList: checkPolicy(user, action, resource, context)
+A pointcut composed of [1] message(s) involving the [request] operations, the [$service, $db] actors, and the [studentRecord] data types. 
+An advice of type [ADD_AFTER] with the instructions:
+	AuthorizationEngine<- $db: checkAttsPermissions(asset, userID, userRole, purpose, userAtts, assetAtts)
+A pointcut composed of [1] message(s) involving the [view] operations, the [$service, $db] actors, and the [studentRecord] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	$service <-- $db: readFilteredStudentRecord

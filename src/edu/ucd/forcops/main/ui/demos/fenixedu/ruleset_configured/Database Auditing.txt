@@ -1,0 +1,8 @@
+#1
+The control [Database Auditing]
+With description [Ability to track and log events to provide details on what has happened to the content, when, who, etc.]
+With new actors [AuditServer]
+With sorting [AuditServer:1000]
+A pointcut composed of [1] message(s) involving the [create, view, erase] operations, the [*, $db] actors, and the [All] data types.
+An advice of type [ADD_AFTER] with the instructions:
+	$db -> AuditServer: appendAuditLog(userID, action)

@@ -1,0 +1,14 @@
+#9
+The control [Single Sign On]
+With description [An authentication process that allows a user to access multiple applications with one set of login credentials as it eliminates further prompts when the user switches applications during the same session]
+With new actors [IdentityProviderSSO]
+With sorting [IdentityProviderSSO:1100]
+A pointcut composed of [3] message(s) involving the [view, decrypt] operations, the [*, $accesscontrol] actors, and the [Person, Message] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	$FIRSTMSG
+	$FIRSTACTOR2 -> IdentityProviderSSO: forwardForAuthentication(url)
+	IdentityProviderSSO -> CryptoService: decrypt(message, algorithm)
+	IdentityProviderSSO <-- CryptoService: decryptedMessage
+	IdentityProviderSSO -> IdentityProviderSSO: verifyCredentials(userID)
+	$FIRSTACTOR2 <-- IdentityProviderSSO: authenticateResponseCredentials
+	$FIRSTACTOR1 <-- $FIRSTACTOR2: authenticateResponseCredentials

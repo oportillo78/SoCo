@@ -1,0 +1,17 @@
+#6
+The control [RBAC]
+With description [A method for coarse-grain access control that is based on a person’s role within a business. As a result, employees are only allowed to access the information necessary to effectively perform their job duties]
+With new actors [AuthorizationEngine, AccessControlList]
+With sorting [AuthorizationEngine:400, AccessControlList:401]
+A pointcut composed of [2] message(s) involving the [authorize, checkPrivileges] operations, the [$service, $db] actors, and the [userID] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	$service-> AuthorizationEngine: checkAuthorization(studentID, userID)
+	AuthorizationEngine-> AccessControlList: checkACL(asset, userID)
+	AccessControlList-> AccessControlList: checkPolicy(user, role, permission, operation)
+	AuthorizationEngine <-- AccessControlList: userRolePrivileges
+A pointcut composed of [1] message(s) involving the [access] operations, the [$service, $db] actors, and the [Granted] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	     $service <-- AuthorizationEngine: accessGranted
+A pointcut composed of [1] message(s) involving the [access] operations, the [$service, $db] actors, and the [Denied] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	     $service <-- AuthorizationEngine: accessDenied

@@ -1,0 +1,22 @@
+#5
+The control [CookiesConsentBanner]
+With description [A cookie notice that appears on websites upon the user’s first visit to the site to give the users the possibility to opt in and opt out of the various types of cookies, and them get their consent to the setting of cookies]
+With new actors []
+With sorting []
+A pointcut composed of [1] message(s) involving the [view] operations, the [$view, $service] actors, and the [ImpliedConsentCookie] data types. 
+An advice of type [REPLACE_ALL] with the instructions:
+	$view <-- $service: showOptInCookieConsentBanner(msg)
+A pointcut composed of [2] message(s) involving the [accept, keep] operations, the [$view, $service] actors, and the [Cookies] data types. 
+An advice of type [REPLACE_BETWEEN] with the instructions:
+	     else clickOnContinueBtn or Decline
+A pointcut composed of [1] message(s) involving the [view, keep] operations, the [$view, $service] actors, and the [DefaultCookies] data types. 
+An advice of type [ADD_AFTER] with the instructions:
+		     else clickOnManageCookieSettingBtn
+	          $view -> $service: requestMoreInfoAboutCookies()
+	          $view <- $service: showGranularCookieConsentBanner(cookieCategories)
+	          loop 
+	               $view -> $view: selectCookies()
+	          end
+	          opt clickOnShowCookiesAndPrivacyPolicyBtn
+	               $view <- $service: displayPrivacyStatement()
+	          end

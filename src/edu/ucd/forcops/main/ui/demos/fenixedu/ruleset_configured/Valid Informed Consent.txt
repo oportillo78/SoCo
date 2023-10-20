@@ -1,0 +1,15 @@
+#3
+The control [Valid Informed Consent]
+With description [Whenever data disclosure need to be legitimized, provide click-through agreements (click and accept) to confirm the user's understanding or consent on an as-needed basis]
+With new actors [Marketing]
+With sorting [Marketing:800]
+A pointcut composed of [2] message(s) involving the [submit,send] operations, the [$service, $db] actors, and the [dissertation, email] data types. 
+An advice of type [WRAP_AROUND] with the instructions:
+	$view <- $db: requestConsent()
+	alt if consentProvided
+		alt if optedInForMarketing
+			$db-> Marketing: subscribeToAlumniMarketing(email)
+		end
+	else else
+	     $service <- $db: showError()
+	end

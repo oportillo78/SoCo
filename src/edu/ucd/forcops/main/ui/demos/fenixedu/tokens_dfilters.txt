@@ -1,0 +1,4 @@
+$db,domain
+$view,JSP
+$service,service
+$accesscontrol,predicate.AccessControl

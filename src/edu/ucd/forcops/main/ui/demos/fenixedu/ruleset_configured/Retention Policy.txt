@@ -1,0 +1,11 @@
+#8
+The control [Retention Policy]
+With description [An organization's established protocol for retaining information for operational or regulatory compliance needs]
+With new actors [RetentionPolicyManager]
+With sorting [RetentionPolicyManager:1200]
+A pointcut composed of [1] message(s) involving the [create] operations, the [$service, *] actors, and the [marksheet, candidacy, dissertation, exam, registration] data types. 
+An advice of type [ADD_AFTER] with the instructions:
+	$service -> RetentionPolicyManager: obtainRetentionPeriod($LASTPDATA)
+	RetentionPolicyManager -> RetentionPolicyManager: getRetentionPeriod($LASTPDATA)
+	$service <-- RetentionPolicyManager: retentionPeriod
+	$service -> $service: assignPolicyToDataItem($LASTPDATA, retentionPeriod)

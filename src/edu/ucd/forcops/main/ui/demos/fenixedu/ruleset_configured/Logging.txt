@@ -1,0 +1,10 @@
+#10
+The control [Logging]
+With description [To record relevant events on software systems like security-related events, exceptions, transactions that process sensitive information, etc. to prevent non-compliant behavior]
+With new actors [Logger]
+With sorting [Logger:900]
+A pointcut composed of [1] message(s) involving the [create] operations, the [*, $db] actors, and the [Alumni,Candidacy,Participant,Person,Student,User] data types. 
+An advice of type [ADD_AFTER] with the instructions:
+	$db -> Logger: writeLog(transaction)
+	Logger-> Logger: deidentifyLog(transactionDetails)
+	Logger-> Logger: writeTransactionLog(deIdentifiedTransaction)
