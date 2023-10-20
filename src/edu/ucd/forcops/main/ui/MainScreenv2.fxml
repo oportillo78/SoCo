@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="596.0" prefWidth="1021.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.ucd.forcops.main.ui.MainScreenControllerv2">
+    <children>
+        <AnchorPane layoutX="420.0" layoutY="14.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="417.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+            <children>
+            <AnchorPane layoutY="35.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
+               <children>
+                      <TableView fx:id="results" layoutX="27.0" prefHeight="722.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="27.0" AnchorPane.rightAnchor="-27.0" AnchorPane.topAnchor="0.0">
+                          <columns>
+                              <TableColumn fx:id="idCol" editable="false" maxWidth="200" minWidth="10.0" prefWidth="20.0" text="Id" />
+                              <TableColumn fx:id="inputFileCol" editable="false" maxWidth="1000" minWidth="50.0" prefWidth="100.0" text="Non-Compliant Diagram" />
+                              <TableColumn fx:id="executionModeCol" editable="false" maxWidth="200.0" minWidth="50.0" prefWidth="50.0" text="Show Evolution?" />
+                              <TableColumn fx:id="appliedControlsCol" editable="false" maxWidth="3000" minWidth="150.0" prefWidth="268.0" text="Applied Controls" />
+                              <TableColumn fx:id="outputFileCol" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="59.0" text="Evolved Diagram" />
+                          </columns>
+                          <columnResizePolicy>
+                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                          </columnResizePolicy>
+                      </TableView>
+               </children>
+            </AnchorPane>
+            <Button layoutX="300.0" mnemonicParsing="false" onAction="#handleButtonLoadSampleDataUni" prefHeight="25.0" prefWidth="180.0" text="Load Sample UniXYZ Data" textAlignment="CENTER" />
+            <Button layoutX="500.0" mnemonicParsing="false" onAction="#handleButtonLoadSampleDataFenix" prefHeight="25.0" prefWidth="180.0" text="Load Sample FenixEdu Data" textAlignment="CENTER" />
+            <!--  
+            <AnchorPane layoutY="-4.0" prefHeight="31.0" prefWidth="900.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <children>
+                      <Button fx:id="exportResultsButton" disable="true" layoutX="300.0" layoutY="4.0" mnemonicParsing="false" onAction="#exportResultsCsv" text="Export Results (CSV)" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="230.0" AnchorPane.topAnchor="0.0" />
+                  	  <Button fx:id="saveDataButton" disable="true" layoutY="5.0" mnemonicParsing="false" onAction="#saveDataClicked" text="Save Data as Historical" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                      <Button fx:id="jplagResultsButton" disable="true" layoutX="681.0" layoutY="3.0" mnemonicParsing="false" onAction="#showJPlagResults" text="Open JPlag Results in Browser" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                      <Button fx:id="analyseComparisonButton" disable="true" layoutX="469.0" layoutY="2.0" mnemonicParsing="false" onAction="#analyseClicked" prefHeight="31.0" prefWidth="194.0" text="View Table Comparison" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="230.0" AnchorPane.topAnchor="0.0" />
+               </children>
+            </AnchorPane> -->
+            </children>
+        </AnchorPane>
+        <Separator layoutX="416.0" orientation="VERTICAL" prefHeight="800.0" prefWidth="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" />
+        <AnchorPane layoutX="23.0" layoutY="14.0" prefHeight="200.0" prefWidth="378.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0">
+            <children>
+
+                <Label layoutX="14.0" layoutY="277.0" prefHeight="50.0" prefWidth="99.0" text="Show Evolution in Diagram?" wrapText="true" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="277.0">
+               <font>
+                  <Font size="14.0" />
+               </font></Label>
+                <ChoiceBox fx:id="debugModes" layoutX="123.0" layoutY="286.0" prefHeight="31.0" prefWidth="71.0" AnchorPane.leftAnchor="123.0" AnchorPane.topAnchor="286.0" />	            
+
+                <Label layoutX="11.0" layoutY="382.0" text="Execution Log:" AnchorPane.topAnchor="382.0">
+               <font>
+                  <Font size="14.0" />
+               </font></Label>	            
+	            <TextArea fx:id="execLog" editable="false" layoutX="14.0" layoutY="404.0" prefHeight="351.0" prefWidth="382.0" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="404.0" />
+	            
+	            <Button layoutX="32.0" layoutY="334.0" mnemonicParsing="false" onAction="#executeClicked" prefHeight="35.0" prefWidth="161.0" text="START Software Evolution" textAlignment="CENTER" wrapText="true" AnchorPane.leftAnchor="32.0" AnchorPane.rightAnchor="193.0" AnchorPane.topAnchor="334.0" />
+            <Button layoutX="12.0" layoutY="138.0" mnemonicParsing="false" onAction="#handleButtonDataDicEdit" prefHeight="54.0" prefWidth="89.0">
+               <graphic>
+                  <ImageView fx:id="imageViewDD" fitHeight="81.0" fitWidth="131.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@/edu/ucd/forcops/main/ui/images/dictionaryImg.jpg" />
+                     </image>
+                  </ImageView>
+               </graphic></Button>
+            <Label layoutX="97.0" layoutY="96.0" text="Admin of Artifacts" textFill="#2212d3">
+               <font>
+                  <Font size="24.0" />
+               </font>
+            </Label>
+            <Label layoutX="11.0" layoutY="21.0" text="Select working directory:">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+            <TextField fx:id="wdFilename" editable="true" layoutX="86.0" layoutY="56.0" maxWidth="1.7976931348623157E308" prefHeight="31.0" prefWidth="300.0" />
+            <Button layoutX="7.0" layoutY="59.0" mnemonicParsing="false" onAction="#handleButtonChooseWD" prefHeight="25.0" prefWidth="71.0" text="Browse" />
+            <Button layoutX="140.0" layoutY="138.0" mnemonicParsing="false" onAction="#handleButtonRulesetEdit" prefHeight="54.0" prefWidth="89.0">
+               <graphic>
+                  <ImageView fitHeight="81.0" fitWidth="131.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@/edu/ucd/forcops/main/ui/images/ruleset.jpg" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+            <Button layoutX="265.0" layoutY="138.0" mnemonicParsing="false" onAction="#handleButtonScenariosEdit" prefHeight="54.0" prefWidth="89.0">
+               <graphic>
+                  <ImageView fitHeight="81.0" fitWidth="131.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@/edu/ucd/forcops/main/ui/images/scenarios.jpg" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+            <Label layoutX="94.0" layoutY="242.0" text="Software Evolution" textFill="#2212d3">
+               <font>
+                  <Font size="24.0" />
+               </font>
+            </Label>
+            <Button layoutX="265.0" layoutY="290.0" mnemonicParsing="false" onAction="#handleButtonEScenariosEdit" prefHeight="54.0" prefWidth="89.0">
+               <graphic>
+                  <ImageView fitHeight="81.0" fitWidth="131.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@/edu/ucd/forcops/main/ui/images/escenarios.jpg" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+	            
+            </children>
+        </AnchorPane>
+    </children>
+</AnchorPane>

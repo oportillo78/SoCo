@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="797.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.ucd.forcops.main.ui.ruleset.PrivacyControlConfigController">
+   <children>
+      <Label layoutX="265.0" layoutY="14.0" text="Privacy Control Rule">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <Label layoutX="25.0" layoutY="76.0" text="General Info" textFill="#0322c1">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <Label layoutX="27.0" layoutY="112.0" prefHeight="27.0" prefWidth="63.0" text="*Name:">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtfieldCtrlName" layoutX="129.0" layoutY="113.0" prefHeight="25.0" prefWidth="225.0" promptText="Enter name for the control" />
+      <Label layoutX="27.0" layoutY="144.0" prefHeight="27.0" prefWidth="105.0" text="Description:">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtfieldCtrlDescription" layoutX="129.0" layoutY="145.0" prefHeight="25.0" prefWidth="441.0" promptText="Enter a description for the control" />
+      <Label layoutX="27.0" layoutY="181.0" prefHeight="27.0" prefWidth="105.0" text="New actors:">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtfieldCtrlNewActors" layoutX="129.0" layoutY="182.0" prefHeight="25.0" prefWidth="441.0" promptText="List the new components involved in this control" />
+      <Label layoutX="27.0" layoutY="218.0" prefHeight="27.0" prefWidth="163.0" text="Sorting preference:">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtfieldCtrlSortingActors" layoutX="182.0" layoutY="219.0" prefHeight="25.0" prefWidth="388.0" promptText="To improve diagram readibility, indicate the order of actors" />
+      <Label layoutX="24.0" layoutY="253.0" text="*Pointcut" textFill="#0322c1">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <TableView fx:id="tableViewPointcut" layoutX="28.0" layoutY="290.0" prefHeight="113.0" prefWidth="644.0" AnchorPane.leftAnchor="28.0" AnchorPane.rightAnchor="28.0">
+         <columns>
+            <TableColumn fx:id="colPoincutNumMsgs" prefWidth="75.0" text="No. of Msgs" /> <!--onEditCommit="#onEditMsgsChangedPcut"-->
+            <TableColumn fx:id="colPoincutProcOpers" prefWidth="198.20001220703125" text="Processing Operations" /> <!--  onEditCommit="#onEditPOChangedPcut"  -->
+            <TableColumn fx:id="colPoincutActors" prefWidth="158.4000244140625" text="Actors" /> <!-- onEditCommit="#onEditActorsChangedPcut" -->
+            <TableColumn fx:id="colPoincutDataTypes" prefWidth="214.5999755859375" text="Data Types" /> <!-- onEditCommit="#onEditDTypesChangedPcut" -->
+         </columns>
+      </TableView>
+      <Label layoutX="32.0" layoutY="412.0" text="*Advice" textFill="#0322c1">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <TableView fx:id="tableViewAdvice" layoutX="32.0" layoutY="447.0" prefHeight="113.0" prefWidth="644.0" AnchorPane.bottomAnchor="237.0" AnchorPane.leftAnchor="28.0" AnchorPane.rightAnchor="28.0" AnchorPane.topAnchor="447.0">
+         <columns>
+            <TableColumn fx:id="colAdviceType" prefWidth="75.0" text="Type" /> <!--  onEditCommit="#onEditTypeChangedAdvice" -->
+            <TableColumn fx:id="colAdviceBehavior" prefWidth="568.0" text="Behavior (Press Shift + Enter to commit)" /> <!--  onEditCommit="#onEditBehaviorChangedAdvice" -->
+         </columns>
+      </TableView>
+      <Button layoutX="570.0" layoutY="258.0" mnemonicParsing="false" onAction="#buttonAdd" text="( + )" AnchorPane.rightAnchor="91.0">
+         <tooltip>
+            <Tooltip text="Add new Pointcut and Advice" />
+         </tooltip></Button>
+      <Button layoutX="620.0" layoutY="258.0" mnemonicParsing="false" onAction="#buttonDelete" prefHeight="25.0" prefWidth="39.0" text="( - )" AnchorPane.rightAnchor="41.0">
+         <tooltip>
+            <Tooltip text="Delete Pointcut and Advice" />
+         </tooltip></Button>
+      <Button layoutX="620.0" layoutY="28.0" mnemonicParsing="false" onAction="#buttonSaveChanges" prefHeight="43.0" prefWidth="68.0" text="Save Changes" textAlignment="CENTER" wrapText="true" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="28.0" />
+      <Label fx:id="lblSaveStatus" layoutX="568.0" layoutY="80.0" prefHeight="27.0" prefWidth="148.0" text="Label" textFill="#cf1813" AnchorPane.rightAnchor="-16.0" AnchorPane.topAnchor="80.0">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
+      <Label fx:id="lblMandatory" layoutX="24.0" layoutY="49.0" prefHeight="27.0" prefWidth="148.0" text="*Mandatory information" textFill="#1c1818" />
+      <Label layoutX="29.0" layoutY="574.0" text="*Tokens associated with controls" textFill="#0322c1" AnchorPane.bottomAnchor="188.0" AnchorPane.leftAnchor="29.0">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Label>
+      <TableView fx:id="tableViewTokens" layoutX="29.0" layoutY="609.0" prefHeight="139.0" prefWidth="564.0" AnchorPane.bottomAnchor="49.0" AnchorPane.leftAnchor="28.0" AnchorPane.rightAnchor="108.0">
+         <columns>
+            <TableColumn fx:id="colToken" prefWidth="203.0" text="Token" /> <!--  onEditCommit="#onEditTokenChanged" -->
+            <TableColumn fx:id="colValue" prefWidth="360.0" text="Value" /> <!--  onEditCommit="#onEditValueChanged" -->
+         </columns>
+      </TableView>
+      <Button layoutX="605.0" layoutY="609.0" mnemonicParsing="false" onAction="#buttonDeleteToken" prefHeight="42.0" prefWidth="69.0" text="Delete Token" textAlignment="CENTER" wrapText="true" AnchorPane.bottomAnchor="146.0" AnchorPane.rightAnchor="26.0" />
+      <TextField fx:id="txtFieldToken" layoutX="34.0" layoutY="762.0" prefHeight="25.0" prefWidth="172.0" promptText="Token" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="34.0" />
+      <TextField fx:id="txtFieldValue" layoutX="229.0" layoutY="762.0" prefHeight="25.0" prefWidth="361.0" promptText="Value" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="229.0" AnchorPane.rightAnchor="110.0" />
+      <Button layoutX="603.0" layoutY="762.0" mnemonicParsing="false" onAction="#buttonAddToken" text="Add Token" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="26.0" />
+   </children>
+</AnchorPane>
