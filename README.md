@@ -35,14 +35,11 @@ Important note:
 
 4.	From the main window (Fig. 1), click on either the button “Load Sample UniXYZ Data” or “Load Sample FenixEdu Data” (Fig 1.c), depending on which application the user wants to replicate.
 
-[]
-Figure 1 Main SoCo window GUI: (a) Configuration Panel, (b) Execution Log Panel, (c) Sample Data Buttons, (d) Results Panel, and (e) View
- 
+![My Image](Fig01.jpg)
+
 5.	A new window will appear showing a 4-row table (As shown in Fig.2)
 
-[]
-Figure 2 GUI to load sample data and SoCo with UniXYZ scenarios
-
+![My Image](Fig02.jpg)
 
 6.	Each table row represents a step needed to replicate SoCo’s results for the chosen application. Each row has a button to get that step executed. Just click the buttons in the given order to replicate the experimental results presented in the paper. To prevent errors, only the button that needs to be executed at each stage is enabled at a time.
 
