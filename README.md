@@ -26,8 +26,7 @@ How to run SoCo’s tool (only after the above dependencies have been installed)
 3.	Then run the below line. The main tool window (Fig. 1) will be shown.
 
 ```
-java --module-path "C:\Program Files\Java\javafx-sdk-19\lib" --add-modules javafx.controls,javafx.fxml
--jar soco_tool.jar -Dlog4j.configurationFile=log4j2.xml
+java --module-path "C:\Program Files\Java\javafx-sdk-19\lib" --add-modules javafx.controls,javafx.fxml -jar soco_tool.jar -Dlog4j.configurationFile=log4j2.xml
 ```
 
 Important note:
