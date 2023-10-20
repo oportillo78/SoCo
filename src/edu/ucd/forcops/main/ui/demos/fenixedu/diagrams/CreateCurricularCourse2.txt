@@ -1,0 +1,100 @@
+@startuml
+ participant "JSP\nJSPCreateCurricularCourse" as JSPCreateCurricularCourse order 0
+ participant "services.bolonhaManager\nCreateCurricularCourse" as CreateCurricularCourse order 1
+ participant "services.bolonhaManager.CreateCurricularCourse\nCurricularCourseArgs" as CurricularCourseArgs order 51
+ participant "domain\nExecutionSemester" as ExecutionSemester order 52
+ participant "services.bolonhaManager.CreateCurricularCourse\nCurricularCourseArgs" as CurricularCourseArgs order 53
+ participant "services.bolonhaManager.CreateCurricularCourse\nCurricularCourseArgs" as CurricularCourseArgs order 54
+ participant "services.bolonhaManager.CreateCurricularCourse\nCurricularCourseArgs" as CurricularCourseArgs order 55
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 56
+ participant "services.bolonhaManager.CreateCurricularCourse\nCurricularCourseArgs" as CurricularCourseArgs order 57
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 58
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 73
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 76
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 79
+ participant "domain.degreeStructure\nOptionalCurricularCourse" as OptionalCurricularCourse order 82
+ participant "domain.degreeStructure\nContext" as Context order 95
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 118
+ participant "domain.curricularPeriod\nCurricularPeriod" as CurricularPeriod order 119
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 140
+ participant "services.bolonhaManager.CreateCurricularCourse\nCreateOptionalCurricularCourseArgs" as CreateOptionalCurricularCourseArgs order 141
+ JSPCreateCurricularCourse -> CreateCurricularCourse: getConnection()
+ JSPCreateCurricularCourse <- CreateCurricularCourse: returnConnection()
+ JSPCreateCurricularCourse -> CreateCurricularCourse: executeAction()
+ CreateCurricularCourse -> CreateCurricularCourse: run(CreateOptionalCurricularCourseArgs):void
+ CreateCurricularCourse -> CreateCurricularCourse: readDegreeCurricularPlan\n(CurricularCourseArgs):DegreeCurricularPlan
+ CreateCurricularCourse -> FenixFramework: getDomainObject(String):T
+ CreateCurricularCourse -> CurricularCourseArgs: getDegreeCurricularPlanID():String
+ CreateCurricularCourse -> CreateCurricularCourse: readParentCourseGroup(CurricularCourseArgs):CourseGroup
+ CreateCurricularCourse -> FenixFramework: getDomainObject(String):T
+ CreateCurricularCourse -> CurricularCourseArgs: getParentCourseGroupID():String
+ CreateCurricularCourse -> CreateCurricularCourse: readCurricularPeriod\n(CurricularCourseArgs,DegreeCurricularPlan):CurricularPeriod
+ CreateCurricularCourse -> DegreeCurricularPlan: getCurricularPeriodFor(int,int):CurricularPeriod
+ CreateCurricularCourse -> CurricularCourseArgs: getYear():Integer
+ CreateCurricularCourse -> CurricularCourseArgs: getSemester():Integer
+ OPT curricularPeriod == null
+ 	CreateCurricularCourse -> DegreeCurricularPlan: createCurricularPeriodFor(int,int):CurricularPeriod
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: buildCurricularPeriodInfoDTOsFor(int,int):CurricularPeriodInfoDTO[]
+ 	ALT getDurationInYears() > 1
+ 		DegreeCurricularPlan -> CurricularPeriodInfoDTO: CurricularPeriodInfoDTO(Integer,AcademicPeriod)
+ 		CurricularPeriodInfoDTO -> CurricularPeriodInfoDTO: DataTranferObject()
+ 		DegreeCurricularPlan -> CurricularPeriodInfoDTO: CurricularPeriodInfoDTO(Integer,AcademicPeriod)
+ 		CurricularPeriodInfoDTO -> CurricularPeriodInfoDTO: DataTranferObject()
+ 	ELSE else
+ 		DegreeCurricularPlan -> CurricularPeriodInfoDTO: CurricularPeriodInfoDTO(Integer,AcademicPeriod)
+ 		CurricularPeriodInfoDTO -> CurricularPeriodInfoDTO: DataTranferObject()
+ 	END
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: getDegreeStructure():CurricularPeriod
+ 	DegreeCurricularPlan -> CurricularPeriod: addCurricularPeriod\n(CurricularPeriodInfoDTO[]):CurricularPeriod
+ 	CurricularPeriod -> CurricularPeriod: validatePath(CurricularPeriodInfoDTO[]):void
+ 	LOOP for: curricularPeriodsPaths
+ 		CurricularPeriod -> CurricularPeriod: findChild(AcademicPeriod,Integer):CurricularPeriod
+ 		CurricularPeriod -> CurricularPeriodInfoDTO: getPeriodType():AcademicPeriod
+ 		CurricularPeriod -> CurricularPeriodInfoDTO: getOrder():Integer
+ 		OPT curricularPeriod == null
+ 			CurricularPeriod -> CurricularPeriod: CurricularPeriod(AcademicPeriod,Integer,CurricularPeriod)
+ 			CurricularPeriod -> CurricularPeriod: CurricularPeriod(AcademicPeriod)
+ 			CurricularPeriod -> CurricularPeriod: setChildOrder(Integer):void
+ 			CurricularPeriod -> CurricularPeriod: setParent(CurricularPeriod):void
+ 			CurricularPeriod -> CurricularPeriodInfoDTO: getPeriodType():AcademicPeriod
+ 			CurricularPeriod -> CurricularPeriodInfoDTO: getOrder():Integer
+ 		END
+ 	END
+ 	CreateCurricularCourse -> CurricularCourseArgs: getYear():Integer
+ 	CreateCurricularCourse -> CurricularCourseArgs: getSemester():Integer
+ END
+ CreateCurricularCourse -> CreateCurricularCourse: readBeginExecutionPeriod(CurricularCourseArgs):ExecutionSemester
+ ALT curricularCourseArgs.getBeginExecutionPeriodID() == null
+ 	CreateCurricularCourse -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ ELSE else
+ 	CreateCurricularCourse -> FenixFramework: getDomainObject(String):T
+ 	CreateCurricularCourse -> CurricularCourseArgs: getBeginExecutionPeriodID():String
+ END
+ CreateCurricularCourse -> CreateCurricularCourse: readEndExecutionPeriod(CurricularCourseArgs):ExecutionSemester
+ ALT curricularCourseArgs.getEndExecutionPeriodID() == null
+ ELSE else
+ 	CreateCurricularCourse -> FenixFramework: getDomainObject(String):T
+ 	CreateCurricularCourse -> CurricularCourseArgs: getEndExecutionPeriodID():String
+ END
+ CreateCurricularCourse -> DegreeCurricularPlan: createOptionalCurricularCourse\n(CourseGroup,String,String,CurricularStage,CurricularPeriod,ExecutionSemester,ExecutionSemester):CurricularCourse
+ DegreeCurricularPlan -> OptionalCurricularCourse: OptionalCurricularCourse\n(CourseGroup,String,String,CurricularStage,CurricularPeriod,ExecutionSemester,ExecutionSemester)
+ OptionalCurricularCourse -> OptionalCurricularCourse: OptionalCurricularCourse()
+ OptionalCurricularCourse -> OptionalCurricularCourse: setName(String):void
+ OptionalCurricularCourse -> OptionalCurricularCourse: setNameEn(String):void
+ OptionalCurricularCourse -> OptionalCurricularCourse: setCurricularStage(CurricularStage):void
+ OptionalCurricularCourse -> OptionalCurricularCourse: setType(CurricularCourseType):void
+ OptionalCurricularCourse -> Context: Context\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionSemester,ExecutionSemester)
+ Context -> Context: Context()
+ Context -> Context: checkParameters\n(CourseGroup,DegreeModule,ExecutionSemester):void
+ Context -> Context: checkExecutionPeriods\n(ExecutionSemester,ExecutionSemester):void
+ Context -> Context: checkIfCanAddDegreeModuleToCourseGroup\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionYear):void
+ Context -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ Context -> Context: checkExistingCourseGroupContexts\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionSemester,ExecutionSemester):void
+ Context -> Context: setParentCourseGroup(CourseGroup):void
+ Context -> Context: setChildDegreeModule(DegreeModule):void
+ Context -> Context: setCurricularPeriod(CurricularPeriod):void
+ Context -> Context: setBeginExecutionPeriod(ExecutionSemester):void
+ Context -> Context: setEndExecutionPeriod(ExecutionSemester):void
+ CreateCurricularCourse -> CreateOptionalCurricularCourseArgs: getName():String
+ CreateCurricularCourse -> CreateOptionalCurricularCourseArgs: getNameEn():String
+ @enduml

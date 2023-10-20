@@ -1,0 +1,50 @@
+@startuml
+ participant "JSP\nJSPCriarTurma" as JSPCriarTurma order 0
+ participant "services.resourceAllocationManager\nCriarTurma" as CriarTurma order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "dto\nInfoExecutionDegree" as InfoExecutionDegree order 15
+ participant "domain\nExecutionDegree" as ExecutionDegree order 20
+ participant "domain\nSchoolClass" as SchoolClass order 21
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 50
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 51
+ participant "domain\nDegree" as Degree order 52
+ participant "domain\nExecutionInterval" as ExecutionInterval order 53
+ participant "core.domain\nBennu" as Bennu order 54
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 60
+ participant "dto\nInfoClass" as InfoClass order 61
+ JSPCriarTurma -> CriarTurma: getConnection()
+ JSPCriarTurma <- CriarTurma: returnConnection()
+ JSPCriarTurma -> CriarTurma: executeAction()
+ CriarTurma -> CriarTurma: run\n(String,Integer,InfoExecutionDegree,AcademicInterval):Object
+ CriarTurma -> FenixFramework: getDomainObject(String):T
+ CriarTurma -> InfoExecutionDegree: getExternalId():String
+ InfoExecutionDegree -> InfoExecutionDegree: getExecutionDegree():ExecutionDegree
+ InfoExecutionDegree -> ExecutionDegree: getExternalId():String
+ CriarTurma -> SchoolClass: SchoolClass\n(ExecutionDegree,AcademicInterval,String,Integer)
+ SchoolClass -> SchoolClass: SchoolClass_Base()
+ SchoolClass -> SchoolClass: AbstractDomainObject()
+ SchoolClass -> ExecutionInterval: getExecutionInterval(AcademicInterval):ExecutionInterval
+ SchoolClass -> SchoolClass: checkIfExistsSchoolClassWithSameName\n(ExecutionDegree,ExecutionSemester,Integer,String):void
+ OPT executionDegree != null && executionSemester != null && curricularYear != null && className != null
+ 	SchoolClass -> ExecutionDegree_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	SchoolClass -> ExecutionDegree_Base: findSchoolClassesByExecutionPeriodAndCurricularYear\n(ExecutionSemester,Integer):Set<SchoolClass>
+ 	SchoolClass -> DegreeCurricularPlan_Base: getDegree():Degree
+ 	SchoolClass -> Degree: constructSchoolClassPrefix(Integer):String
+ END
+ SchoolClass -> SchoolClass: setRootDomainObject(Bennu):void
+ SchoolClass -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ SchoolClass -> SchoolClass: setExecutionDegree(ExecutionDegree):void
+ SchoolClass -> SchoolClass: setExecutionPeriod(ExecutionSemester):void
+ SchoolClass -> SchoolClass: setAnoCurricular(Integer):void
+ SchoolClass -> SchoolClass: setNome(String):void
+ CriarTurma -> InfoClass: newInfoFromDomain(SchoolClass):InfoClass
+ ALT schoolClass == null
+ ELSE else
+ 	InfoClass -> InfoClass: InfoClass(SchoolClass)
+ END
+ @enduml

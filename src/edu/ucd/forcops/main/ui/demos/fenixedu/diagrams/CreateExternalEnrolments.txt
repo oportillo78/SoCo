@@ -1,0 +1,46 @@
+@startuml
+scale 0.8
+participant "JSP\nJSPCreateExternalEnrolments" as JSPCreateExternalEnrolments order 0
+participant "services.administrativeOffice.enrolment\nCreateExternalEnrolments" as CreateExternalEnrolments order 1
+participant "dto.administrativeOffice.studentEnrolment\nExternalCurricularCourseEnrolmentBean" as ExternalCurricularCourseEnrolmentBean order 19
+participant "dto.administrativeOffice.externalUnits\nExternalCurricularCourseResultBean" as ExternalCurricularCourseResultBean order 24
+participant "domain.studentCurriculum\nExternalEnrolment" as ExternalEnrolment order 25
+participant "domain.degreeStructure\nEmptyConversionTable" as EmptyConversionTable order 50
+JSPCreateExternalEnrolments -> CreateExternalEnrolments: getConnection()
+JSPCreateExternalEnrolments <- CreateExternalEnrolments: returnConnection()
+JSPCreateExternalEnrolments -> CreateExternalEnrolments: executeAction()
+alt if cookiesNotFound
+     JSPCreateExternalEnrolments <-- CreateExternalEnrolments: showImpliedConsentCookieBanner(msg)
+     alt clickOnAcceptCookiesBtn
+          JSPCreateExternalEnrolments -> CreateExternalEnrolments: acceptAllCookies(sessionID)
+     else clickOnCloseBtn
+          JSPCreateExternalEnrolments -> CreateExternalEnrolments: keepDefaultCookies()
+     end
+else else
+	CreateExternalEnrolments -> CreateExternalEnrolments: run\n(Registration,List<ExternalCurricularCourseEnrolmentBean>):void
+	loop for: beans
+		CreateExternalEnrolments -> ExternalCurricularCourseEnrolmentBean: getExternalCurricularCourse():ExternalCurricularCourse
+		ExternalCurricularCourseEnrolmentBean -> ExternalCurricularCourseEnrolmentBean: getExternalCurricularCourseResultBean():ExternalCurricularCourseResultBean
+		ExternalCurricularCourseEnrolmentBean -> ExternalCurricularCourseResultBean: getExternalCurricularCourse():ExternalCurricularCourse
+		CreateExternalEnrolments -> ExternalCurricularCourseEnrolmentBean: getGrade():Grade
+		CreateExternalEnrolments -> ExternalCurricularCourseEnrolmentBean: getNormalizedGrade():Grade
+		CreateExternalEnrolments -> ExternalCurricularCourseEnrolmentBean: getExecutionPeriod():ExecutionSemester
+		CreateExternalEnrolments -> ExternalCurricularCourseEnrolmentBean: getEvaluationDate():YearMonthDay
+		CreateExternalEnrolments -> ExternalCurricularCourseEnrolmentBean: getEctsCredits():Double
+		CreateExternalEnrolments -> ExternalEnrolment: ExternalEnrolment\n(Registration,ExternalCurricularCourse,Grade,Grade,ExecutionSemester,YearMonthDay,Double)
+		ExternalEnrolment -> ExternalEnrolment: newExternalEnrolment()
+		ExternalEnrolment -> ExternalEnrolment: checkConstraints\n(Registration,ExternalCurricularCourse,ExecutionSemester,Grade,Double):void
+		ExternalEnrolment -> ExternalEnrolment: checkIfCanCreateExternalEnrolment\n(Registration,ExternalCurricularCourse):void
+		ExternalEnrolment -> ExternalEnrolment: setRegistration(Registration):void
+		ExternalEnrolment -> ExternalEnrolment: setExternalCurricularCourse(ExternalCurricularCourse):void
+		ExternalEnrolment -> ExternalEnrolment: setGrade(Grade):void
+		ExternalEnrolment -> ExternalEnrolment: setNormalizedEctsGrade(Grade):void
+		ExternalEnrolment -> ExternalEnrolment: setEctsConversionTable(EctsConversionTable):void
+		ExternalEnrolment -> EmptyConversionTable: getInstance():EmptyConversionTable
+		ExternalEnrolment -> ExternalEnrolment: setExecutionPeriod(ExecutionSemester):void
+		ExternalEnrolment -> ExternalEnrolment: setEvaluationDate(YearMonthDay):void
+		ExternalEnrolment -> ExternalEnrolment: setEctsCredits(Double):void
+	end
+    JSPCreateExternalEnrolments <- CreateExternalEnrolments: showPersonalizedPage(cookies)
+end
+@enduml

@@ -1,0 +1,53 @@
+@startuml
+participant "JSP\nJSPAccountingEventsCreator" as JSPAccountingEventsCreator order 0
+participant "services.accounting\nAccountingEventsCreator" as AccountingEventsCreator order 1
+participant "domain\nDegree" as Degree order 47
+participant "domain.accounting.events.dfa\nDfaRegistrationEvent" as DfaRegistrationEvent order 48
+participant "domain\nDegree" as Degree order 49
+participant "domain.accounting.events.dfa\nDfaRegistrationEvent" as DfaRegistrationEvent order 50
+participant "predicate\nAccessControl" as AccessControl order 51
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 52
+participant "domain\nPerson" as Person order 53
+participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 54
+participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 65
+participant "domain.student\nRegistration" as Registration order 66
+participant "domain\nDegree" as Degree order 67
+participant "domain.accounting.events.dfa\nDfaRegistrationEvent" as DfaRegistrationEvent order 68
+JSPAccountingEventsCreator -> AccountingEventsCreator: getConnection()
+JSPAccountingEventsCreator <- AccountingEventsCreator: returnConnection()
+JSPAccountingEventsCreator -> AccountingEventsCreator: executeAction()
+AccountingEventsCreator -> AccountingEventsCreator: createDfaRegistrationEvent\n(StudentCurricularPlan,ExecutionYear):void
+AccountingEventsCreator -> AccountingEventsCreator: check(AccessControlPredicate<?>):void
+AccountingEventsCreator -> StudentCurricularPlan: getDegree():Degree
+AccountingEventsCreator -> Degree: getAdministrativeOffice():AdministrativeOffice
+AccountingEventsCreator -> StudentCurricularPlan: getPerson():Person
+AccountingEventsCreator -> StudentCurricularPlan: getRegistration():student.Registration
+AccountingEventsCreator -> DfaRegistrationEvent: DfaRegistrationEvent\n(AdministrativeOffice,Person,student.Registration,ExecutionYear)
+AccountingEventsCreator -> AccountingEventsCreator: check(AccessControlPredicate<?>):void
+AccountingEventsCreator -> StudentCurricularPlan: getDegree():Degree
+AccountingEventsCreator -> Degree: getAdministrativeOffice():AdministrativeOffice
+AccountingEventsCreator -> StudentCurricularPlan: getPerson():Person
+AccountingEventsCreator -> StudentCurricularPlan: getRegistration():student.Registration
+AccountingEventsCreator -> DfaRegistrationEvent: DfaRegistrationEvent\n(AdministrativeOffice,Person,student.Registration,ExecutionYear)
+AccountingEventsCreator -> AccountingEventsCreator: check(AccessControlPredicate<?>):void
+AccountingEventsCreator -> AccessControl: getPerson():Person
+AccountingEventsCreator -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt  requester == null
+	else  else
+		AccountingEventsCreator -> Person: getUsername():java.lang.String
+	end
+end
+AccountingEventsCreator -> StudentCurricularPlan: getDegree():Degree
+StudentCurricularPlan -> StudentCurricularPlan: getDegreeCurricularPlan():DegreeCurricularPlan
+StudentCurricularPlan -> DegreeCurricularPlan: getDegree():Degree
+AccountingEventsCreator -> Degree: getAdministrativeOffice():AdministrativeOffice
+AccountingEventsCreator -> StudentCurricularPlan: getPerson():Person
+StudentCurricularPlan -> StudentCurricularPlan: getRegistration():student.Registration
+StudentCurricularPlan -> Registration: getPerson():Person
+AccountingEventsCreator -> StudentCurricularPlan: getRegistration():student.Registration
+StudentCurricularPlan -> StudentCurricularPlan: getStudent():student.Registration
+AccountingEventsCreator -> DfaRegistrationEvent: DfaRegistrationEvent\n(AdministrativeOffice,Person,student.Registration,ExecutionYear)
+DfaRegistrationEvent -> DfaRegistrationEvent: newDfaRegistrationEvent()
+DfaRegistrationEvent -> DfaRegistrationEvent: init\n(AdministrativeOffice,Person,student.Registration,ExecutionYear):void
+@enduml

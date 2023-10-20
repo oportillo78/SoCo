@@ -1,0 +1,372 @@
+@startuml
+ participant "JSP\nJSPCreateAcademicCalendarEntry" as JSPCreateAcademicCalendarEntry order 0
+ participant "services.manager.academicCalendarManagement\nCreateAcademicCalendarEntry" as CreateAcademicCalendarEntry order 1
+ participant "services.manager.academicCalendarManagement\nCreateAcademicCalendarEntry" as CreateAcademicCalendarEntry order 5
+ participant "dto.manager.academicCalendarManagement\nCalendarEntryBean" as CalendarEntryBean order 158
+ participant "domain.time.calendarStructure\nAcademicCalendarRootEntry" as AcademicCalendarRootEntry order 159
+ participant "core.domain\nBennu" as Bennu order 172
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 228
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 229
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 230
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 231
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 232
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 233
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 234
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 235
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 236
+ participant "domain.time.calendarStructure\nAcademicYearCE" as AcademicYearCE order 237
+ participant "domain.time.calendarStructure\nAcademicSemesterCE" as AcademicSemesterCE order 238
+ participant "domain\nExecutionYear" as ExecutionYear order 276
+ participant "domain.time.calendarStructure\nAcademicInterval" as AcademicInterval order 277
+ participant "i18n\nLocalizedString" as LocalizedString order 278
+ participant "domain\nExecutionSemester" as ExecutionSemester order 279
+ participant "domain.time.calendarStructure\nAcademicInterval" as AcademicInterval order 296
+ participant "domain.time.calendarStructure\nAcademicTrimesterCE" as AcademicTrimesterCE order 297
+ participant "domain.time.calendarStructure\nLessonsPeriodCE" as LessonsPeriodCE order 319
+ participant "domain.time.calendarStructure\nExamsPeriodInNormalSeasonCE" as ExamsPeriodInNormalSeasonCE order 341
+ participant "domain.time.calendarStructure\nExamsPeriodInSpecialSeasonCE" as ExamsPeriodInSpecialSeasonCE order 360
+ participant "domain.time.calendarStructure\nAcademicCalendarEntry" as AcademicCalendarEntry order 392
+ participant "domain.time.calendarStructure\nAcademicCalendarEntry" as AcademicCalendarEntry order 394
+ participant "domain.time.calendarStructure\nGradeSubmissionInNormalSeasonCE" as GradeSubmissionInNormalSeasonCE order 397
+ participant "domain.time.calendarStructure\nGradeSubmissionInSpecialSeasonCE" as GradeSubmissionInSpecialSeasonCE order 423
+ participant "domain.time.calendarStructure\nEnrolmentsPeriodCE" as EnrolmentsPeriodCE order 449
+ participant "domain.time.calendarStructure\nAcademicCalendarEntry" as AcademicCalendarEntry order 471
+ JSPCreateAcademicCalendarEntry -> CreateAcademicCalendarEntry: getConnection()
+ JSPCreateAcademicCalendarEntry <- CreateAcademicCalendarEntry: returnConnection()
+ JSPCreateAcademicCalendarEntry -> CreateAcademicCalendarEntry: executeAction()
+ CreateAcademicCalendarEntry -> CreateAcademicCalendarEntry: run\n(CalendarEntryBean,boolean):AcademicCalendarEntry
+ ALT toCreate
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getType():Class<? extends AcademicCalendarEntry>
+ 	ALT type.equals(AcademicCalendarRootEntry.class)
+ 		CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 		CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 		CreateAcademicCalendarEntry -> CalendarEntryBean: getTemplateEntry():AcademicCalendarEntry
+ 		CreateAcademicCalendarEntry -> AcademicCalendarRootEntry: AcademicCalendarRootEntry\n(LocalizedString,LocalizedString,AcademicCalendarEntry)
+ 		AcademicCalendarRootEntry -> AcademicCalendarRootEntry: AcademicCalendarRootEntry_Base()
+ 		AcademicCalendarRootEntry -> AcademicCalendarRootEntry: setRootDomainObjectForRootEntries(Bennu):void
+ 		AcademicCalendarRootEntry -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		AcademicCalendarRootEntry -> AcademicCalendarRootEntry: setTitle(LocalizedString):void
+ 		AcademicCalendarRootEntry -> AcademicCalendarRootEntry: setDescription(LocalizedString):void
+ 		AcademicCalendarRootEntry -> AcademicCalendarRootEntry: setTemplateEntry(AcademicCalendarEntry):void
+ 	ELSE else
+ 		ALT type.equals(AcademicYearCE.class)
+ 			CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 			CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 			CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 			CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 			CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 			CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 			CreateAcademicCalendarEntry -> AcademicYearCE: AcademicYearCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 		ELSE else
+ 			ALT type.equals(AcademicSemesterCE.class)
+ 				CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 				CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 				CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 				CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 				CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 				CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 				CreateAcademicCalendarEntry -> AcademicSemesterCE: AcademicSemesterCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 				AcademicSemesterCE -> AcademicSemesterCE: AcademicSemesterCE_Base()
+ 				AcademicSemesterCE -> AcademicSemesterCE: AcademicCalendarEntry()
+ 				AcademicSemesterCE -> AcademicSemesterCE: AcademicCalendarEntry_Base()
+ 				AcademicSemesterCE -> AcademicSemesterCE: setRootDomainObject(Bennu):void
+ 				AcademicSemesterCE -> Bennu: getInstance():Bennu
+ 				OPT ?
+ 					Bennu -> Bennu: initialize():Bennu
+ 				END
+ 				Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 				Bennu -> DomainRoot: getBennu():Bennu
+ 				AcademicSemesterCE -> AcademicSemesterCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 				ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 					AcademicSemesterCE -> AcademicSemesterCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 				END
+ 				AcademicSemesterCE -> AcademicSemesterCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 				AcademicSemesterCE -> AcademicSemesterCE: setTitle(LocalizedString):void
+ 				AcademicSemesterCE -> AcademicSemesterCE: setDescription(LocalizedString):void
+ 				AcademicSemesterCE -> AcademicSemesterCE: setTimeInterval(DateTime,DateTime):void
+ 				AcademicSemesterCE -> AcademicSemesterCE: createNewExecutionPeriod():void
+ 				AcademicSemesterCE -> ExecutionYear: getExecutionYear(AcademicYearCE):ExecutionYear
+ 				AcademicSemesterCE -> AcademicSemesterCE: getParentEntry():AcademicCalendarEntry
+ 				AcademicSemesterCE -> AcademicSemesterCE: getRootEntry():AcademicCalendarRootEntry
+ 				AcademicSemesterCE -> AcademicInterval: AcademicInterval\n(AcademicCalendarEntry,AcademicCalendarRootEntry)
+ 				AcademicSemesterCE -> AcademicSemesterCE: getTitle():LocalizedString
+ 				AcademicSemesterCE -> LocalizedString: getContent():String
+ 				AcademicSemesterCE -> ExecutionSemester: ExecutionSemester(ExecutionYear,AcademicInterval,String)
+ 				ExecutionSemester -> ExecutionSemester: ExecutionSemester()
+ 				ExecutionSemester -> ExecutionSemester: setExecutionYear(ExecutionYear):void
+ 				ExecutionSemester -> ExecutionSemester: setAcademicInterval(AcademicInterval):void
+ 				ExecutionSemester -> ExecutionSemester: setBeginDateYearMonthDay(YearMonthDay):void
+ 				ExecutionSemester -> AcademicInterval: getBeginYearMonthDayWithoutChronology():YearMonthDay
+ 				ExecutionSemester -> ExecutionSemester: setEndDateYearMonthDay(YearMonthDay):void
+ 				ExecutionSemester -> AcademicInterval: getEndYearMonthDayWithoutChronology():YearMonthDay
+ 				ExecutionSemester -> ExecutionSemester: setName(String):void
+ 			ELSE else
+ 				ALT type.equals(AcademicTrimesterCE.class)
+ 					CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 					CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 					CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 					CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 					CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 					CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 					CreateAcademicCalendarEntry -> AcademicTrimesterCE: AcademicTrimesterCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: AcademicTrimesterCE_Base()
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: AcademicCalendarEntry()
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: AcademicCalendarEntry_Base()
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: setRootDomainObject(Bennu):void
+ 					AcademicTrimesterCE -> Bennu: getInstance():Bennu
+ 					OPT ?
+ 						Bennu -> Bennu: initialize():Bennu
+ 					END
+ 					Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 					Bennu -> DomainRoot: getBennu():Bennu
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 					ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 						AcademicTrimesterCE -> AcademicTrimesterCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 					END
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: setTitle(LocalizedString):void
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: setDescription(LocalizedString):void
+ 					AcademicTrimesterCE -> AcademicTrimesterCE: setTimeInterval(DateTime,DateTime):void
+ 				ELSE else
+ 					ALT type.equals(LessonsPeriodCE.class)
+ 						CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 						CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 						CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 						CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 						CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 						CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 						CreateAcademicCalendarEntry -> LessonsPeriodCE: LessonsPeriodCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 						LessonsPeriodCE -> LessonsPeriodCE: LessonsPeriodCE_Base()
+ 						LessonsPeriodCE -> LessonsPeriodCE: AcademicCalendarEntry()
+ 						LessonsPeriodCE -> LessonsPeriodCE: AcademicCalendarEntry_Base()
+ 						LessonsPeriodCE -> LessonsPeriodCE: setRootDomainObject(Bennu):void
+ 						LessonsPeriodCE -> Bennu: getInstance():Bennu
+ 						OPT ?
+ 							Bennu -> Bennu: initialize():Bennu
+ 						END
+ 						Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 						Bennu -> DomainRoot: getBennu():Bennu
+ 						LessonsPeriodCE -> LessonsPeriodCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 						ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 							LessonsPeriodCE -> LessonsPeriodCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 						END
+ 						LessonsPeriodCE -> LessonsPeriodCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 						LessonsPeriodCE -> LessonsPeriodCE: setTitle(LocalizedString):void
+ 						LessonsPeriodCE -> LessonsPeriodCE: setDescription(LocalizedString):void
+ 						LessonsPeriodCE -> LessonsPeriodCE: setTimeInterval(DateTime,DateTime):void
+ 					ELSE else
+ 						ALT type.equals(ExamsPeriodInNormalSeasonCE.class)
+ 							CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 							CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 							CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 							CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 							CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 							CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 							CreateAcademicCalendarEntry -> ExamsPeriodInNormalSeasonCE: ExamsPeriodInNormalSeasonCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: ExamsPeriodInNormalSeasonCE_Base()
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: ExamsPeriodCE()
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: ExamsPeriodCE_Base()
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 							ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 								ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 							END
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: setTitle(LocalizedString):void
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: setDescription(LocalizedString):void
+ 							ExamsPeriodInNormalSeasonCE -> ExamsPeriodInNormalSeasonCE: setTimeInterval(DateTime,DateTime):void
+ 						ELSE else
+ 							ALT type.equals(ExamsPeriodInSpecialSeasonCE.class)
+ 								CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 								CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 								CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 								CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 								CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 								CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 								CreateAcademicCalendarEntry -> ExamsPeriodInSpecialSeasonCE: ExamsPeriodInSpecialSeasonCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: ExamsPeriodInSpecialSeasonCE_Base()
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: ExamsPeriodCE()
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: ExamsPeriodCE_Base()
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: AcademicCalendarEntry()
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: AcademicCalendarEntry_Base()
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: setRootDomainObject(Bennu):void
+ 								ExamsPeriodInSpecialSeasonCE -> Bennu: getInstance():Bennu
+ 								OPT ?
+ 									Bennu -> Bennu: initialize():Bennu
+ 								END
+ 								Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 								Bennu -> DomainRoot: getBennu():Bennu
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 								ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 									ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 									ALT !entry.isRoot()
+ 										ExamsPeriodInSpecialSeasonCE -> AcademicCalendarEntry: getFullPath():List<AcademicCalendarEntry>
+ 										LOOP for: entryPath
+ 											OPT virtualOrRedefinedEntry != null
+ 												ExamsPeriodInSpecialSeasonCE -> AcademicCalendarEntry: getVirtualOrRedefinedEntryIn\n(AcademicCalendarRootEntry):AcademicCalendarEntry
+ 											END
+ 											ALT virtualOrRedefinedEntry == null
+ 												ExamsPeriodInSpecialSeasonCE -> AcademicCalendarEntry: createVirtualEntry\n(AcademicCalendarEntry):AcademicCalendarEntry
+ 											END
+ 										END
+ 									END
+ 								END
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: setTitle(LocalizedString):void
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: setDescription(LocalizedString):void
+ 								ExamsPeriodInSpecialSeasonCE -> ExamsPeriodInSpecialSeasonCE: setTimeInterval(DateTime,DateTime):void
+ 							ELSE else
+ 								ALT type.equals(GradeSubmissionInNormalSeasonCE.class)
+ 									CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 									CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 									CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 									CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 									CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 									CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 									CreateAcademicCalendarEntry -> GradeSubmissionInNormalSeasonCE: GradeSubmissionInNormalSeasonCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: GradeSubmissionInNormalSeasonCE_Base()
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: GradeSubmissionCE()
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: GradeSubmissionCE_Base()
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: AcademicCalendarEntry()
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: AcademicCalendarEntry_Base()
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: setRootDomainObject(Bennu):void
+ 									GradeSubmissionInNormalSeasonCE -> Bennu: getInstance():Bennu
+ 									OPT ?
+ 										Bennu -> Bennu: initialize():Bennu
+ 									END
+ 									Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 									Bennu -> DomainRoot: getBennu():Bennu
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 									ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 										GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 									END
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: setTitle(LocalizedString):void
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: setDescription(LocalizedString):void
+ 									GradeSubmissionInNormalSeasonCE -> GradeSubmissionInNormalSeasonCE: setTimeInterval(DateTime,DateTime):void
+ 								ELSE else
+ 									ALT type.equals(GradeSubmissionInSpecialSeasonCE.class)
+ 										CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 										CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 										CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 										CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 										CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 										CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 										CreateAcademicCalendarEntry -> GradeSubmissionInSpecialSeasonCE: GradeSubmissionInSpecialSeasonCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: GradeSubmissionInSpecialSeasonCE_Base()
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: GradeSubmissionCE()
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: GradeSubmissionCE_Base()
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: AcademicCalendarEntry()
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: AcademicCalendarEntry_Base()
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: setRootDomainObject(Bennu):void
+ 										GradeSubmissionInSpecialSeasonCE -> Bennu: getInstance():Bennu
+ 										OPT ?
+ 											Bennu -> Bennu: initialize():Bennu
+ 										END
+ 										Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 										Bennu -> DomainRoot: getBennu():Bennu
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 										ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 											GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 										END
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: setTitle(LocalizedString):void
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: setDescription(LocalizedString):void
+ 										GradeSubmissionInSpecialSeasonCE -> GradeSubmissionInSpecialSeasonCE: setTimeInterval(DateTime,DateTime):void
+ 									ELSE else
+ 										OPT type.equals(EnrolmentsPeriodCE.class)
+ 											CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 											CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 											CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 											CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 											CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 											CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 											CreateAcademicCalendarEntry -> EnrolmentsPeriodCE: EnrolmentsPeriodCE\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry)
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: EnrolmentsPeriodCE_Base()
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: AcademicCalendarEntry()
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: AcademicCalendarEntry_Base()
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: setRootDomainObject(Bennu):void
+ 											EnrolmentsPeriodCE -> Bennu: getInstance():Bennu
+ 											OPT ?
+ 												Bennu -> Bennu: initialize():Bennu
+ 											END
+ 											Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 											Bennu -> DomainRoot: getBennu():Bennu
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: initEntry\n(AcademicCalendarEntry,LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry):void
+ 											ALT !parentEntry.getRootEntry().equals(rootEntry)
+ 												EnrolmentsPeriodCE -> EnrolmentsPeriodCE: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 											END
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: setParentEntry(AcademicCalendarEntry,boolean):void
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: setTitle(LocalizedString):void
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: setDescription(LocalizedString):void
+ 											EnrolmentsPeriodCE -> EnrolmentsPeriodCE: setTimeInterval(DateTime,DateTime):void
+ 										END
+ 									END
+ 								END
+ 							END
+ 						END
+ 					END
+ 				END
+ 			END
+ 		END
+ 	END
+ ELSE else
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getEntry():AcademicCalendarEntry
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getTitle():LocalizedString
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getDescription():LocalizedString
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getBegin():DateTime
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getEnd():DateTime
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getRootEntry():AcademicCalendarRootEntry
+ 	CreateAcademicCalendarEntry -> CalendarEntryBean: getTemplateEntry():AcademicCalendarEntry
+ 	CreateAcademicCalendarEntry -> AcademicCalendarEntry: edit\n(LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry,AcademicCalendarEntry):AcademicCalendarEntry
+ 	ALT !rootEntry.equals(getRootEntry())
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 		ALT !entry.isRoot()
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: getFullPath():List<AcademicCalendarEntry>
+ 			LOOP for: entryPath
+ 				OPT virtualOrRedefinedEntry != null
+ 					AcademicCalendarEntry -> AcademicCalendarEntry: getVirtualOrRedefinedEntryIn\n(AcademicCalendarRootEntry):AcademicCalendarEntry
+ 				END
+ 				ALT virtualOrRedefinedEntry == null
+ 					AcademicCalendarEntry -> AcademicCalendarEntry: createVirtualEntry\n(AcademicCalendarEntry):AcademicCalendarEntry
+ 				END
+ 			END
+ 		END
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: getParentEntry():AcademicCalendarEntry
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: createVirtualEntry\n(AcademicCalendarEntry):AcademicCalendarEntry
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: edit\n(LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry,AcademicCalendarEntry):AcademicCalendarEntry
+ 		ALT !rootEntry.equals(getRootEntry())
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: createVirtualPathUntil\n(AcademicCalendarEntry,AcademicCalendarRootEntry):AcademicCalendarEntry
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: getParentEntry():AcademicCalendarEntry
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: createVirtualEntry\n(AcademicCalendarEntry):AcademicCalendarEntry
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: edit\n(LocalizedString,LocalizedString,DateTime,DateTime,AcademicCalendarRootEntry,AcademicCalendarEntry):AcademicCalendarEntry
+ 		ELSE else
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: isVirtual():boolean
+ 			OPT isRedefinedEntry
+ 				AcademicCalendarEntry -> AcademicCalendarEntry: beforeRedefineEntry():void
+ 			END
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: setTitle(LocalizedString):void
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: setDescription(LocalizedString):void
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: setTimeInterval(DateTime,DateTime):void
+ 			OPT isRedefinedEntry
+ 				AcademicCalendarEntry -> AcademicCalendarEntry: afterRedefineEntry():void
+ 			END
+ 		END
+ 	ELSE else
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: isVirtual():boolean
+ 		OPT isRedefinedEntry
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: beforeRedefineEntry():void
+ 		END
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: setTitle(LocalizedString):void
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: setDescription(LocalizedString):void
+ 		AcademicCalendarEntry -> AcademicCalendarEntry: setTimeInterval(DateTime,DateTime):void
+ 		OPT isRedefinedEntry
+ 			AcademicCalendarEntry -> AcademicCalendarEntry: afterRedefineEntry():void
+ 		END
+ 	END
+ END
+ @enduml

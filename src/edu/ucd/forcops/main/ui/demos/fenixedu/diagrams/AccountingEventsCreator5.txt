@@ -1,0 +1,34 @@
+@startuml
+participant "JSP\nJSPAccountingEventsCreator" as JSPAccountingEventsCreator order 0
+participant "services.accounting\nAccountingEventsCreator" as AccountingEventsCreator order 1
+participant "domain.student\nRegistration" as Registration order 27
+participant "predicate\nAccessControl" as AccessControl order 28
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 29
+participant "domain\nPerson" as Person order 30
+participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 31
+participant "domain.student\nRegistration" as Registration order 34
+participant "domain.accounting.events\nAccountingEventsManager" as AccountingEventsManager order 39
+JSPAccountingEventsCreator -> AccountingEventsCreator: getConnection()
+JSPAccountingEventsCreator <- AccountingEventsCreator: returnConnection()
+JSPAccountingEventsCreator -> AccountingEventsCreator: executeAction()
+AccountingEventsCreator -> AccountingEventsCreator: createInsuranceEvent\n(StudentCurricularPlan,ExecutionYear):void
+AccountingEventsCreator -> AccountingEventsCreator: check(AccessControlPredicate<?>):void
+AccountingEventsCreator -> StudentCurricularPlan: getRegistration():student.Registration
+AccountingEventsCreator -> Registration: getStudent():student.Student
+AccountingEventsCreator -> Registration: createInsuranceEvent\n(StudentCurricularPlan,ExecutionYear):void
+AccountingEventsCreator -> AccountingEventsCreator: check(AccessControlPredicate<?>):void
+AccountingEventsCreator -> AccessControl: getPerson():Person
+AccountingEventsCreator -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt  requester == null
+	else  else
+		AccountingEventsCreator -> Person: getUsername():java.lang.String
+	end
+end
+AccountingEventsCreator -> StudentCurricularPlan: getRegistration():student.Registration
+StudentCurricularPlan -> StudentCurricularPlan: getStudent():student.Registration
+AccountingEventsCreator -> Registration: getStudent():student.Student
+AccountingEventsCreator -> Registration: createInsuranceEvent\n(StudentCurricularPlan,ExecutionYear):void
+Registration -> AccountingEventsManager: newAccountingEventsManager()
+Registration -> AccountingEventsManager: createInsuranceEvent\n(StudentCurricularPlan,ExecutionYear):InvocationResult
+@enduml

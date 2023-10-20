@@ -1,0 +1,309 @@
+@startuml
+ participant "JSP\nJSPCreateEnrolmentPeriods" as JSPCreateEnrolmentPeriods order 0
+ participant "services.manager\nCreateEnrolmentPeriods" as CreateEnrolmentPeriods order 1
+ participant "domain\nEnrolmentPeriodInClasses" as EnrolmentPeriodInClasses order 93
+ participant "domain\nEnrolmentPeriodInClassesMobility" as EnrolmentPeriodInClassesMobility order 94
+ participant "domain\nEnrolmentPeriodInCurricularCourses" as EnrolmentPeriodInCurricularCourses order 95
+ participant "domain\nEnrolmentPeriodInSpecialSeasonEvaluations" as EnrolmentPeriodInSpecialSeasonEvaluations order 96
+ participant "domain\nEnrolmentPeriodInCurricularCoursesSpecialSeason" as EnrolmentPeriodInCurricularCoursesSpecialSeason order 97
+ participant "domain\nEnrolmentPeriodInCurricularCoursesFlunkedSeason" as EnrolmentPeriodInCurricularCoursesFlunkedSeason order 98
+ participant "domain\nEnrolmentPeriodInImprovementOfApprovedEnrolment" as EnrolmentPeriodInImprovementOfApprovedEnrolment order 99
+ participant "domain\nReingressionPeriod" as ReingressionPeriod order 100
+ participant "domain\nEnrolmentPeriodInClasses" as EnrolmentPeriodInClasses order 101
+ participant "org.joda.time\nDateTime" as DateTime order 114
+ participant "org.joda.time\nDateTime" as DateTime order 115
+ participant "domain\nEnrolmentPeriodInClassesMobility" as EnrolmentPeriodInClassesMobility order 116
+ participant "org.joda.time\nDateTime" as DateTime order 129
+ participant "org.joda.time\nDateTime" as DateTime order 130
+ participant "domain\nEnrolmentPeriodInCurricularCourses" as EnrolmentPeriodInCurricularCourses order 131
+ participant "org.joda.time\nDateTime" as DateTime order 144
+ participant "org.joda.time\nDateTime" as DateTime order 145
+ participant "domain\nEnrolmentPeriodInSpecialSeasonEvaluations" as EnrolmentPeriodInSpecialSeasonEvaluations order 146
+ participant "org.joda.time\nDateTime" as DateTime order 159
+ participant "org.joda.time\nDateTime" as DateTime order 160
+ participant "domain\nEnrolmentPeriodInCurricularCoursesSpecialSeason" as EnrolmentPeriodInCurricularCoursesSpecialSeason order 161
+ participant "org.joda.time\nDateTime" as DateTime order 174
+ participant "org.joda.time\nDateTime" as DateTime order 175
+ participant "domain\nEnrolmentPeriodInCurricularCoursesFlunkedSeason" as EnrolmentPeriodInCurricularCoursesFlunkedSeason order 176
+ participant "org.joda.time\nDateTime" as DateTime order 189
+ participant "org.joda.time\nDateTime" as DateTime order 190
+ participant "domain\nEnrolmentPeriodInImprovementOfApprovedEnrolment" as EnrolmentPeriodInImprovementOfApprovedEnrolment order 191
+ participant "org.joda.time\nDateTime" as DateTime order 204
+ participant "org.joda.time\nDateTime" as DateTime order 205
+ participant "domain\nReingressionPeriod" as ReingressionPeriod order 206
+ participant "org.joda.time\nDateTime" as DateTime order 221
+ participant "org.joda.time\nDateTime" as DateTime order 222
+ participant "domain\nEnrolmentPeriodInClasses" as EnrolmentPeriodInClasses order 223
+ participant "domain\nEnrolmentPeriodInClassesMobility" as EnrolmentPeriodInClassesMobility order 228
+ participant "domain\nEnrolmentPeriodInCurricularCourses" as EnrolmentPeriodInCurricularCourses order 233
+ participant "domain\nEnrolmentPeriodInSpecialSeasonEvaluations" as EnrolmentPeriodInSpecialSeasonEvaluations order 238
+ participant "domain\nEnrolmentPeriodInCurricularCoursesSpecialSeason" as EnrolmentPeriodInCurricularCoursesSpecialSeason order 243
+ participant "domain\nEnrolmentPeriodInCurricularCoursesFlunkedSeason" as EnrolmentPeriodInCurricularCoursesFlunkedSeason order 248
+ participant "domain\nEnrolmentPeriodInImprovementOfApprovedEnrolment" as EnrolmentPeriodInImprovementOfApprovedEnrolment order 253
+ participant "domain\nReingressionPeriod" as ReingressionPeriod order 258
+ participant "domain\nEnrolmentPeriodInClasses" as EnrolmentPeriodInClasses order 265
+ participant "domain\nEnrolmentPeriodInClassesMobility" as EnrolmentPeriodInClassesMobility order 270
+ participant "domain\nEnrolmentPeriodInCurricularCourses" as EnrolmentPeriodInCurricularCourses order 275
+ participant "domain\nEnrolmentPeriodInSpecialSeasonEvaluations" as EnrolmentPeriodInSpecialSeasonEvaluations order 280
+ participant "domain\nEnrolmentPeriodInCurricularCoursesSpecialSeason" as EnrolmentPeriodInCurricularCoursesSpecialSeason order 285
+ participant "domain\nEnrolmentPeriodInCurricularCoursesFlunkedSeason" as EnrolmentPeriodInCurricularCoursesFlunkedSeason order 290
+ participant "domain\nEnrolmentPeriodInImprovementOfApprovedEnrolment" as EnrolmentPeriodInImprovementOfApprovedEnrolment order 295
+ participant "domain\nReingressionPeriod" as ReingressionPeriod order 300
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 307
+ participant "domain\nEmptyDegreeCurricularPlan" as EmptyDegreeCurricularPlan order 312
+ participant "domain\nReingressionPeriod" as ReingressionPeriod order 313
+ participant "org.joda.time\nDateTime" as DateTime order 328
+ participant "org.joda.time\nDateTime" as DateTime order 329
+ participant "org.joda.time.base\nAbstractInstant" as AbstractInstant order 330
+ participant "org.joda.time.base\nAbstractInstant" as AbstractInstant order 333
+ JSPCreateEnrolmentPeriods -> CreateEnrolmentPeriods: getConnection()
+ JSPCreateEnrolmentPeriods <- CreateEnrolmentPeriods: returnConnection()
+ JSPCreateEnrolmentPeriods -> CreateEnrolmentPeriods: executeAction()
+ CreateEnrolmentPeriods -> CreateEnrolmentPeriods: run\n(ExecutionSemester,DegreeType,EnrolmentPeriodType,DateTime,DateTime,List<DegreeCurricularPlan>):void
+ CreateEnrolmentPeriods -> AbstractInstant: toDate():Date
+ AbstractInstant -> AbstractInstant: getMillis():long
+ CreateEnrolmentPeriods -> AbstractInstant: toDate():Date
+ AbstractInstant -> AbstractInstant: getMillis():long
+ ALT !degreeType.isBolonhaType() && enrolmentPeriodType.isReingressionPeriod()
+ 	CreateEnrolmentPeriods -> CreateEnrolmentPeriods: createReingressionPeriodsForPreBolonhaDegrees\n(ExecutionSemester,DegreeType,Date,Date,List<DegreeCurricularPlan>):void
+ 	LOOP for: dcpList
+ 		CreateEnrolmentPeriods -> ReingressionPeriod: ReingressionPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 		ReingressionPeriod -> ReingressionPeriod: ReingressionPeriod_Base()
+ 		ReingressionPeriod -> ReingressionPeriod: EnrolmentPeriod()
+ 		ReingressionPeriod -> ReingressionPeriod: checkForExistingPeriod\n(DegreeCurricularPlan,ExecutionSemester):void
+ 		ReingressionPeriod -> ReingressionPeriod: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 		ReingressionPeriod -> ReingressionPeriod: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 		ReingressionPeriod -> DateTime: DateTime(Object)
+ 		ReingressionPeriod -> DateTime: DateTime(Object)
+ 	END
+ ELSE else
+ 	ALT degreeType.isEmpty()
+ 		CreateEnrolmentPeriods -> CreateEnrolmentPeriods: createEnrolmentPeriodsForEmptyDegree\n(ExecutionSemester,EnrolmentPeriodType,Date,Date):void
+ 		CreateEnrolmentPeriods -> CreateEnrolmentPeriods: createPeriod\n(EnrolmentPeriodType,Date,Date,ExecutionSemester,DegreeCurricularPlan):void
+ 		CreateEnrolmentPeriods -> DegreeCurricularPlan: readEmptyDegreeCurricularPlan():DegreeCurricularPlan
+ 		CreateEnrolmentPeriods -> CreateEnrolmentPeriods: createPeriod\n(EnrolmentPeriodType,Date,Date,ExecutionSemester,DegreeCurricularPlan):void
+ 		ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES.equals(enrolmentPeriodType)
+ 			CreateEnrolmentPeriods -> EnrolmentPeriodInClasses: EnrolmentPeriodInClasses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 			EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: EnrolmentPeriodInClasses_Base()
+ 			EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: EnrolmentPeriod()
+ 			EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 			EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 			EnrolmentPeriodInClasses -> DateTime: DateTime(Object)
+ 			EnrolmentPeriodInClasses -> DateTime: DateTime(Object)
+ 		ELSE else
+ 			ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES_MOBILITY.equals(enrolmentPeriodType)
+ 				CreateEnrolmentPeriods -> EnrolmentPeriodInClassesMobility: EnrolmentPeriodInClassesMobility\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 				EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: EnrolmentPeriodInClassesMobility_Base()
+ 				EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: EnrolmentPeriod()
+ 				EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 				EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 				EnrolmentPeriodInClassesMobility -> DateTime: DateTime(Object)
+ 				EnrolmentPeriodInClassesMobility -> DateTime: DateTime(Object)
+ 			ELSE else
+ 				ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES.equals(enrolmentPeriodType)
+ 					CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 					EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses_Base()
+ 					EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriod()
+ 					EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 					EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 					EnrolmentPeriodInCurricularCourses -> DateTime: DateTime(Object)
+ 					EnrolmentPeriodInCurricularCourses -> DateTime: DateTime(Object)
+ 				ELSE else
+ 					ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_SPECIAL_SEASON_EVALUATIONS.equals(enrolmentPeriodType)
+ 						CreateEnrolmentPeriods -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriodInSpecialSeasonEvaluations\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriodInSpecialSeasonEvaluations_Base\n()
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriod()
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> DateTime: DateTime(Object)
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> DateTime: DateTime(Object)
+ 					ELSE else
+ 						ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_SPECIAL_SEASON.equals(enrolmentPeriodType)
+ 							CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriodInCurricularCoursesSpecialSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriodInCurricularCoursesSpecialSeason_Base\n()
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriod()
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> DateTime: DateTime(Object)
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> DateTime: DateTime(Object)
+ 						ELSE else
+ 							ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_FLUNKED_SEASON.equals(enrolmentPeriodType)
+ 								CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriodInCurricularCoursesFlunkedSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriodInCurricularCoursesFlunkedSeason_Base\n()
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriod()
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> DateTime: DateTime(Object)
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> DateTime: DateTime(Object)
+ 							ELSE else
+ 								ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_IMPROVEMENT_OF_APPROVED_ENROLMENT.equals(enrolmentPeriodType)
+ 									CreateEnrolmentPeriods -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriodInImprovementOfApprovedEnrolment\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriodInImprovementOfApprovedEnrolment_Base\n()
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriod()
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> DateTime: DateTime(Object)
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> DateTime: DateTime(Object)
+ 								ELSE else
+ 									ALT enrolmentPeriodType.isReingressionPeriod()
+ 										CreateEnrolmentPeriods -> ReingressionPeriod: ReingressionPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 										ReingressionPeriod -> ReingressionPeriod: ReingressionPeriod_Base()
+ 										ReingressionPeriod -> ReingressionPeriod: EnrolmentPeriod()
+ 										ReingressionPeriod -> ReingressionPeriod: checkForExistingPeriod\n(DegreeCurricularPlan,ExecutionSemester):void
+ 										ReingressionPeriod -> ReingressionPeriod: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 										ReingressionPeriod -> ReingressionPeriod: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 										ReingressionPeriod -> DateTime: DateTime(Object)
+ 										ReingressionPeriod -> DateTime: DateTime(Object)
+ 									END
+ 								END
+ 							END
+ 						END
+ 					END
+ 				END
+ 			END
+ 		END
+ 		ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES.equals(enrolmentPeriodType)
+ 			CreateEnrolmentPeriods -> EnrolmentPeriodInClasses: EnrolmentPeriodInClasses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 			EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: EnrolmentPeriodInClasses_Base()
+ 			EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 		ELSE else
+ 			ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES_MOBILITY.equals(enrolmentPeriodType)
+ 				CreateEnrolmentPeriods -> EnrolmentPeriodInClassesMobility: EnrolmentPeriodInClassesMobility\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 				EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: EnrolmentPeriodInClassesMobility_Base()
+ 				EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 			ELSE else
+ 				ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES.equals(enrolmentPeriodType)
+ 					CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 					EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses_Base()
+ 					EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 				ELSE else
+ 					ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_SPECIAL_SEASON_EVALUATIONS.equals(enrolmentPeriodType)
+ 						CreateEnrolmentPeriods -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriodInSpecialSeasonEvaluations\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriodInSpecialSeasonEvaluations_Base\n()
+ 						EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 					ELSE else
+ 						ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_SPECIAL_SEASON.equals(enrolmentPeriodType)
+ 							CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriodInCurricularCoursesSpecialSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriodInCurricularCoursesSpecialSeason_Base\n()
+ 							EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 						ELSE else
+ 							ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_FLUNKED_SEASON.equals(enrolmentPeriodType)
+ 								CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriodInCurricularCoursesFlunkedSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriodInCurricularCoursesFlunkedSeason_Base\n()
+ 								EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 							ELSE else
+ 								ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_IMPROVEMENT_OF_APPROVED_ENROLMENT.equals(enrolmentPeriodType)
+ 									CreateEnrolmentPeriods -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriodInImprovementOfApprovedEnrolment\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriodInImprovementOfApprovedEnrolment_Base\n()
+ 									EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 								ELSE else
+ 									ALT enrolmentPeriodType.isReingressionPeriod()
+ 										CreateEnrolmentPeriods -> ReingressionPeriod: ReingressionPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 										ReingressionPeriod -> ReingressionPeriod: ReingressionPeriod_Base()
+ 										ReingressionPeriod -> ReingressionPeriod: checkForExistingPeriod\n(DegreeCurricularPlan,ExecutionSemester):void
+ 										ReingressionPeriod -> ReingressionPeriod: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 									END
+ 								END
+ 							END
+ 						END
+ 					END
+ 				END
+ 			END
+ 		END
+ 		CreateEnrolmentPeriods -> DegreeCurricularPlan: readEmptyDegreeCurricularPlan():DegreeCurricularPlan
+ 		DegreeCurricularPlan -> EmptyDegreeCurricularPlan: getInstance():EmptyDegreeCurricularPlan
+ 		DegreeCurricularPlan -> EmptyDegreeCurricularPlan: getInstance():EmptyDegreeCurricularPlan
+ 	ELSE else
+ 		CreateEnrolmentPeriods -> CreateEnrolmentPeriods: createEnrolmentPeriodsForBolonhaDegrees\n(ExecutionSemester,DegreeType,EnrolmentPeriodType,Date,Date,List<DegreeCurricularPlan>):void
+ 		LOOP for: dcpList
+ 			OPT degreeType == null || degreeType == degreeCurricularPlan.getDegree().getDegreeType()
+ 				CreateEnrolmentPeriods -> CreateEnrolmentPeriods: createPeriod\n(EnrolmentPeriodType,Date,Date,ExecutionSemester,DegreeCurricularPlan):void
+ 			END
+ 		END
+ 		LOOP for: dcpList
+ 			OPT degreeType == null || degreeType == degreeCurricularPlan.getDegree().getDegreeType()
+ 				CreateEnrolmentPeriods -> CreateEnrolmentPeriods: createPeriod\n(EnrolmentPeriodType,Date,Date,ExecutionSemester,DegreeCurricularPlan):void
+ 				ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES.equals(enrolmentPeriodType)
+ 					CreateEnrolmentPeriods -> EnrolmentPeriodInClasses: EnrolmentPeriodInClasses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 				ELSE else
+ 					ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES_MOBILITY.equals(enrolmentPeriodType)
+ 						CreateEnrolmentPeriods -> EnrolmentPeriodInClassesMobility: EnrolmentPeriodInClassesMobility\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 					ELSE else
+ 						ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES.equals(enrolmentPeriodType)
+ 							CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 						ELSE else
+ 							ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_SPECIAL_SEASON_EVALUATIONS.equals(enrolmentPeriodType)
+ 								CreateEnrolmentPeriods -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriodInSpecialSeasonEvaluations\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 							ELSE else
+ 								ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_SPECIAL_SEASON.equals(enrolmentPeriodType)
+ 									CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriodInCurricularCoursesSpecialSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 								ELSE else
+ 									ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_FLUNKED_SEASON.equals(enrolmentPeriodType)
+ 										CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriodInCurricularCoursesFlunkedSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 									ELSE else
+ 										ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_IMPROVEMENT_OF_APPROVED_ENROLMENT.equals(enrolmentPeriodType)
+ 											CreateEnrolmentPeriods -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriodInImprovementOfApprovedEnrolment\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 										ELSE else
+ 											ALT enrolmentPeriodType.isReingressionPeriod()
+ 												CreateEnrolmentPeriods -> ReingressionPeriod: ReingressionPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 											END
+ 										END
+ 									END
+ 								END
+ 							END
+ 						END
+ 					END
+ 				END
+ 				ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES.equals(enrolmentPeriodType)
+ 					CreateEnrolmentPeriods -> EnrolmentPeriodInClasses: EnrolmentPeriodInClasses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 					EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: EnrolmentPeriodInClasses_Base()
+ 					EnrolmentPeriodInClasses -> EnrolmentPeriodInClasses: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 				ELSE else
+ 					ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CLASSES_MOBILITY.equals(enrolmentPeriodType)
+ 						CreateEnrolmentPeriods -> EnrolmentPeriodInClassesMobility: EnrolmentPeriodInClassesMobility\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 						EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: EnrolmentPeriodInClassesMobility_Base()
+ 						EnrolmentPeriodInClassesMobility -> EnrolmentPeriodInClassesMobility: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 					ELSE else
+ 						ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES.equals(enrolmentPeriodType)
+ 							CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 							EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses_Base()
+ 							EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 						ELSE else
+ 							ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_SPECIAL_SEASON_EVALUATIONS.equals(enrolmentPeriodType)
+ 								CreateEnrolmentPeriods -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriodInSpecialSeasonEvaluations\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 								EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: EnrolmentPeriodInSpecialSeasonEvaluations_Base\n()
+ 								EnrolmentPeriodInSpecialSeasonEvaluations -> EnrolmentPeriodInSpecialSeasonEvaluations: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 							ELSE else
+ 								ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_SPECIAL_SEASON.equals(enrolmentPeriodType)
+ 									CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriodInCurricularCoursesSpecialSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 									EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: EnrolmentPeriodInCurricularCoursesSpecialSeason_Base\n()
+ 									EnrolmentPeriodInCurricularCoursesSpecialSeason -> EnrolmentPeriodInCurricularCoursesSpecialSeason: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 								ELSE else
+ 									ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_CURRICULAR_COURSES_FLUNKED_SEASON.equals(enrolmentPeriodType)
+ 										CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriodInCurricularCoursesFlunkedSeason\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 										EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: EnrolmentPeriodInCurricularCoursesFlunkedSeason_Base\n()
+ 										EnrolmentPeriodInCurricularCoursesFlunkedSeason -> EnrolmentPeriodInCurricularCoursesFlunkedSeason: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 									ELSE else
+ 										ALT EnrolmentPeriodType.ENROLMENT_PERIOD_IN_IMPROVEMENT_OF_APPROVED_ENROLMENT.equals(enrolmentPeriodType)
+ 											CreateEnrolmentPeriods -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriodInImprovementOfApprovedEnrolment\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 											EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: EnrolmentPeriodInImprovementOfApprovedEnrolment_Base\n()
+ 											EnrolmentPeriodInImprovementOfApprovedEnrolment -> EnrolmentPeriodInImprovementOfApprovedEnrolment: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 										ELSE else
+ 											ALT enrolmentPeriodType.isReingressionPeriod()
+ 												CreateEnrolmentPeriods -> ReingressionPeriod: ReingressionPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,Date)
+ 												ReingressionPeriod -> ReingressionPeriod: ReingressionPeriod_Base()
+ 												ReingressionPeriod -> ReingressionPeriod: checkForExistingPeriod\n(DegreeCurricularPlan,ExecutionSemester):void
+ 												ReingressionPeriod -> ReingressionPeriod: init\n(DegreeCurricularPlan,ExecutionSemester,Date,Date):void
+ 											END
+ 										END
+ 									END
+ 								END
+ 							END
+ 						END
+ 					END
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

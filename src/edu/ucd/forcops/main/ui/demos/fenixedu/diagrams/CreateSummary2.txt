@@ -1,0 +1,102 @@
+@startuml
+ participant "JSP\nJSPCreateSummary" as JSPCreateSummary order 0
+ participant "services.teacher\nCreateSummary" as CreateSummary order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 89
+ participant "core.domain\nUser" as User order 94
+ participant "domain\nSummary" as Summary order 95
+ participant "core.domain\nBennu" as Bennu order 120
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 127
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 128
+ participant "domain\nContentManagementLog" as ContentManagementLog order 129
+ participant "domain\nShift" as Shift order 136
+ participant "i18n\nLocalizedString" as LocalizedString order 137
+ participant "domain\nExecutionCourse" as ExecutionCourse order 138
+ participant "domain\nExecutionCourse" as ExecutionCourse order 139
+ participant "core.signals\nSignal" as Signal order 140
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 141
+ participant "domain\nSummary" as Summary order 142
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 143
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 144
+ participant "service.filter\nSummaryManagementToTeacherAuthorizationFilter" as SummaryManagementToTeacherAuthorizationFilter order 145
+ participant "core.security\nAuthenticate" as Authenticate order 150
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 153
+ participant "domain\nProfessorship" as Professorship order 154
+ JSPCreateSummary -> CreateSummary: getConnection()
+ JSPCreateSummary <- CreateSummary: returnConnection()
+ JSPCreateSummary -> CreateSummary: executeAction()
+ CreateSummary -> CreateSummary: runEditSummary(SummariesManagementBean):void
+ CreateSummary -> CreateSummary: atomicEditSummary(SummariesManagementBean):void
+ CreateSummary -> SummariesManagementBean: getSummary():Summary
+ CreateSummary -> SummariesManagementBean: getProfessorshipLogged():Professorship
+ CreateSummary -> SummaryManagementToTeacherAuthorizationFilter: execute(Summary,Professorship):void
+ SummaryManagementToTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ SummaryManagementToTeacherAuthorizationFilter -> Professorship: isResponsibleFor():boolean
+ Professorship -> Professorship: getResponsibleFor():Boolean
+ CreateSummary -> CreateSummary: run(SummariesManagementBean):void
+ CreateSummary -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ServiceMonitoring -> User: getUsername():String
+ ALT bean.isNewSummary()
+ 	CreateSummary -> Summary: Summary\n(LocalizedString,LocalizedString,Integer,Boolean,Professorship,String,Teacher,Shift,Lesson,YearMonthDay,Space,Partial,ShiftType,Boolean)
+ 	Summary -> Summary: Summary_Base()
+ 	Summary -> Summary: setRootDomainObject(Bennu):void
+ 	Summary -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	Summary -> Summary: fillSummaryWithInfo\n(LocalizedString,LocalizedString,Integer,Boolean,Professorship,String,Teacher,Shift,Lesson,YearMonthDay,Space,Partial,ShiftType,Boolean):void
+ 	Summary -> ContentManagementLog: createLog\n(ExecutionCourse,String,String,String[]):ContentManagementLog
+ 	ContentManagementLog -> ContentManagementLog: generateLabelDescription(String,String,String[]):String
+ 	ContentManagementLog -> ContentManagementLog: createContentManagementLog\n(ExecutionCourse,String):ContentManagementLog
+ 	ContentManagementLog -> ContentManagementLog: ContentManagementLog(ExecutionCourse,String)
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> LocalizedString: getContent():String
+ 	Summary -> Shift: getPresentationName():String
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> ExecutionCourse: getNome():String
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> ExecutionCourse: getDegreePresentationString():String
+ 	CreateSummary -> SummariesManagementBean: getTitle():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getSummaryText():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getStudentsNumber():Integer
+ 	CreateSummary -> SummariesManagementBean: getSummaryType():SummaryType
+ 	CreateSummary -> SummariesManagementBean: getProfessorship():Professorship
+ 	CreateSummary -> SummariesManagementBean: getTeacherName():String
+ 	CreateSummary -> SummariesManagementBean: getTeacher():Teacher
+ 	CreateSummary -> SummariesManagementBean: getShift():Shift
+ 	CreateSummary -> SummariesManagementBean: getLesson():Lesson
+ 	CreateSummary -> SummariesManagementBean: getSummaryDate():YearMonthDay
+ 	CreateSummary -> SummariesManagementBean: getSummaryRoom():Space
+ 	CreateSummary -> SummariesManagementBean: getSummaryTime():Partial
+ 	CreateSummary -> SummariesManagementBean: getLessonType():ShiftType
+ 	CreateSummary -> SummariesManagementBean: getTaught():Boolean
+ 	CreateSummary -> Signal: emit(String,Object):void
+ 	CreateSummary -> DomainObjectEvent: DomainObjectEvent(T)
+ ELSE else
+ 	CreateSummary -> SummariesManagementBean: getSummary():Summary
+ 	CreateSummary -> SummariesManagementBean: getTitle():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getSummaryText():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getStudentsNumber():Integer
+ 	CreateSummary -> SummariesManagementBean: getSummaryType():SummaryType
+ 	CreateSummary -> SummariesManagementBean: getProfessorship():Professorship
+ 	CreateSummary -> SummariesManagementBean: getTeacherName():String
+ 	CreateSummary -> SummariesManagementBean: getTeacher():Teacher
+ 	CreateSummary -> SummariesManagementBean: getShift():Shift
+ 	CreateSummary -> SummariesManagementBean: getLesson():Lesson
+ 	CreateSummary -> SummariesManagementBean: getSummaryDate():YearMonthDay
+ 	CreateSummary -> SummariesManagementBean: getSummaryRoom():Space
+ 	CreateSummary -> SummariesManagementBean: getSummaryTime():Partial
+ 	CreateSummary -> SummariesManagementBean: getLessonType():ShiftType
+ 	CreateSummary -> SummariesManagementBean: getTaught():Boolean
+ 	CreateSummary -> Summary: edit\n(LocalizedString,LocalizedString,Integer,Boolean,Professorship,String,Teacher,Shift,Lesson,YearMonthDay,Space,Partial,ShiftType,Boolean):void
+ 	CreateSummary -> Signal: emit(String,Object):void
+ 	CreateSummary -> SummariesManagementBean: getSummary():Summary
+ 	CreateSummary -> DomainObjectEvent: DomainObjectEvent(T)
+ END
+ @enduml

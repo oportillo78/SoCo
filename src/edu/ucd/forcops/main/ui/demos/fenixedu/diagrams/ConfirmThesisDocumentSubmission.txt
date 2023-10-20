@@ -1,0 +1,38 @@
+@startuml
+ participant "JSP\nJSPConfirmThesisDocumentSubmission" as JSPConfirmThesisDocumentSubmission order 0
+ participant "services.thesis\nConfirmThesisDocumentSubmission" as ConfirmThesisDocumentSubmission order 1
+ participant "domain.thesis\nThesis" as Thesis order 9
+ participant "predicate\nAccessControl" as AccessControl order 24
+ participant "core.security\nAuthenticate" as Authenticate order 29
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 32
+ participant "core.domain\nUser_Base" as User_Base order 33
+ participant "org.joda.time\nDateTime" as DateTime order 34
+ participant "org.joda.time\nDateTimeUtils" as DateTimeUtils order 43
+ participant "org.joda.time.chrono\nISOChronology" as ISOChronology order 44
+ JSPConfirmThesisDocumentSubmission -> ConfirmThesisDocumentSubmission: getConnection()
+ JSPConfirmThesisDocumentSubmission <- ConfirmThesisDocumentSubmission: returnConnection()
+ JSPConfirmThesisDocumentSubmission -> ConfirmThesisDocumentSubmission: executeAction()
+ ConfirmThesisDocumentSubmission -> ConfirmThesisDocumentSubmission: run(Thesis):void
+ ConfirmThesisDocumentSubmission -> Thesis: setConfirmmedDocuments(DateTime):void
+ Thesis -> Thesis: setConfirmer(Person):void
+ Thesis -> Thesis: setParticipation(Person,ThesisParticipationType):void
+ Thesis -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ Thesis -> Thesis: setConfirmmedDocuments(DateTime):void
+ Thesis -> Thesis: setConfirmer(Person):void
+ Thesis -> AccessControl: getPerson():Person
+ Thesis -> Thesis: setConfirmmedDocuments(DateTime):void
+ ConfirmThesisDocumentSubmission -> DateTime: DateTime()
+ DateTime -> DateTime: BaseDateTime()
+ DateTime -> DateTime: BaseDateTime(long,Chronology)
+ DateTime -> DateTimeUtils: currentTimeMillis():long
+ DateTime -> ISOChronology: getInstance():ISOChronology
+ @enduml

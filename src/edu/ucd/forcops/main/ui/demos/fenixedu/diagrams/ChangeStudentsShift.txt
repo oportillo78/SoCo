@@ -1,0 +1,204 @@
+@startuml
+ participant "JSP\nJSPChangeStudentsShift" as JSPChangeStudentsShift order 0
+ participant "services.resourceAllocationManager\nChangeStudentsShift" as ChangeStudentsShift order 1
+ participant "predicate\nAccessControl" as AccessControl order 51
+ participant "core.security\nAuthenticate" as Authenticate order 56
+ participant "core.domain\nUser_Base" as User_Base order 59
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 60
+ participant "domain\nPerson" as Person order 61
+ participant "core.domain\nUser" as User order 66
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 67
+ participant "domain\nShift_Base" as Shift_Base order 70
+ participant "domain\nShift_Base" as Shift_Base order 71
+ participant "domain.student\nRegistration" as Registration order 72
+ participant "domain.student\nStudent" as Student order 77
+ participant "core.i18n\nBundleUtil" as BundleUtil order 78
+ participant "i18n\nLocalizedString" as LocalizedString order 85
+ participant "core.domain\nMessage" as Message order 86
+ participant "core.domain\nMessagingSystem" as MessagingSystem order 91
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 93
+ participant "domain\nInstallation" as Installation order 96
+ participant "core.domain\nBennu" as Bennu order 101
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 112
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 113
+ participant "core.domain\nBennu" as Bennu order 114
+ participant "domain\nInstallation" as Installation order 115
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 118
+ participant "core.domain.Message\nTemplateMessageBuilder" as TemplateMessageBuilder order 212
+ participant "core.domain\nMessage" as Message order 215
+ participant "org.joda.time\nDateTime" as DateTime order 230
+ participant "com.google.common.base\nStrings" as Strings order 231
+ participant "com.google.common.base\nPlatform" as Platform order 238
+ participant "core.domain.MessagingSystem\nUtil" as Util order 239
+ participant "com.google.common.base\nJoiner" as Joiner order 246
+ participant "core.domain.Message\nTemplateMessageBuilder" as TemplateMessageBuilder order 247
+ participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 260
+ participant "core.domain\nMessageTemplate" as MessageTemplate order 261
+ participant "core.domain.Message\nTemplateMessageBuilder" as TemplateMessageBuilder order 280
+ participant "core.domain\nMessageTemplate" as MessageTemplate order 283
+ participant "domain\nPerson" as Person order 284
+ participant "core.groups\nGroup" as Group order 287
+ participant "core.groups\nUserGroup" as UserGroup order 290
+ participant "core.domain.groups\nNamedGroup" as NamedGroup order 293
+ JSPChangeStudentsShift -> ChangeStudentsShift: getConnection()
+ JSPChangeStudentsShift <- ChangeStudentsShift: returnConnection()
+ JSPChangeStudentsShift -> ChangeStudentsShift: executeAction()
+ ChangeStudentsShift -> ChangeStudentsShift: run\n(User,String,String,Set<Registration>):void
+ ChangeStudentsShift -> ChangeStudentsShift: check(AccessControlPredicate<?>):void
+ ChangeStudentsShift -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ ChangeStudentsShift -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		ChangeStudentsShift -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ ChangeStudentsShift -> FenixFramework: getDomainObject(String):T
+ ChangeStudentsShift -> FenixFramework: getDomainObject(String):T
+ ChangeStudentsShift -> Shift_Base: getStudentsSet():Set<Registration>
+ OPT newShift != null
+ 	ChangeStudentsShift -> Shift_Base: getStudentsSet():Set<Registration>
+ END
+ LOOP for: registrations
+ 	ChangeStudentsShift -> Registration: getPerson():Person
+ 	Registration -> Registration: getStudent():Student
+ 	Registration -> Student: getPerson():Person
+ END
+ ChangeStudentsShift -> BundleUtil: getLocalizedString(String,String,String[]):LocalizedString
+ BundleUtil -> LocalizedString: LocalizedString()
+ LOOP for: ?
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> LocalizedString: with(Locale,String):LocalizedString
+ END
+ ChangeStudentsShift -> Shift_Base: getNome():String
+ ChangeStudentsShift -> Message: fromSystem():MessageBuilder
+ Message -> MessagingSystem: systemSender():Sender
+ Message -> MessageBuilder: MessageBuilder(Sender)
+ MessageBuilder -> MessageBuilder: from(Sender):MessageBuilder
+ ChangeStudentsShift -> Installation: getInstance():Installation
+ Installation -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: Bennu()
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Installation -> Bennu: getInstallation():Installation
+ ChangeStudentsShift -> Installation: getInstituitionalEmailAddress(String):String
+ Installation -> Installation: getInstituitionEmailDomain():String
+ ChangeStudentsShift -> MessageBuilder: replyTo(String[]):MessageBuilder
+ MessageBuilder -> MessageBuilder: builderSetAdd(T[],Predicate<T>,Set<T>):void
+ MessageBuilder -> MessageBuilder: builderSetAdd(Stream<T>,Predicate<T>,Set<T>):void
+ ChangeStudentsShift -> Person: convertToUserGroup(Collection<Person>):Group
+ Person -> Group: users(Stream<User>):Group
+ Group -> UserGroup: UserGroup(Set<User>)
+ UserGroup -> UserGroup: CustomGroup()
+ ChangeStudentsShift -> NamedGroup: NamedGroup(LocalizedString,Group)
+ ChangeStudentsShift -> MessageBuilder: to(Group[]):MessageBuilder
+ MessageBuilder -> MessageBuilder: builderSetAdd(T[],Predicate<T>,Set<T>):void
+ MessageBuilder -> MessageBuilder: builderSetAdd(Stream<T>,Predicate<T>,Set<T>):void
+ ChangeStudentsShift -> MessageBuilder: template(String):TemplateMessageBuilder
+ MessageBuilder -> TemplateMessageBuilder: TemplateMessageBuilder(String,MessageBuilder)
+ TemplateMessageBuilder -> MessageTemplate: get(String):MessageTemplate
+ ChangeStudentsShift -> MessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ ChangeStudentsShift -> MessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ ChangeStudentsShift -> MessageBuilder: and():MessageBuilder
+ MessageBuilder -> MessageBuilder: subject(LocalizedString):MessageBuilder
+ MessageBuilder -> MessageTemplate: getCompiledSubject(Map<String,Object>):LocalizedString
+ MessageTemplate -> MessageTemplate: compile\n(String,LocalizedString,Map<String,Object>):LocalizedString
+ MessageTemplate -> MessageTemplate: getId():String
+ MessageTemplate -> MessageTemplate: getSubject():LocalizedString
+ MessageBuilder -> MessageBuilder: textBody(LocalizedString):MessageBuilder
+ MessageBuilder -> MessageTemplate: getCompiledTextBody(Map<String,Object>):LocalizedString
+ MessageTemplate -> MessageTemplate: compile\n(String,LocalizedString,Map<String,Object>):LocalizedString
+ MessageTemplate -> MessageTemplate: getId():String
+ MessageTemplate -> MessageTemplate: getTextBody():LocalizedString
+ MessageBuilder -> MessageBuilder: htmlBody(LocalizedString):MessageBuilder
+ MessageBuilder -> MessageTemplate: getCompiledHtmlBody(Map<String,Object>):LocalizedString
+ MessageTemplate -> MessageTemplate: compile\n(String,LocalizedString,Map<String,Object>):LocalizedString
+ MessageTemplate -> MessageTemplate: getId():String
+ MessageTemplate -> MessageTemplate: getHtmlBody():LocalizedString
+ ChangeStudentsShift -> MessageBuilder: send():Message
+ MessageBuilder -> Message: Message()
+ Message -> Message: Message_Base()
+ Message -> MessagingSystem: getInstance():MessagingSystem
+ Message -> Message: setMessagingSystem(MessagingSystem):void
+ Message -> Message: setMessagingSystemFromPendingDispatch(MessagingSystem):void
+ Message -> Message: setCreated(DateTime):void
+ Message -> DateTime: DateTime()
+ Message -> Message: setCreator(User):void
+ Message -> Authenticate: getUser():User
+ MessageBuilder -> Message: setSender(Sender):void
+ MessageBuilder -> Message: setReplyTo(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ Strings -> Platform: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ ALT ?
+ ELSE else
+ 	Util -> Joiner: join(Iterable<?>):String
+ END
+ MessageBuilder -> Message: setPreferredLocale(Locale):void
+ MessageBuilder -> Message: setSingleBccs(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ Strings -> Platform: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ ALT ?
+ ELSE else
+ 	Util -> Joiner: join(Iterable<?>):String
+ END
+ MessageBuilder -> Message: setSingleTos(String):void
+ MessageBuilder -> Strings: emptyToNull(String):String
+ Strings -> Platform: emptyToNull(String):String
+ MessageBuilder -> Util: toEmailListString(Collection<String>):String
+ ALT ?
+ ELSE else
+ 	Util -> Joiner: join(Iterable<?>):String
+ END
+ OPT ?
+ 	MessageBuilder -> MessageBuilder: template(String):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: TemplateMessageBuilder(String,MessageBuilder)
+ 	TemplateMessageBuilder -> MessageTemplate: get(String):MessageTemplate
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> Authenticate: getUser():User
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> MessageBuilder: newArrayList(Iterable<? extends E>):ArrayList<E>
+ 	MessageBuilder -> TemplateMessageBuilder: parameter(String,Object):TemplateMessageBuilder
+ 	MessageBuilder -> TemplateMessageBuilder: and():MessageBuilder
+ 	TemplateMessageBuilder -> MessageBuilder: subject(LocalizedString):MessageBuilder
+ 	TemplateMessageBuilder -> MessageTemplate: getCompiledSubject(Map<String,Object>):LocalizedString
+ 	TemplateMessageBuilder -> MessageBuilder: textBody(LocalizedString):MessageBuilder
+ 	TemplateMessageBuilder -> MessageTemplate: getCompiledTextBody(Map<String,Object>):LocalizedString
+ 	TemplateMessageBuilder -> MessageBuilder: htmlBody(LocalizedString):MessageBuilder
+ 	TemplateMessageBuilder -> MessageTemplate: getCompiledHtmlBody(Map<String,Object>):LocalizedString
+ END
+ MessageBuilder -> Message: setSubject(LocalizedString):void
+ MessageBuilder -> Message: setTextBody(LocalizedString):void
+ MessageBuilder -> Message: setHtmlBody(LocalizedString):void
+ @enduml

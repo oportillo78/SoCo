@@ -1,0 +1,46 @@
+@startuml
+scale 0.8
+participant "JSP\nJSPAccountingEventsCreator" as JSPAccountingEventsCreator order 0
+participant "services.accounting\nAccountingEventsCreator" as AccountingEventsCreator order 1
+participant "predicate\nAccessControl" as AccessControl order 33
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 34
+participant "domain\nPerson" as Person order 35
+participant "domain.student\nRegistration" as Registration order 36
+participant "domain.accounting.events\nAccountingEventsManager" as AccountingEventsManager order 41
+participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 44
+participant "domain.student\nRegistration" as Registration order 49
+JSPAccountingEventsCreator -> AccountingEventsCreator: getConnection()
+JSPAccountingEventsCreator <- AccountingEventsCreator: returnConnection()
+JSPAccountingEventsCreator -> AccountingEventsCreator: executeAction()
+AccountingEventsCreator -> AccountingEventsCreator: createAdministrativeOfficeFeeAndInsuranceEvent\n(StudentCurricularPlan,ExecutionYear):void
+AccountingEventsCreator -> AccountingEventsCreator: check(AccessControlPredicate<?>):void
+AccountingEventsCreator -> AccessControl: getPerson():Person
+AccountingEventsCreator -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt requester == null
+	else else
+		AccountingEventsCreator -> Person: getUsername():java.lang.String
+	end
+end
+AccountingEventsCreator -> StudentCurricularPlan: getRegistration():student.Registration
+StudentCurricularPlan -> StudentCurricularPlan: getStudent():student.Registration
+AccountingEventsCreator -> Registration: getStudent():student.Student
+AccountingEventsCreator -> Registration: createAdministrativeOfficeFeeEvent\n(StudentCurricularPlan,ExecutionYear):void
+Registration -> AccountingEventsManager: newAccountingEventsManager()
+Registration -> AccountingEventsManager: createAdministrativeOfficeFeeAndInsuranceEvent\n(StudentCurricularPlan,ExecutionYear):InvocationResult
+AccountingEventsCreator -> AccountingEventsCreator: check(AccessControlPredicate<?>):void
+AccountingEventsCreator -> AccessControl: getPerson():Person
+AccountingEventsCreator -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt requester == null
+	else else
+		AccountingEventsCreator -> Person: getUsername():java.lang.String
+	end
+end
+AccountingEventsCreator -> StudentCurricularPlan: getRegistration():student.Registration
+StudentCurricularPlan -> StudentCurricularPlan: getStudent():student.Registration
+AccountingEventsCreator -> Registration: getStudent():student.Student
+AccountingEventsCreator -> Registration: createAdministrativeOfficeFeeEvent\n(StudentCurricularPlan,ExecutionYear):void
+Registration -> AccountingEventsManager: newAccountingEventsManager()
+Registration -> AccountingEventsManager: createAdministrativeOfficeFeeAndInsuranceEvent\n(StudentCurricularPlan,ExecutionYear):InvocationResult
+@enduml

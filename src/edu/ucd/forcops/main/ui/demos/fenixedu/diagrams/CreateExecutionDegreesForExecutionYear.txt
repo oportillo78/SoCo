@@ -1,0 +1,37 @@
+@startuml
+ participant "JSP\nJSPCreateExecutionDegreesForExecutionYear" as JSPCreateExecutionDegreesForExecutionYear order 0
+ participant "services.manager\nCreateExecutionDegreesForExecutionYear" as CreateExecutionDegreesForExecutionYear order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 15
+ participant "domain\nExecutionDegree" as ExecutionDegree order 18
+ participant "core.domain\nBennu" as Bennu order 37
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 43
+ participant "domain\nExecutionYear_Base" as ExecutionYear_Base order 44
+ JSPCreateExecutionDegreesForExecutionYear -> CreateExecutionDegreesForExecutionYear: getConnection()
+ JSPCreateExecutionDegreesForExecutionYear <- CreateExecutionDegreesForExecutionYear: returnConnection()
+ JSPCreateExecutionDegreesForExecutionYear -> CreateExecutionDegreesForExecutionYear: executeAction()
+ CreateExecutionDegreesForExecutionYear -> CreateExecutionDegreesForExecutionYear: run\n(String[],String[],String,String,Boolean):List<DegreeCurricularPlan>
+ CreateExecutionDegreesForExecutionYear -> FenixFramework: getDomainObject(String):T
+ CreateExecutionDegreesForExecutionYear -> CreateExecutionDegreesForExecutionYear: readCampusByName(String):Space
+ LOOP for: allDegreeCurricularPlanIDs
+ 	CreateExecutionDegreesForExecutionYear -> FenixFramework: getDomainObject(String):T
+ 	CreateExecutionDegreesForExecutionYear -> DegreeCurricularPlan: createExecutionDegree\n(ExecutionYear,Space,Boolean):ExecutionDegree
+ 	DegreeCurricularPlan -> ExecutionDegree: ExecutionDegree\n(DegreeCurricularPlan,ExecutionYear,Space,Boolean)
+ 	ExecutionDegree -> ExecutionDegree: ExecutionDegree()
+ 	ExecutionDegree -> ExecutionDegree: ExecutionDegree_Base()
+ 	ExecutionDegree -> ExecutionDegree: setRootDomainObject(Bennu):void
+ 	ExecutionDegree -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionDegree -> ExecutionDegree: setDegreeCurricularPlan(DegreeCurricularPlan):void
+ 	ExecutionDegree -> ExecutionDegree: setExecutionYear(ExecutionYear):void
+ 	ExecutionDegree -> ExecutionDegree: setCampus(Space):void
+ 	OPT publishedExamMap
+ 		ExecutionDegree -> ExecutionDegree: getPublishedExamMapsSet():Set<ExecutionSemester>
+ 		ExecutionDegree -> ExecutionYear_Base: getExecutionPeriodsSet():Set<ExecutionSemester>
+ 	END
+ END
+ @enduml

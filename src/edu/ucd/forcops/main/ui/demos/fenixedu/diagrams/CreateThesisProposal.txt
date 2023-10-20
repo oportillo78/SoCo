@@ -1,0 +1,48 @@
+@startuml
+ participant "JSP\nJSPCreateThesisProposal" as JSPCreateThesisProposal order 0
+ participant "services.thesis\nCreateThesisProposal" as CreateThesisProposal order 1
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 13
+ participant "domain.student\nStudent" as Student order 14
+ participant "domain.student\nRegistration" as Registration order 19
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 22
+ participant "domain.thesis\nThesis" as Thesis order 23
+ participant "org.joda.time\nDateTime" as DateTime order 52
+ participant "predicate\nAccessControl" as AccessControl order 53
+ participant "core.domain\nBennu" as Bennu order 54
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 61
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 62
+ JSPCreateThesisProposal -> CreateThesisProposal: getConnection()
+ JSPCreateThesisProposal <- CreateThesisProposal: returnConnection()
+ JSPCreateThesisProposal -> CreateThesisProposal: executeAction()
+ CreateThesisProposal -> CreateThesisProposal: run\n(DegreeCurricularPlan,Student,LocalizedString,String):Thesis
+ CreateThesisProposal -> DegreeCurricularPlan_Base: getDegree():Degree
+ CreateThesisProposal -> Student: getDissertationEnrolment(DegreeCurricularPlan):Enrolment
+ Student -> Student: getDissertationEnrolments(DegreeCurricularPlan):TreeSet<Enrolment>
+ LOOP for: getRegistrationsSet()
+ 	Student -> Registration: getDissertationEnrolments(DegreeCurricularPlan):Set<Enrolment>
+ 	LOOP for: getStudentCurricularPlansSet()
+ 		Registration -> StudentCurricularPlan: getDissertationEnrolments():Collection<Enrolment>
+ 	END
+ END
+ CreateThesisProposal -> Thesis: Thesis(Degree,Enrolment,LocalizedString)
+ Thesis -> Thesis: Thesis()
+ Thesis -> Thesis: Thesis_Base()
+ Thesis -> Thesis: setRootDomainObject(Bennu):void
+ Thesis -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Thesis -> Thesis: setDeclarationAccepted(Boolean):void
+ Thesis -> Thesis: create():void
+ Thesis -> Thesis: setCreation(DateTime):void
+ Thesis -> DateTime: DateTime()
+ Thesis -> Thesis: setCreator(Person):void
+ Thesis -> AccessControl: getPerson():Person
+ Thesis -> Thesis: setState(ThesisState):void
+ Thesis -> Thesis: setDegree(Degree):void
+ Thesis -> Thesis: setEnrolment(Enrolment):void
+ Thesis -> Thesis: setTitle(LocalizedString):void
+ CreateThesisProposal -> Thesis: setComment(String):void
+ @enduml

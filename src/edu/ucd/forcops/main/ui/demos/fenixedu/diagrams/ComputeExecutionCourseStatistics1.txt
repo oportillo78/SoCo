@@ -1,0 +1,209 @@
+@startuml
+ participant "JSP\nJSPComputeExecutionCourseStatistics" as JSPComputeExecutionCourseStatistics order 0
+ participant "services.department\nComputeExecutionCourseStatistics" as ComputeExecutionCourseStatistics order 1
+ participant "domain.curriculum\nIGrade" as IGrade order 105
+ participant "domain.curriculum\nIGrade" as IGrade order 106
+ participant "domain.curriculum\nIGrade" as IGrade order 107
+ participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 108
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 121
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 122
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 123
+ participant "dto.department\nCourseStatisticsDTO" as CourseStatisticsDTO order 124
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 125
+ participant "domain\nDegree" as Degree order 126
+ participant "domain\nExecutionYear" as ExecutionYear order 149
+ participant "i18n\nLocalizedString" as LocalizedString order 150
+ participant "domain\nDegreeInfo_Base" as DegreeInfo_Base order 153
+ participant "i18n\nLocalizedString" as LocalizedString order 154
+ participant "domain\nProfessorship_Base" as Professorship_Base order 161
+ participant "domain\nPerson" as Person order 162
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 163
+ participant "domain.degreeStructure\nCompetenceCourseInformation_Base" as CompetenceCourseInformation_Base order 190
+ participant "i18n\nLocalizedString" as LocalizedString order 191
+ participant "domain\nCurricularCourse" as CurricularCourse order 192
+ participant "domain.degreeStructure\nContext" as Context order 212
+ participant "domain.degreeStructure\nContext" as Context order 213
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 214
+ participant "domain\nCurricularCourse" as CurricularCourse order 215
+ participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 220
+ participant "dto.department\nExecutionCourseStatisticsDTO" as ExecutionCourseStatisticsDTO order 223
+ participant "core.i18n\nBundleUtil" as BundleUtil order 228
+ participant "i18n\nI18N" as I18N order 233
+ participant "i18n\nLocalizedString" as LocalizedString order 235
+ participant "i18n.LocalizedString\nInternalMap" as InternalMap order 245
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 246
+ participant "domain\nExecutionSemester" as ExecutionSemester order 254
+ participant "domain\nExecutionSemester" as ExecutionSemester order 255
+ participant "domain\nExecutionSemester" as ExecutionSemester order 256
+ participant "domain\nExecutionYear" as ExecutionYear order 261
+ JSPComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: getConnection()
+ JSPComputeExecutionCourseStatistics <- ComputeExecutionCourseStatistics: returnConnection()
+ JSPComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: executeAction()
+ ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: runComputeExecutionCourseStatistics\n(CompetenceCourse,Degree,ExecutionSemester):List<ExecutionCourseStatisticsDTO>
+ ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: run\n(CompetenceCourse,Degree,ExecutionSemester):List<ExecutionCourseStatisticsDTO>
+ ComputeExecutionCourseStatistics -> CompetenceCourse: getAssociatedCurricularCoursesGroupedByDegree\n():Map<Degree,List<CurricularCourse>>
+ LOOP for: getAssociatedCurricularCoursesSet()
+ 	CompetenceCourse -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	CurricularCourse -> CurricularCourse: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ 	ALT !getParentContextsSet().isEmpty()
+ 		CurricularCourse -> CurricularCourse: getParentContextsSet():Set<Context>
+ 		CurricularCourse -> Context: getParentCourseGroup():CourseGroup
+ 		CurricularCourse -> Context: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ 	END
+ 	CompetenceCourse -> DegreeCurricularPlan: getDegree():Degree
+ END
+ LOOP for: curricularCourses
+ 	ComputeExecutionCourseStatistics -> CurricularCourse: getExecutionCoursesByExecutionPeriod(ExecutionSemester):List<ExecutionCourse>
+ 	CurricularCourse -> CollectionUtils: select(Collection,Predicate):Collection
+ 	CollectionUtils -> CollectionUtils: select(Collection,Predicate,Collection):void
+ 	CurricularCourse -> CurricularCourse: getAssociatedExecutionCoursesSet():Set<ExecutionCourse>
+ END
+ LOOP for: executionCourses
+ 	ComputeExecutionCourseStatistics -> ExecutionCourseStatisticsDTO: ExecutionCourseStatisticsDTO()
+ 	ExecutionCourseStatisticsDTO -> ExecutionCourseStatisticsDTO: CourseStatisticsDTO()
+ 	ExecutionCourseStatisticsDTO -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	ComputeExecutionCourseStatistics -> ExecutionCourseStatisticsDTO: setExternalId(String):void
+ 	ComputeExecutionCourseStatistics -> CompetenceCourse: getExternalId():String
+ 	ComputeExecutionCourseStatistics -> ExecutionCourseStatisticsDTO: setName(String):void
+ 	ComputeExecutionCourseStatistics -> CompetenceCourse: getNameI18N(ExecutionSemester):LocalizedString
+ 	CompetenceCourse -> LocalizedString: LocalizedString()
+ 	CompetenceCourse -> CompetenceCourse: getName(ExecutionSemester):String
+ 	CompetenceCourse -> CompetenceCourse: findCompetenceCourseInformationForExecutionPeriod\n(ExecutionSemester):CompetenceCourseInformation
+ 	OPT executionSemester == null
+ 		CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ 	END
+ 	ALT information != null
+ 		CompetenceCourse -> CompetenceCourseInformation_Base: getName():String
+ 	END
+ 	OPT name != null && name.length() > 0
+ 		CompetenceCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 	END
+ 	CompetenceCourse -> CompetenceCourse: getNameEn(ExecutionSemester):String
+ 	CompetenceCourse -> CompetenceCourse: findCompetenceCourseInformationForExecutionPeriod\n(ExecutionSemester):CompetenceCourseInformation
+ 	OPT executionSemester == null
+ 		CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ 	END
+ 	ALT information != null
+ 		CompetenceCourse -> CompetenceCourseInformation_Base: getNameEn():String
+ 	END
+ 	OPT nameEn != null && nameEn.length() > 0
+ 		CompetenceCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 	END
+ 	ComputeExecutionCourseStatistics -> LocalizedString: getContent():String
+ 	LocalizedString -> LocalizedString: getContent(Locale):String
+ 	LocalizedString -> InternalMap: getContent(Locale):String
+ 	LocalizedString -> I18N: getLocale():Locale
+ 	OPT ?
+ 		LocalizedString -> LocalizedString: getContent(Locale):String
+ 		LocalizedString -> InternalMap: getContent(Locale):String
+ 	END
+ 	ComputeExecutionCourseStatistics -> ExecutionCourseStatisticsDTO: setExecutionPeriod(String):void
+ 	ComputeExecutionCourseStatistics -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 	ComputeExecutionCourseStatistics -> ExecutionSemester: getName():String
+ 	ComputeExecutionCourseStatistics -> ExecutionCourseStatisticsDTO: setTeachers(List<String>):void
+ 	ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: getResponsibleTeachersName(ExecutionCourse):List<String>
+ 	LOOP for: executionCourse.getProfessorshipsSet()
+ 		OPT professorship.getResponsibleFor().booleanValue()
+ 			ComputeExecutionCourseStatistics -> Professorship_Base: getPerson():Person
+ 			ComputeExecutionCourseStatistics -> Person: getName():String
+ 		END
+ 	END
+ 	ComputeExecutionCourseStatistics -> ExecutionCourseStatisticsDTO: setExecutionYear(String):void
+ 	ComputeExecutionCourseStatistics -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 	ComputeExecutionCourseStatistics -> ExecutionSemester: getExecutionYear():ExecutionYear
+ 	ComputeExecutionCourseStatistics -> ExecutionSemester: getYear():String
+ 	ExecutionSemester -> ExecutionSemester: getExecutionYear():ExecutionYear
+ 	ExecutionSemester -> ExecutionYear: getYear():String
+ 	ComputeExecutionCourseStatistics -> ExecutionCourseStatisticsDTO: setDegrees(List<String>):void
+ 	ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: getDegrees(ExecutionCourse):List<String>
+ 	LOOP for: executionCourse.getAssociatedCurricularCoursesSet()
+ 		ComputeExecutionCourseStatistics -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		CurricularCourse -> CurricularCourse: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ 		ALT !getParentContextsSet().isEmpty()
+ 			CurricularCourse -> CurricularCourse: getParentContextsSet():Set<Context>
+ 			CurricularCourse -> Context: getParentCourseGroup():CourseGroup
+ 			CurricularCourse -> Context: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ 		END
+ 		ComputeExecutionCourseStatistics -> DegreeCurricularPlan: getDegree():Degree
+ 	END
+ 	ComputeExecutionCourseStatistics -> ExecutionCourse_Base: getExecutionYear():ExecutionYear
+ 	ExecutionCourse_Base -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 	ExecutionCourse_Base -> ExecutionSemester: getExecutionYear():ExecutionYear
+ 	LOOP for: degrees
+ 		ComputeExecutionCourseStatistics -> Degree: getNameFor(ExecutionYear):LocalizedString
+ 		ALT executionYear == null
+ 			Degree -> Degree: getMostRecentDegreeInfo():DegreeInfo
+ 		ELSE else
+ 			Degree -> Degree: getMostRecentDegreeInfo(ExecutionYear):DegreeInfo
+ 			LOOP for: getDegreeInfosSet()
+ 				Degree -> DegreeInfo_Base: getExecutionYear():ExecutionYear
+ 			END
+ 			OPT result == null && executionYear.hasNextExecutionYear()
+ 				Degree -> Degree: getMostRecentDegreeInfo(ExecutionYear):DegreeInfo
+ 				Degree -> ExecutionYear: getNextExecutionYear():ExecutionYear
+ 			END
+ 		END
+ 		ALT degreeInfo == null
+ 			Degree -> LocalizedString: LocalizedString()
+ 			LocalizedString -> InternalMap: InternalMap()
+ 			Degree -> Degree: getNome():String
+ 			Degree -> LocalizedString: with(Locale,String):LocalizedString
+ 			Degree -> Degree: getNameEn():String
+ 			Degree -> LocalizedString: with(Locale,String):LocalizedString
+ 		ELSE else
+ 			Degree -> DegreeInfo_Base: getName():LocalizedString
+ 		END
+ 		ComputeExecutionCourseStatistics -> LocalizedString: getContent():String
+ 		LocalizedString -> LocalizedString: getContent(Locale):String
+ 		LocalizedString -> I18N: getLocale():Locale
+ 		OPT ?
+ 			LocalizedString -> LocalizedString: getContent(Locale):String
+ 		END
+ 	END
+ 	ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: createCourseStatistics\n(CourseStatisticsDTO,List<Enrolment>):void
+ 	LOOP for: enrolments
+ 		ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: getBestEnrollmentEvaluation(Enrolment):EnrolmentEvaluation
+ 		ALT enrolment.isFirstTime()
+ 			OPT evaluation != null && evaluation.getEnrollmentStateByGrade() == EnrollmentState.APROVED
+ 				ComputeExecutionCourseStatistics -> EnrolmentEvaluation: getGradeWrapper():IGrade
+ 				EnrolmentEvaluation -> GradeFactory: getInstance():GradeFactory
+ 				EnrolmentEvaluation -> EnrolmentEvaluation: getGradeValue():String
+ 				EnrolmentEvaluation -> GradeFactory: getGrade(String):IGrade
+ 			END
+ 		ELSE else
+ 			OPT evaluation != null && evaluation.getEnrollmentStateByGrade() == EnrollmentState.APROVED
+ 				ComputeExecutionCourseStatistics -> EnrolmentEvaluation: getGradeWrapper():IGrade
+ 				EnrolmentEvaluation -> GradeFactory: getInstance():GradeFactory
+ 				EnrolmentEvaluation -> EnrolmentEvaluation: getGradeValue():String
+ 				EnrolmentEvaluation -> GradeFactory: getGrade(String):IGrade
+ 			END
+ 		END
+ 	END
+ 	ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 	ComputeExecutionCourseStatistics -> IGrade: getGradeType():GradeType
+ 	ComputeExecutionCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 	ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 	ComputeExecutionCourseStatistics -> IGrade: getGradeType():GradeType
+ 	ComputeExecutionCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 	ComputeExecutionCourseStatistics -> ComputeExecutionCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 	ComputeExecutionCourseStatistics -> IGrade: getGradeType():GradeType
+ 	ComputeExecutionCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setFirstEnrolledCount(int):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setFirstApprovedCount(int):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setFirstApprovedAverage(IGrade):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setRestEnrolledCount(int):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setRestApprovedCount(int):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setRestApprovedAverage(IGrade):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setTotalEnrolledCount(int):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setTotalApprovedCount(int):void
+ 	ComputeExecutionCourseStatistics -> CourseStatisticsDTO: setTotalApprovedAverage(IGrade):void
+ 	ComputeExecutionCourseStatistics -> ExecutionCourse_Base: getActiveEnrollments():List<Enrolment>
+ 	LOOP for: this.getAssociatedCurricularCoursesSet()
+ 		ExecutionCourse_Base -> CurricularCourse: getActiveEnrollments(ExecutionSemester):List<Enrolment>
+ 		CurricularCourse -> CurricularCourse: addActiveEnrollments\n(Collection<Enrolment>,ExecutionSemester):void
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 	END
+ END
+ @enduml

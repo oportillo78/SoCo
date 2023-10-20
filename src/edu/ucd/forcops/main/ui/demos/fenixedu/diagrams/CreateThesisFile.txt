@@ -1,0 +1,18 @@
+@startuml
+ participant "JSP\nJSPCreateThesisFile" as JSPCreateThesisFile order 0
+ participant "services.thesis\nCreateThesisFile" as CreateThesisFile order 1
+ participant "domain.thesis\nThesisFile" as ThesisFile order 11
+ JSPCreateThesisFile -> CreateThesisFile: getConnection()
+ JSPCreateThesisFile <- CreateThesisFile: returnConnection()
+ JSPCreateThesisFile -> CreateThesisFile: executeAction()
+ CreateThesisFile -> CreateThesisFile: run\n(Thesis,byte[],String,String,String,Locale):ThesisFile
+ CreateThesisFile -> CreateThesisFile: removePreviousFile(Thesis):void
+ CreateThesisFile -> ThesisFile: ThesisFile(String,String,byte[])
+ ThesisFile -> ThesisFile: ThesisFile_Base()
+ ThesisFile -> ThesisFile: GenericFile()
+ ThesisFile -> ThesisFile: init(String,String,byte[]):void
+ ThesisFile -> ThesisFile: setDisplayName(String):void
+ ThesisFile -> ThesisFile: setFilename(String):void
+ ThesisFile -> ThesisFile: setContent(byte[]):void
+ CreateThesisFile -> CreateThesisFile: updateThesis\n(Thesis,ThesisFile,String,String,Locale,String,byte[]):void
+ @enduml

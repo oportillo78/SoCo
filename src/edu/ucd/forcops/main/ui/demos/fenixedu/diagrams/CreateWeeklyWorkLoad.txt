@@ -1,0 +1,123 @@
+@startuml
+ participant "JSP\nJSPCreateWeeklyWorkLoad" as JSPCreateWeeklyWorkLoad order 0
+ participant "services.student\nCreateWeeklyWorkLoad" as CreateWeeklyWorkLoad order 1
+ participant "predicate\nAccessControl" as AccessControl order 17
+ participant "core.security\nAuthenticate" as Authenticate order 22
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 25
+ participant "core.domain\nUser_Base" as User_Base order 26
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 27
+ participant "domain\nPerson" as Person order 28
+ participant "core.domain\nUser" as User order 33
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 36
+ participant "domain\nAttends" as Attends order 38
+ participant "domain\nExecutionCourse" as ExecutionCourse order 89
+ participant "domain\nEnrolment" as Enrolment order 90
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 91
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 92
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 93
+ participant "domain\nExecutionDegree" as ExecutionDegree order 94
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 99
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 100
+ participant "org.joda.time\nDateMidnight" as DateMidnight order 101
+ participant "org.joda.time\nDateTimeFieldType" as DateTimeFieldType order 112
+ participant "org.joda.time\nDateTimeField" as DateTimeField order 114
+ participant "org.joda.time\nDateTimeFieldType" as DateTimeFieldType order 115
+ participant "org.joda.time\nDateMidnight" as DateMidnight order 116
+ participant "org.joda.time\nDateTimeField" as DateTimeField order 126
+ participant "org.joda.time\nInterval" as Interval order 127
+ participant "org.joda.time\nPeriodType" as PeriodType order 130
+ participant "org.joda.time\nPeriod" as Period order 131
+ participant "domain.student\nWeeklyWorkLoad" as WeeklyWorkLoad order 132
+ participant "core.domain\nBennu" as Bennu order 151
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 157
+ JSPCreateWeeklyWorkLoad -> CreateWeeklyWorkLoad: getConnection()
+ JSPCreateWeeklyWorkLoad <- CreateWeeklyWorkLoad: returnConnection()
+ JSPCreateWeeklyWorkLoad -> CreateWeeklyWorkLoad: executeAction()
+ CreateWeeklyWorkLoad -> CreateWeeklyWorkLoad: run(String,Integer,Integer,Integer):void
+ CreateWeeklyWorkLoad -> CreateWeeklyWorkLoad: check(AccessControlPredicate<?>):void
+ CreateWeeklyWorkLoad -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CreateWeeklyWorkLoad -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CreateWeeklyWorkLoad -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ CreateWeeklyWorkLoad -> FenixFramework: getDomainObject(String):T
+ CreateWeeklyWorkLoad -> Attends: createWeeklyWorkLoad(Integer,Integer,Integer):WeeklyWorkLoad
+ Attends -> Attends: calculateCurrentWeekOffset():int
+ Attends -> DateMidnight: DateMidnight(Object)
+ Attends -> Attends: getBegginingOfLessonPeriod():Date
+ Attends -> Attends: getExecutionCourse():ExecutionCourse
+ Attends -> ExecutionCourse: getExecutionPeriod():ExecutionSemester
+ Attends -> Attends: getEnrolment():Enrolment
+ Attends -> Enrolment: getStudentCurricularPlan():StudentCurricularPlan
+ Attends -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ Attends -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ Attends -> DegreeCurricularPlan: getExecutionDegreeByYear(ExecutionYear):ExecutionDegree
+ ALT executionSemester.getSemester().intValue() == 1
+ 	Attends -> ExecutionDegree: getPeriodLessonsFirstSemester():OccupationPeriod
+ 	ExecutionDegree -> ExecutionDegree: getOnePeriod\n(OccupationPeriodType,Integer):OccupationPeriod
+ 	Attends -> OccupationPeriod: getStart():Date
+ ELSE else
+ 	ALT executionSemester.getSemester().intValue() == 2
+ 		Attends -> ExecutionDegree: getPeriodLessonsSecondSemester():OccupationPeriod
+ 		ExecutionDegree -> ExecutionDegree: getOnePeriod\n(OccupationPeriodType,Integer):OccupationPeriod
+ 		Attends -> OccupationPeriod: getStart():Date
+ 	END
+ END
+ Attends -> DateMidnight: withField(DateTimeFieldType,int):DateMidnight
+ DateMidnight -> DateTimeFieldType: getField(Chronology):DateTimeField
+ DateMidnight -> DateMidnight: getChronology():Chronology
+ DateMidnight -> DateMidnight: getMillis():long
+ DateMidnight -> DateTimeField: set(long,int):long
+ DateMidnight -> DateMidnight: withMillis(long):DateMidnight
+ Attends -> DateTimeFieldType: dayOfWeek():DateTimeFieldType
+ Attends -> DateMidnight: DateMidnight()
+ Attends -> DateTimeFieldType: dayOfWeek():DateTimeFieldType
+ Attends -> DateMidnight: withField(DateTimeFieldType,int):DateMidnight
+ DateMidnight -> DateTimeFieldType: getField(Chronology):DateTimeField
+ DateMidnight -> DateMidnight: getChronology():Chronology
+ DateMidnight -> DateMidnight: getMillis():long
+ DateMidnight -> DateTimeField: set(long,int):long
+ DateMidnight -> DateMidnight: withMillis(long):DateMidnight
+ Attends -> Interval: Interval(ReadableInstant,ReadableInstant)
+ Interval -> Interval: BaseInterval(ReadableInstant,ReadableInstant)
+ Attends -> Interval: toPeriod(PeriodType):Period
+ Attends -> PeriodType: weeks():PeriodType
+ Attends -> Period: getWeeks():int
+ ALT getWeeklyWorkLoadsSet().isEmpty()
+ ELSE else
+ 	Attends -> Attends: getWeeklyWorkLoadsSet():Set<WeeklyWorkLoad>
+ END
+ Attends -> WeeklyWorkLoad: WeeklyWorkLoad(Attends,Integer,Integer,Integer,Integer)
+ WeeklyWorkLoad -> WeeklyWorkLoad: WeeklyWorkLoad_Base()
+ WeeklyWorkLoad -> WeeklyWorkLoad: AbstractDomainObject()
+ WeeklyWorkLoad -> WeeklyWorkLoad: setRootDomainObject(Bennu):void
+ WeeklyWorkLoad -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ WeeklyWorkLoad -> WeeklyWorkLoad: setAttends(Attends):void
+ WeeklyWorkLoad -> WeeklyWorkLoad: setContact(Integer):void
+ WeeklyWorkLoad -> WeeklyWorkLoad: setAutonomousStudy(Integer):void
+ WeeklyWorkLoad -> WeeklyWorkLoad: setOther(Integer):void
+ WeeklyWorkLoad -> WeeklyWorkLoad: setWeekOffset(Integer):void
+ @enduml

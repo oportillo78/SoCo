@@ -1,0 +1,73 @@
+@startuml
+participant "JSP\nJSPCreateAdHocEvaluation" as JSPCreateAdHocEvaluation order 0
+participant "services.teacher\nCreateAdHocEvaluation" as CreateAdHocEvaluation order 1
+participant "domain\nAdHocEvaluation" as AdHocEvaluation order 21
+participant "pt.ist.framework\nFenix" as FenixFramework order 22
+participant "domain\nAdHocEvaluation" as AdHocEvaluation order 25
+participant "service.filter\nCourseLectTeacher\nAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 26
+participant "dto\nInfoExecCourse" as InfoExecutionCourse order 39
+participant "dto\nSummaries\nManagementBean" as SummariesManagementBean order 40
+participant "service.filter\nCourseCoord\nAuthorizationFilter" as ExecutionCourseCoordinatorAuthorizationFilter order 41
+participant "core.security\nAuthenticate" as Authenticate order 68
+participant "core.domain\nUser" as User order 69
+participant "java.util\nTreeSet" as TreeSet order 70
+participant "service.filter.coord\nCoordComparator" as CoordinatorByExecutionDegreeComparator order 71
+participant "domain\nPerson_Base" as Person_Base order 72
+participant "domain\nCoord_Base" as Coordinator_Base order 73
+participant "domain\nExecutionDegree" as ExecutionDegree order 74
+JSPCreateAdHocEvaluation -> CreateAdHocEvaluation: getConnection()
+JSPCreateAdHocEvaluation <- CreateAdHocEvaluation: returnConnection()
+JSPCreateAdHocEvaluation -> CreateAdHocEvaluation: executeAction()
+CreateAdHocEvaluation -> CreateAdHocEvaluation: runCreateAdHocEvaluation\n(String,String,\nString,GradeScale):void
+CreateAdHocEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(Execution\nCourse):void
+ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse\n(Object):ExecutionCourse
+alt argument == null
+else else
+	alt argument instanceof ExecutionCourse
+	else else
+		alt argument instanceof InfoExecutionCourse
+			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomain\nObject(String):T
+			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+		else else
+			alt argument instanceof String
+				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomain\nObject(String):T
+			else else
+				alt argument instanceof SummariesManagementBean
+					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse\n():ExecutionCourse
+				else else
+				end
+			end
+		end
+	end
+end
+CreateAdHocEvaluation -> CreateAdHocEvaluation: run(String,String,\nString,GradeScale):void
+CreateAdHocEvaluation -> FenixFramework: getDomainObject(String):T
+CreateAdHocEvaluation -> AdHocEvaluation: AdHocEvaluation\n(ExecutionCourse,String,\nString,GradeScale)
+opt NotAuthorizedException ex1
+	CreateAdHocEvaluation -> ExecutionCourseCoordinatorAuthorizationFilter: execute(String):void
+	ExecutionCourseCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+	ExecutionCourseCoordinatorAuthorizationFilter -> User: getPerson():Person	
+	opt coordinators.isEmpty()
+		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+	end	
+	ExecutionCourseCoordinatorAuthorizationFilter -> TreeSet: newTreeSet(Comparator<? super E>)
+	ExecutionCourseCoordinatorAuthorizationFilter -> CoordinatorByExecutionDegreeComparator: CoordinatorBy\nExecutionDegreeComparator()
+	ExecutionCourseCoordinatorAuthorizationFilter -> TreeSet: addAll(Collection<? extends E>):boolean
+	ExecutionCourseCoordinatorAuthorizationFilter -> Person_Base: getCoordinatorsSet():Set<Coordinator>	
+	opt !RoleType.\nCOORDINATOR.isMember\n(person.getUser())
+		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+	end
+	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: getSpecific\nExecutionYear\n(String):ExecutionYear
+	ExecutionCourseCoordinatorAuthorizationFilter -> TreeSet: first():E
+	ExecutionCourseCoordinatorAuthorizationFilter -> Coordinator_Base: getExecutionDegree\n():ExecutionDegree
+	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionDegree: getExecutionYear\n():ExecutionYear	
+	opt executionYear == null ||\n coordinatorExecutionYear.\ncompareTo(executionYear) < 0
+		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+	end	
+	CreateAdHocEvaluation -> CreateAdHocEvaluation: run(String,String,\nString,GradeScale):void
+	CreateAdHocEvaluation -> FenixFramework: getDomainObject(String):T
+	CreateAdHocEvaluation -> AdHocEvaluation: AdHocEvaluation\n(ExecutionCourse,String,\nString,GradeScale)
+end
+@enduml

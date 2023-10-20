@@ -1,0 +1,45 @@
+@startuml
+ participant "JSP\nJSPCancelResidenceEvent" as JSPCancelResidenceEvent order 0
+ participant "services.accounting\nCancelResidenceEvent" as CancelResidenceEvent order 1
+ participant "domain.accounting\nResidenceEvent" as ResidenceEvent order 7
+ participant "core.signals\nSignal" as Signal order 30
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 47
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 48
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 49
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 50
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 51
+ participant "domain.accounting.EventState\nChangeStateEvent" as ChangeStateEvent order 52
+ participant "org.joda.time\nDateTime" as DateTime order 53
+ JSPCancelResidenceEvent -> CancelResidenceEvent: getConnection()
+ JSPCancelResidenceEvent <- CancelResidenceEvent: returnConnection()
+ JSPCancelResidenceEvent -> CancelResidenceEvent: executeAction()
+ CancelResidenceEvent -> CancelResidenceEvent: run(ResidenceEvent,Person):void
+ CancelResidenceEvent -> ResidenceEvent: cancel(Person):void
+ ResidenceEvent -> ResidenceEvent: cancelNewName1(Person):void
+ ResidenceEvent -> ResidenceEvent: cancel(Person,String):void
+ ResidenceEvent -> ResidenceEvent: forceCancel(Person,String):void
+ ResidenceEvent -> ResidenceEvent: changeState(EventState,DateTime):void
+ ResidenceEvent -> Signal: emit(String,Object):void
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ ResidenceEvent -> ChangeStateEvent: ChangeStateEvent(EventState,Event,DateTime)
+ ResidenceEvent -> ResidenceEvent: setEventState(EventState):void
+ ResidenceEvent -> ResidenceEvent: setEventStateDate(DateTime):void
+ ResidenceEvent -> DateTime: DateTime()
+ ResidenceEvent -> ResidenceEvent: setResponsibleForCancel(Person):void
+ ResidenceEvent -> ResidenceEvent: setCancelJustification(String):void
+ @enduml

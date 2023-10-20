@@ -1,0 +1,67 @@
+@startuml
+ participant "JSP\nJSPCreateConversationMessage" as JSPCreateConversationMessage order 0
+ participant "services.messaging\nCreateConversationMessage" as CreateConversationMessage order 1
+ participant "domain.messaging\nConversationThread" as ConversationThread order 51
+ participant "domain.messaging\nConversationMessage_Base" as ConversationMessage_Base order 52
+ participant "domain.messaging\nConversationMessage_Base" as ConversationMessage_Base order 53
+ participant "domain.messaging\nConversationThread" as ConversationThread order 54
+ participant "domain.messaging\nForumSubscription_Base" as ForumSubscription_Base order 55
+ participant "domain.messaging\nConversationThread" as ConversationThread order 56
+ participant "domain.messaging\nForumSubscription" as ForumSubscription order 57
+ participant "dto.messaging\nCreateConversationMessageBean" as CreateConversationMessageBean order 58
+ participant "domain.messaging\nConversationThread" as ConversationThread order 59
+ participant "domain.messaging\nForum" as Forum order 68
+ participant "domain.messaging\nConversationMessage" as ConversationMessage order 69
+ participant "org.joda.time\nDateTime" as DateTime order 86
+ JSPCreateConversationMessage -> CreateConversationMessage: getConnection()
+ JSPCreateConversationMessage <- CreateConversationMessage: returnConnection()
+ JSPCreateConversationMessage -> CreateConversationMessage: executeAction()
+ CreateConversationMessage -> CreateConversationMessage: runCreateConversationMessage(CreateConversationMessageBean):void
+ CreateConversationMessage -> CreateConversationMessage: run(CreateConversationMessageBean):void
+ CreateConversationMessage -> CreateConversationMessageBean: getConversationThread():ConversationThread
+ CreateConversationMessage -> CreateConversationMessageBean: getCreator():Person
+ CreateConversationMessage -> CreateConversationMessageBean: getBody():LocalizedString
+ CreateConversationMessage -> ConversationThread: createConversationMessage\n(Person,LocalizedString):ConversationMessage
+ ConversationThread -> ConversationThread: checkIfPersonCanWrite(Person):void
+ ConversationThread -> ConversationThread: getForum():Forum
+ ConversationThread -> Forum: checkIfPersonCanWrite(Person):void
+ ConversationThread -> ConversationMessage: ConversationMessage\n(ConversationThread,Person,LocalizedString)
+ ConversationMessage -> ConversationMessage: ConversationMessage_Base()
+ ConversationMessage -> ConversationMessage: AbstractDomainObject()
+ ConversationMessage -> ConversationMessage: setCreationDate(DateTime):void
+ ConversationMessage -> DateTime: DateTime()
+ ConversationMessage -> ConversationMessage: init\n(ConversationThread,Person,LocalizedString):void
+ ConversationMessage -> ConversationMessage: setConversationThread(ConversationThread):void
+ ConversationMessage -> ConversationMessage: setBody(LocalizedString):void
+ ConversationMessage -> ConversationMessage: setCreator(Person):void
+ CreateConversationMessage -> CreateConversationMessage: sendNotifications(ConversationMessage):void
+ CreateConversationMessage -> CreateConversationMessage: notifyEmailSubscribers(ConversationMessage):void
+ CreateConversationMessage -> ConversationMessage_Base: getConversationThread():ConversationThread
+ CreateConversationMessage -> ConversationThread: getForum():Forum
+ CreateConversationMessage -> ConversationThread: getReadersGroup():Group
+ CreateConversationMessage -> ConversationThread: getMembers():Stream<User>
+ LOOP for: conversationMessage.getConversationThread().getForum()                .getForumSubscriptionsSet()
+ 	CreateConversationMessage -> ForumSubscription_Base: getPerson():Person
+ 	OPT subscription.getReceivePostsByEmail()
+ 		ALT subscriber.getEmail() == null
+ 			CreateConversationMessage -> ForumSubscription_Base: setReceivePostsByEmail(Boolean):void
+ 		END
+ 	END
+ END
+ LOOP for: subscriptionsToRemove
+ 	CreateConversationMessage -> ConversationMessage_Base: getConversationThread():ConversationThread
+ 	CreateConversationMessage -> ConversationThread: getForum():Forum
+ 	CreateConversationMessage -> ConversationThread: removeForumSubscriptions(ForumSubscription):void
+ 	CreateConversationMessage -> ForumSubscription: delete():void
+ END
+ CreateConversationMessage -> CreateConversationMessage: sendEmailWithConversationMessage\n(Set<Person>,Set<Person>,ConversationMessage):void
+ CreateConversationMessage -> CreateConversationMessage: notifyLastReplier(ConversationMessage):void
+ CreateConversationMessage -> ConversationMessage_Base: getConversationThread():ConversationThread
+ CreateConversationMessage -> ConversationThread: getNextToLastConversationMessage():ConversationMessage
+ OPT nextToLastConversationMessage != null
+ 	CreateConversationMessage -> ConversationMessage_Base: getCreator():Person
+ 	OPT !conversationMessage.getConversationThread().getForum()                    .isPersonReceivingMessagesByEmail(nextToLastMessageReplier)
+ 		CreateConversationMessage -> CreateConversationMessage: sendEmailWithConversationMessage\n(Set<Person>,Set<Person>,ConversationMessage):void
+ 	END
+ END
+ @enduml

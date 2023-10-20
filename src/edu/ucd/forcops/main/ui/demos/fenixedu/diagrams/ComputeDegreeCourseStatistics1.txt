@@ -1,0 +1,93 @@
+@startuml
+ participant "JSP\nJSPComputeDegreeCourseStatistics" as JSPComputeDegreeCourseStatistics order 0
+ participant "services.department\nComputeDegreeCourseStatistics" as ComputeDegreeCourseStatistics order 1
+ participant "domain.curriculum\nIGrade" as IGrade order 65
+ participant "domain.curriculum\nIGrade" as IGrade order 66
+ participant "domain.curriculum\nIGrade" as IGrade order 67
+ participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 68
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 81
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 82
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 83
+ participant "dto.department\nCourseStatisticsDTO" as CourseStatisticsDTO order 84
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 85
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 90
+ participant "domain\nCurricularCourse" as CurricularCourse order 91
+ participant "domain.degreeStructure\nContext" as Context order 102
+ participant "dto.department\nDegreeCourseStatisticsDTO" as DegreeCourseStatisticsDTO order 109
+ participant "core.i18n\nBundleUtil" as BundleUtil order 114
+ participant "i18n\nI18N" as I18N order 119
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 120
+ JSPComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: getConnection()
+ JSPComputeDegreeCourseStatistics <- ComputeDegreeCourseStatistics: returnConnection()
+ JSPComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: executeAction()
+ ComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: runComputeDegreeCourseStatistics\n(CompetenceCourse,ExecutionSemester):List<DegreeCourseStatisticsDTO>
+ ComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: run\n(CompetenceCourse,ExecutionSemester):List<DegreeCourseStatisticsDTO>
+ ComputeDegreeCourseStatistics -> CompetenceCourse: getAssociatedCurricularCoursesGroupedByDegree\n():Map<Degree,List<CurricularCourse>>
+ LOOP for: getAssociatedCurricularCoursesSet()
+ 	CompetenceCourse -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	CurricularCourse -> CurricularCourse: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ 	ALT !getParentContextsSet().isEmpty()
+ 		CurricularCourse -> CurricularCourse: getParentContextsSet():Set<Context>
+ 		CurricularCourse -> Context: getParentCourseGroup():CourseGroup
+ 		CurricularCourse -> Context: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ 		ALT !getParentContextsSet().isEmpty()
+ 			Context -> Context: getParentContextsSet():Set<Context>
+ 			Context -> Context: getParentCourseGroup():CourseGroup
+ 			Context -> Context: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ 		END
+ 	END
+ 	CompetenceCourse -> DegreeCurricularPlan: getDegree():Degree
+ END
+ LOOP for: groupedCourses.keySet()
+ 	LOOP for: curricularCourses
+ 		ComputeDegreeCourseStatistics -> CurricularCourse: getActiveEnrollments(ExecutionSemester):List<Enrolment>
+ 		CurricularCourse -> CurricularCourse: addActiveEnrollments\n(Collection<Enrolment>,ExecutionSemester):void
+ 	END
+ 	ComputeDegreeCourseStatistics -> DegreeCourseStatisticsDTO: DegreeCourseStatisticsDTO()
+ 	DegreeCourseStatisticsDTO -> DegreeCourseStatisticsDTO: CourseStatisticsDTO()
+ 	DegreeCourseStatisticsDTO -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	ComputeDegreeCourseStatistics -> DegreeCourseStatisticsDTO: setExternalId(String):void
+ 	ComputeDegreeCourseStatistics -> AbstractDomainObject: getExternalId():String
+ 	ComputeDegreeCourseStatistics -> DegreeCourseStatisticsDTO: setName(String):void
+ 	ComputeDegreeCourseStatistics -> AbstractDomainObject: getSigla():String
+ 	ComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: createCourseStatistics\n(CourseStatisticsDTO,List<Enrolment>):void
+ 	LOOP for: enrolments
+ 		ComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: getBestEnrollmentEvaluation(Enrolment):EnrolmentEvaluation
+ 		ALT enrolment.isFirstTime()
+ 			OPT evaluation != null && evaluation.getEnrollmentStateByGrade() == EnrollmentState.APROVED
+ 				ComputeDegreeCourseStatistics -> EnrolmentEvaluation: getGradeWrapper():IGrade
+ 				EnrolmentEvaluation -> GradeFactory: getInstance():GradeFactory
+ 				EnrolmentEvaluation -> EnrolmentEvaluation: getGradeValue():String
+ 				EnrolmentEvaluation -> GradeFactory: getGrade(String):IGrade
+ 			END
+ 		ELSE else
+ 			OPT evaluation != null && evaluation.getEnrollmentStateByGrade() == EnrollmentState.APROVED
+ 				ComputeDegreeCourseStatistics -> EnrolmentEvaluation: getGradeWrapper():IGrade
+ 				EnrolmentEvaluation -> GradeFactory: getInstance():GradeFactory
+ 				EnrolmentEvaluation -> EnrolmentEvaluation: getGradeValue():String
+ 				EnrolmentEvaluation -> GradeFactory: getGrade(String):IGrade
+ 			END
+ 		END
+ 	END
+ 	ComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 	ComputeDegreeCourseStatistics -> IGrade: getGradeType():GradeType
+ 	ComputeDegreeCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 	ComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 	ComputeDegreeCourseStatistics -> IGrade: getGradeType():GradeType
+ 	ComputeDegreeCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 	ComputeDegreeCourseStatistics -> ComputeDegreeCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 	ComputeDegreeCourseStatistics -> IGrade: getGradeType():GradeType
+ 	ComputeDegreeCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setFirstEnrolledCount(int):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setFirstApprovedCount(int):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setFirstApprovedAverage(IGrade):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setRestEnrolledCount(int):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setRestApprovedCount(int):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setRestApprovedAverage(IGrade):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setTotalEnrolledCount(int):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setTotalApprovedCount(int):void
+ 	ComputeDegreeCourseStatistics -> CourseStatisticsDTO: setTotalApprovedAverage(IGrade):void
+ END
+ @enduml

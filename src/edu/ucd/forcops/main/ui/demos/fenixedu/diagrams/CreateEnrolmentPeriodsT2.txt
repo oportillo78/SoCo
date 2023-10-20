@@ -1,0 +1,37 @@
+@startuml
+ participant "JSP\nJSPCreateEnrolmentPeriods" as JSPCreateEnrolmentPeriods order 0
+ participant "services.phd\nCreateEnrolmentPeriods" as CreateEnrolmentPeriods order 1
+ participant "domain\nEnrolmentPeriodInCurricularCourses" as EnrolmentPeriodInCurricularCourses order 7
+ participant "core.domain\nBennu" as Bennu order 30
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 43
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 44
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 45
+ JSPCreateEnrolmentPeriods -> CreateEnrolmentPeriods: getConnection()
+ JSPCreateEnrolmentPeriods <- CreateEnrolmentPeriods: returnConnection()
+ JSPCreateEnrolmentPeriods -> CreateEnrolmentPeriods: executeAction()
+ CreateEnrolmentPeriods -> CreateEnrolmentPeriods: create\n(Collection<DegreeCurricularPlan>,ExecutionSemester,DateTime,DateTime):void
+ LOOP for: degreeCurricularPlans
+ 	CreateEnrolmentPeriods -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime)
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriodInCurricularCourses_Base()
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriod()
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: EnrolmentPeriod_Base()
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: setRootDomainObject(Bennu):void
+ 	EnrolmentPeriodInCurricularCourses -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: Bennu()
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: checkParameters\n(DegreeCurricularPlan,ExecutionSemester):void
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: init\n(DegreeCurricularPlan,ExecutionSemester,DateTime,DateTime):void
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: setDegreeCurricularPlan(DegreeCurricularPlan):void
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: setExecutionPeriod(ExecutionSemester):void
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: setStartDateDateTime(DateTime):void
+ 	EnrolmentPeriodInCurricularCourses -> EnrolmentPeriodInCurricularCourses: setEndDateDateTime(DateTime):void
+ END
+ @enduml

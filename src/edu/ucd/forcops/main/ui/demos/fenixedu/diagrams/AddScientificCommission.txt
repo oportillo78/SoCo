@@ -1,0 +1,124 @@
+@startuml
+ participant "JSP\nJSPAddScientificCommission" as JSPAddScientificCommission order 0
+ participant "services.coordinator\nAddScientificCommission" as AddScientificCommission order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nScientificCommission" as ScientificCommission order 16
+ participant "core.domain\nBennu" as Bennu order 51
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 62
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 63
+ participant "domain\nScientificCommissionLog" as ScientificCommissionLog order 64
+ participant "core.i18n\nBundleUtil" as BundleUtil order 81
+ participant "i18n\nI18N" as I18N order 86
+ participant "domain\nExecutionDegree" as ExecutionDegree order 88
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 93
+ participant "domain\nExecutionDegree" as ExecutionDegree order 94
+ participant "domain\nPerson" as Person order 95
+ participant "core.domain\nUserProfile" as UserProfile order 120
+ participant "core.domain\nUserProfile" as UserProfile order 121
+ participant "core.domain\nUser" as User order 126
+ participant "domain\nExecutionDegree" as ExecutionDegree order 131
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 142
+ participant "domain\nDegree" as Degree order 152
+ participant "i18n\nLocalizedString" as LocalizedString order 157
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 158
+ participant "service.filter\nResponsibleDegreeCoordinatorAuthorizationFilter" as ResponsibleDegreeCoordinatorAuthorizationFilter order 159
+ participant "core.security\nAuthenticate" as Authenticate order 162
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 165
+ JSPAddScientificCommission -> AddScientificCommission: getConnection()
+ JSPAddScientificCommission <- AddScientificCommission: returnConnection()
+ JSPAddScientificCommission -> AddScientificCommission: executeAction()
+ AddScientificCommission -> AddScientificCommission: runAddScientificCommission(String,Person):void
+ AddScientificCommission -> ResponsibleDegreeCoordinatorAuthorizationFilter: execute():void
+ ResponsibleDegreeCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ AddScientificCommission -> AddScientificCommission: run(String,Person):void
+ AddScientificCommission -> FenixFramework: getDomainObject(String):T
+ AddScientificCommission -> ScientificCommission: ScientificCommission(ExecutionDegree,Person)
+ ScientificCommission -> ScientificCommission: ScientificCommission_Base()
+ ScientificCommission -> ScientificCommission: AbstractDomainObject()
+ ScientificCommission -> ScientificCommission: setRootDomainObject(Bennu):void
+ ScientificCommission -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: Bennu()
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ScientificCommission -> ScientificCommission: setContact(Boolean):void
+ ScientificCommission -> ScientificCommission: setExecutionDegree(ExecutionDegree):void
+ ScientificCommission -> ScientificCommission: setPerson(Person):void
+ ScientificCommission -> ScientificCommissionLog: createLog\n(Degree,ExecutionYear,String,String,String[]):ScientificCommissionLog
+ ScientificCommissionLog -> ScientificCommissionLog: generateLabelDescription(String,String,String[]):String
+ ScientificCommissionLog -> BundleUtil: getString(String,String,String[]):String
+ BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ BundleUtil -> I18N: getLocale():Locale
+ ScientificCommissionLog -> ScientificCommissionLog: createScientificCommissionLog\n(Degree,ExecutionYear,String):ScientificCommissionLog
+ ScientificCommissionLog -> ScientificCommissionLog: ScientificCommissionLog(Degree,ExecutionYear,String)
+ ScientificCommissionLog -> ScientificCommissionLog: ScientificCommissionLog_Base()
+ OPT getDegree() == null
+ 	ScientificCommissionLog -> ScientificCommissionLog: setDegree(Degree):void
+ END
+ OPT getExecutionYear() == null
+ 	ScientificCommissionLog -> ScientificCommissionLog: setExecutionYear(ExecutionYear):void
+ END
+ ScientificCommissionLog -> ScientificCommissionLog: setDescription(String):void
+ ScientificCommission -> ScientificCommission: getExecutionDegree():ExecutionDegree
+ ScientificCommission -> ExecutionDegree: getDegree():Degree
+ ExecutionDegree -> ExecutionDegree: getDegreeCurricularPlan():DegreeCurricularPlan
+ ExecutionDegree -> DegreeCurricularPlan: getDegree():Degree
+ ScientificCommission -> ScientificCommission: getExecutionDegree():ExecutionDegree
+ ScientificCommission -> ExecutionDegree: getExecutionYear():ExecutionYear
+ ScientificCommission -> ScientificCommission: getPerson():Person
+ ScientificCommission -> Person: getPresentationName():String
+ Person -> Person: getUsername():String
+ Person -> Person: getUser():User
+ ALT user == null
+ ELSE else
+ 	Person -> User: getUsername():String
+ 	User -> User: getUsername():String
+ END
+ ALT username == null
+ 	Person -> Person: getName():String
+ 	Person -> Person: getProfile():UserProfile
+ 	Person -> UserProfile: getFullName():String
+ 	OPT ?
+ 		UserProfile -> UserProfile: getGivenNames():String
+ 	END
+ 	OPT ?
+ 		UserProfile -> UserProfile: getFamilyNames():String
+ 	END
+ ELSE else
+ 	Person -> Person: getName():String
+ 	Person -> Person: getProfile():UserProfile
+ 	Person -> UserProfile: getFullName():String
+ 	Person -> Person: getUsername():String
+ 	Person -> Person: getUser():User
+ 	ALT user == null
+ 	ELSE else
+ 		Person -> User: getUsername():String
+ 		User -> User: getUsername():String
+ 	END
+ END
+ ScientificCommission -> ScientificCommission: getExecutionDegree():ExecutionDegree
+ ScientificCommission -> ExecutionDegree: getDegree():Degree
+ ExecutionDegree -> ExecutionDegree: getDegreeCurricularPlan():DegreeCurricularPlan
+ ExecutionDegree -> DegreeCurricularPlan: getDegree():Degree
+ ScientificCommission -> ExecutionDegree: getPresentationName():String
+ ExecutionDegree -> ExecutionDegree: getDegreeCurricularPlan():DegreeCurricularPlan
+ ExecutionDegree -> ExecutionDegree: getExecutionYear():ExecutionYear
+ ExecutionDegree -> DegreeCurricularPlan: getPresentationName(ExecutionYear):String
+ DegreeCurricularPlan -> DegreeCurricularPlan: getPresentationName(ExecutionYear,Locale):String
+ DegreeCurricularPlan -> DegreeCurricularPlan: getDegree():Degree
+ DegreeCurricularPlan -> Degree: getPresentationName(ExecutionYear,Locale):String
+ Degree -> Degree: getPresentationNameI18N(ExecutionYear):LocalizedString
+ Degree -> LocalizedString: getContent(Locale):String
+ DegreeCurricularPlan -> DegreeCurricularPlan: getName():String
+ DegreeCurricularPlan -> I18N: getLocale():Locale
+ @enduml

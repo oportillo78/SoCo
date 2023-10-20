@@ -1,0 +1,190 @@
+@startuml
+ participant "JSP\nJSPCreateRule" as JSPCreateRule order 0
+ participant "services.bolonhaManager\nCreateRule" as CreateRule order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 15
+ participant "domain\nExecutionSemester" as ExecutionSemester order 35
+ participant "core.domain\nBennu" as Bennu order 40
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 46
+ participant "core.domain\nBennu" as Bennu order 47
+ participant "domain.curricularRules\nCurricularRulesManager" as CurricularRulesManager order 48
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 191
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 192
+ participant "domain.curricularRules\nEvenOddRule" as EvenOddRule order 193
+ participant "domain.curricularRules\nMinimumNumberOfCreditsToEnrol" as MinimumNumberOfCreditsToEnrol order 206
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 211
+ participant "domain.curricularRules\nAnyCurricularCourse" as AnyCurricularCourse order 212
+ participant "domain.curricularRules\nExclusiveness" as Exclusiveness order 235
+ participant "domain.curricularRules\nExclusiveness" as Exclusiveness order 244
+ participant "domain.curricularRules\nRestrictionBetweenDegreeModules" as RestrictionBetweenDegreeModules order 253
+ participant "domain.curricularRules\nEnrolmentToBeApprovedByCoordinator" as EnrolmentToBeApprovedByCoordinator order 258
+ participant "domain.curricularRules\nDegreeModulesSelectionLimit" as DegreeModulesSelectionLimit order 263
+ participant "domain.curricularRules\nCreditsLimit" as CreditsLimit order 268
+ participant "domain.curricularRules\nRestrictionNotEnroledDegreeModule" as RestrictionNotEnroledDegreeModule order 275
+ participant "domain.curricularRules\nRestrictionEnroledDegreeModule" as RestrictionEnroledDegreeModule order 288
+ participant "dto.bolonhaManager\nCurricularRuleParametersDTO" as CurricularRuleParametersDTO order 301
+ participant "domain.curricularRules\nRestrictionDoneDegreeModule" as RestrictionDoneDegreeModule order 302
+ participant "dto\nCurricularPeriodInfoDTO" as CurricularPeriodInfoDTO order 315
+ JSPCreateRule -> CreateRule: getConnection()
+ JSPCreateRule <- CreateRule: returnConnection()
+ JSPCreateRule -> CreateRule: executeAction()
+ CreateRule -> CreateRule: run\n(String,CurricularRuleType,CurricularRuleParametersDTO,String,String):void
+ CreateRule -> FenixFramework: getDomainObject(String):T
+ ALT beginExecutionPeriodID == null
+ 	CreateRule -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 	ExecutionSemester -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ ELSE else
+ 	CreateRule -> FenixFramework: getDomainObject(String):T
+ END
+ ALT (endExecutionPeriodID == null)
+ ELSE else
+ 	CreateRule -> FenixFramework: getDomainObject(String):T
+ END
+ CreateRule -> CurricularRulesManager: createCurricularRule\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleType,CurricularRuleParametersDTO):CurricularRule
+ ALT case PRECEDENCY_APPROVED_DEGREE_MODULE:
+ 	CurricularRulesManager -> CurricularRulesManager: createRestrictionDoneDegreeModule\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ 	CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ 	CurricularRulesManager -> CurricularRuleParametersDTO: getSelectedDegreeModuleID():String
+ 	CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ 	CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ 	CurricularRulesManager -> CurricularRuleParametersDTO: getCurricularPeriodInfoDTO():CurricularPeriodInfoDTO
+ 	CurricularRulesManager -> RestrictionDoneDegreeModule: RestrictionDoneDegreeModule\n(CurricularCourse,CurricularCourse,CourseGroup,CurricularPeriodInfoDTO,ExecutionSemester,ExecutionSemester)
+ 	RestrictionDoneDegreeModule -> RestrictionDoneDegreeModule: RestrictionDoneDegreeModule(DegreeModule)
+ 	RestrictionDoneDegreeModule -> RestrictionDoneDegreeModule: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ 	OPT curricularPeriodInfoDTO != null
+ 		RestrictionDoneDegreeModule -> RestrictionDoneDegreeModule: setAcademicPeriod(AcademicPeriod):void
+ 		RestrictionDoneDegreeModule -> CurricularPeriodInfoDTO: getPeriodType():AcademicPeriod
+ 		RestrictionDoneDegreeModule -> RestrictionDoneDegreeModule: setCurricularPeriodOrder(Integer):void
+ 		RestrictionDoneDegreeModule -> CurricularPeriodInfoDTO: getOrder():Integer
+ 	END
+ ELSE case PRECEDENCY_ENROLED_DEGREE_MODULE:
+ 	CurricularRulesManager -> CurricularRulesManager: createRestrictionEnroledDegreeModule\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ 	CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ 	CurricularRulesManager -> CurricularRuleParametersDTO: getSelectedDegreeModuleID():String
+ 	CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ 	CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ 	CurricularRulesManager -> CurricularRuleParametersDTO: getCurricularPeriodInfoDTO():CurricularPeriodInfoDTO
+ 	CurricularRulesManager -> RestrictionEnroledDegreeModule: RestrictionEnroledDegreeModule\n(CurricularCourse,CurricularCourse,CourseGroup,CurricularPeriodInfoDTO,ExecutionSemester,ExecutionSemester)
+ 	RestrictionEnroledDegreeModule -> RestrictionEnroledDegreeModule: RestrictionEnroledDegreeModule(CurricularCourse)
+ 	RestrictionEnroledDegreeModule -> RestrictionEnroledDegreeModule: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ 	OPT curricularPeriodInfoDTO != null
+ 		RestrictionEnroledDegreeModule -> RestrictionEnroledDegreeModule: setAcademicPeriod(AcademicPeriod):void
+ 		RestrictionEnroledDegreeModule -> CurricularPeriodInfoDTO: getPeriodType():AcademicPeriod
+ 		RestrictionEnroledDegreeModule -> RestrictionEnroledDegreeModule: setCurricularPeriodOrder(Integer):void
+ 		RestrictionEnroledDegreeModule -> CurricularPeriodInfoDTO: getOrder():Integer
+ 	END
+ END
+ CurricularRulesManager -> CurricularRulesManager: createRestrictionNotEnroledDegreeModule\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getSelectedDegreeModuleID():String
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> CurricularRuleParametersDTO: getCurricularPeriodInfoDTO():CurricularPeriodInfoDTO
+ CurricularRulesManager -> RestrictionNotEnroledDegreeModule: RestrictionNotEnroledDegreeModule\n(CurricularCourse,CurricularCourse,CourseGroup,CurricularPeriodInfoDTO,ExecutionSemester,ExecutionSemester)
+ RestrictionNotEnroledDegreeModule -> RestrictionNotEnroledDegreeModule: RestrictionNotEnroledDegreeModule(CurricularCourse)
+ RestrictionNotEnroledDegreeModule -> RestrictionNotEnroledDegreeModule: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ RestrictionNotEnroledDegreeModule -> RestrictionNotEnroledDegreeModule: setAcademicPeriod(AcademicPeriod):void
+ RestrictionNotEnroledDegreeModule -> CurricularPeriodInfoDTO: getPeriodType():AcademicPeriod
+ RestrictionNotEnroledDegreeModule -> RestrictionNotEnroledDegreeModule: setCurricularPeriodOrder(Integer):void
+ RestrictionNotEnroledDegreeModule -> CurricularPeriodInfoDTO: getOrder():Integer
+ CurricularRulesManager -> CurricularRulesManager: createCreditsLimit\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMinimumCredits():Double
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMaximumCredits():Double
+ CurricularRulesManager -> CreditsLimit: CreditsLimit\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester,Double,Double)
+ CreditsLimit -> CreditsLimit: CreditsLimit(Double,Double)
+ CreditsLimit -> CreditsLimit: checkParameters(DegreeModule):void
+ CreditsLimit -> CreditsLimit: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ CurricularRulesManager -> CurricularRulesManager: createDegreeModulesSelectionLimit\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMinimumLimit():Integer
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMaximumLimit():Integer
+ CurricularRulesManager -> DegreeModulesSelectionLimit: DegreeModulesSelectionLimit\n(CourseGroup,CourseGroup,ExecutionSemester,ExecutionSemester,Integer,Integer)
+ DegreeModulesSelectionLimit -> DegreeModulesSelectionLimit: DegreeModulesSelectionLimit(Integer,Integer)
+ DegreeModulesSelectionLimit -> DegreeModulesSelectionLimit: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ CurricularRulesManager -> CurricularRulesManager: createEnrolmentToBeApprovedByCoordinator\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> EnrolmentToBeApprovedByCoordinator: EnrolmentToBeApprovedByCoordinator\n(CurricularCourse,CourseGroup,ExecutionSemester,ExecutionSemester)
+ EnrolmentToBeApprovedByCoordinator -> EnrolmentToBeApprovedByCoordinator: EnrolmentToBeApprovedByCoordinator()
+ EnrolmentToBeApprovedByCoordinator -> EnrolmentToBeApprovedByCoordinator: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ CurricularRulesManager -> CurricularRulesManager: createRestrictionBetweenDegreeModules\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getSelectedDegreeModuleID():String
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMinimumCredits():Double
+ CurricularRulesManager -> RestrictionBetweenDegreeModules: RestrictionBetweenDegreeModules\n(DegreeModule,DegreeModule,Double,CourseGroup,ExecutionSemester,ExecutionSemester)
+ RestrictionBetweenDegreeModules -> RestrictionBetweenDegreeModules: RestrictionBetweenDegreeModules(DegreeModule,Double)
+ RestrictionBetweenDegreeModules -> RestrictionBetweenDegreeModules: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ CurricularRulesManager -> CurricularRulesManager: createExclusiveness\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getSelectedDegreeModuleID():String
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> Exclusiveness: Exclusiveness\n(DegreeModule,DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester)
+ Exclusiveness -> Exclusiveness: Exclusiveness_Base()
+ Exclusiveness -> Exclusiveness: checkParameters(DegreeModule,DegreeModule):void
+ Exclusiveness -> Exclusiveness: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester,CurricularRuleType):void
+ Exclusiveness -> Exclusiveness: setExclusiveDegreeModule(DegreeModule):void
+ CurricularRulesManager -> Exclusiveness: Exclusiveness\n(DegreeModule,DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester)
+ Exclusiveness -> Exclusiveness: Exclusiveness_Base()
+ Exclusiveness -> Exclusiveness: checkParameters(DegreeModule,DegreeModule):void
+ Exclusiveness -> Exclusiveness: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester,CurricularRuleType):void
+ Exclusiveness -> Exclusiveness: setExclusiveDegreeModule(DegreeModule):void
+ CurricularRulesManager -> CurricularRulesManager: createAnyCurricularCourse\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getSelectedDegreeID():String
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getSelectedDepartmentUnitID():String
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMinimumCredits():Double
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMaximumCredits():Double
+ CurricularRulesManager -> CurricularRuleParametersDTO: getCurricularPeriodInfoDTO():CurricularPeriodInfoDTO
+ CurricularRulesManager -> CurricularPeriodInfoDTO: getOrder():Integer
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMinimumYear():Integer
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMaximumYear():Integer
+ CurricularRulesManager -> CurricularRuleParametersDTO: getDegreeType():DegreeType
+ CurricularRulesManager -> AnyCurricularCourse: AnyCurricularCourse\n(OptionalCurricularCourse,CourseGroup,ExecutionSemester,ExecutionSemester,Double,Double,Integer,Integer,Integer,DegreeType,Degree,DepartmentUnit)
+ AnyCurricularCourse -> AnyCurricularCourse: AnyCurricularCourse_Base()
+ AnyCurricularCourse -> AnyCurricularCourse: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester,CurricularRuleType):void
+ AnyCurricularCourse -> AnyCurricularCourse: checkYears(Integer,Integer):void
+ AnyCurricularCourse -> AnyCurricularCourse: setMinimumCredits(Double):void
+ AnyCurricularCourse -> AnyCurricularCourse: setMaximumCredits(Double):void
+ AnyCurricularCourse -> AnyCurricularCourse: setCurricularPeriodOrder(Integer):void
+ AnyCurricularCourse -> AnyCurricularCourse: setMinimumYear(Integer):void
+ AnyCurricularCourse -> AnyCurricularCourse: setMaximumYear(Integer):void
+ AnyCurricularCourse -> AnyCurricularCourse: setBolonhaDegreeType(DegreeType):void
+ AnyCurricularCourse -> AnyCurricularCourse: setDegree(Degree):void
+ AnyCurricularCourse -> AnyCurricularCourse: setDepartmentUnit(DepartmentUnit):void
+ CurricularRulesManager -> CurricularRulesManager: createMinimumNumberOfCreditsToEnrol\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> CurricularRuleParametersDTO: getMinimumCredits():Double
+ CurricularRulesManager -> MinimumNumberOfCreditsToEnrol: MinimumNumberOfCreditsToEnrol\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester,Double)
+ MinimumNumberOfCreditsToEnrol -> MinimumNumberOfCreditsToEnrol: MinimumNumberOfCreditsToEnrol(Double)
+ MinimumNumberOfCreditsToEnrol -> MinimumNumberOfCreditsToEnrol: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester):void
+ CurricularRulesManager -> CurricularRulesManager: createEvenOdd\n(DegreeModule,ExecutionSemester,ExecutionSemester,CurricularRuleParametersDTO):CurricularRule
+ CurricularRulesManager -> FenixFramework: getDomainObject(String):T
+ CurricularRulesManager -> CurricularRuleParametersDTO: getContextCourseGroupID():String
+ CurricularRulesManager -> CurricularRuleParametersDTO: getCurricularPeriodInfoDTO():CurricularPeriodInfoDTO
+ CurricularRulesManager -> CurricularPeriodInfoDTO: getOrder():Integer
+ CurricularRulesManager -> CurricularRuleParametersDTO: getCurricularPeriodInfoDTO():CurricularPeriodInfoDTO
+ CurricularRulesManager -> CurricularPeriodInfoDTO: getPeriodType():AcademicPeriod
+ CurricularRulesManager -> CurricularRuleParametersDTO: getEven():Boolean
+ CurricularRulesManager -> EvenOddRule: EvenOddRule\n(DegreeModule,CourseGroup,Integer,AcademicPeriod,Boolean,ExecutionSemester,ExecutionSemester)
+ EvenOddRule -> EvenOddRule: EvenOddRule_Base()
+ EvenOddRule -> EvenOddRule: checkParameters\n(DegreeModule,Integer,AcademicPeriod,Boolean):void
+ EvenOddRule -> EvenOddRule: init\n(DegreeModule,CourseGroup,ExecutionSemester,ExecutionSemester,CurricularRuleType):void
+ EvenOddRule -> EvenOddRule: setEven(Boolean):void
+ EvenOddRule -> EvenOddRule: setCurricularPeriodOrder(Integer):void
+ EvenOddRule -> EvenOddRule: setAcademicPeriod(AcademicPeriod):void
+ @enduml

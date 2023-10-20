@@ -1,0 +1,38 @@
+@startuml
+ participant "JSP\nJSPAddForumEmailSubscriber" as JSPAddForumEmailSubscriber order 0
+ participant "services.messaging\nAddForumEmailSubscriber" as AddForumEmailSubscriber order 1
+ participant "domain.messaging\nForum" as Forum order 7
+ participant "domain.messaging\nForumSubscription" as ForumSubscription order 14
+ participant "core.domain\nBennu" as Bennu order 31
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 44
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 45
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 46
+ JSPAddForumEmailSubscriber -> AddForumEmailSubscriber: getConnection()
+ JSPAddForumEmailSubscriber <- AddForumEmailSubscriber: returnConnection()
+ JSPAddForumEmailSubscriber -> AddForumEmailSubscriber: executeAction()
+ AddForumEmailSubscriber -> AddForumEmailSubscriber: run(Forum,Person):void
+ AddForumEmailSubscriber -> Forum: addEmailSubscriber(Person):void
+ Forum -> Forum: getPersonSubscription(Person):ForumSubscription
+ OPT subscription == null
+ 	Forum -> ForumSubscription: ForumSubscription(Person,Forum)
+ 	ForumSubscription -> ForumSubscription: ForumSubscription()
+ 	ForumSubscription -> ForumSubscription: ForumSubscription_Base()
+ 	ForumSubscription -> ForumSubscription: setRootDomainObject(Bennu):void
+ 	ForumSubscription -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: Bennu()
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ForumSubscription -> ForumSubscription: setReceivePostsByEmail(Boolean):void
+ 	ForumSubscription -> ForumSubscription: setFavorite(Boolean):void
+ 	ForumSubscription -> ForumSubscription: setPerson(Person):void
+ 	ForumSubscription -> ForumSubscription: setForum(Forum):void
+ END
+ Forum -> ForumSubscription: setReceivePostsByEmail(Boolean):void
+ @enduml

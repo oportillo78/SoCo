@@ -1,0 +1,64 @@
+@startuml
+ participant "JSP\nJSPCreateCompositeRule" as JSPCreateCompositeRule order 0
+ participant "services.bolonhaManager\nCreateCompositeRule" as CreateCompositeRule order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 9
+ participant "domain.curricularRules\nCurricularRulesManager" as CurricularRulesManager order 10
+ participant "domain.curricularRules\nCurricularRule" as CurricularRule order 13
+ participant "domain.curricularRules\nAndRule" as AndRule order 20
+ participant "domain.curricularRules\nCurricularRule" as CurricularRule order 41
+ participant "domain.curricularRules\nCurricularRule_Base" as CurricularRule_Base order 42
+ participant "domain.curricularRules\nOrRule" as OrRule order 43
+ participant "domain.curricularRules\nCurricularRule" as CurricularRule order 64
+ participant "domain.curricularRules\nCurricularRule_Base" as CurricularRule_Base order 65
+ participant "domain.curricularRules\nNotRule" as NotRule order 66
+ participant "domain.curricularRules\nCurricularRule" as CurricularRule order 83
+ JSPCreateCompositeRule -> CreateCompositeRule: getConnection()
+ JSPCreateCompositeRule <- CreateCompositeRule: returnConnection()
+ JSPCreateCompositeRule -> CreateCompositeRule: executeAction()
+ CreateCompositeRule -> CreateCompositeRule: run(LogicOperator,String[]):void
+ OPT selectedCurricularRuleIDs != null
+ 	LOOP for:i < selectedCurricularRuleIDs.length
+ 		CreateCompositeRule -> FenixFramework: getDomainObject(String):T
+ 	END
+ 	CreateCompositeRule -> CurricularRulesManager: createCompositeRule\n(LogicOperator,CurricularRule[]):CurricularRule
+ 	CurricularRulesManager -> CurricularRule: createCurricularRule\n(LogicOperator,CurricularRule[]):CurricularRule
+ 	ALT case AND:
+ 		CurricularRule -> AndRule: AndRule(CurricularRule[])
+ 		AndRule -> AndRule: initCompositeRule(CurricularRule[]):void
+ 		AndRule -> AndRule: setDegreeModuleToApplyRule(DegreeModule):void
+ 		AndRule -> CurricularRule: getDegreeModuleToApplyRule():DegreeModule
+ 		AndRule -> AndRule: setBegin(ExecutionSemester):void
+ 		AndRule -> AndRule: getBeginExecutionPeriod(CurricularRule[]):ExecutionSemester
+ 		AndRule -> AndRule: setEnd(ExecutionSemester):void
+ 		AndRule -> AndRule: getEndExecutionPeriod(CurricularRule[]):ExecutionSemester
+ 		LOOP for: curricularRules
+ 			AndRule -> CurricularRule_Base: setDegreeModuleToApplyRule(DegreeModule):void
+ 			AndRule -> CurricularRule_Base: setParentCompositeRule(CompositeRule):void
+ 		END
+ 		AndRule -> AndRule: setCompositeRuleType(LogicOperator):void
+ 	ELSE case OR:
+ 		CurricularRule -> OrRule: OrRule(CurricularRule[])
+ 		OrRule -> OrRule: initCompositeRule(CurricularRule[]):void
+ 		OrRule -> OrRule: setDegreeModuleToApplyRule(DegreeModule):void
+ 		OrRule -> CurricularRule: getDegreeModuleToApplyRule():DegreeModule
+ 		OrRule -> OrRule: setBegin(ExecutionSemester):void
+ 		OrRule -> OrRule: getBeginExecutionPeriod(CurricularRule[]):ExecutionSemester
+ 		OrRule -> OrRule: setEnd(ExecutionSemester):void
+ 		OrRule -> OrRule: getEndExecutionPeriod(CurricularRule[]):ExecutionSemester
+ 		LOOP for: curricularRules
+ 			OrRule -> CurricularRule_Base: setDegreeModuleToApplyRule(DegreeModule):void
+ 			OrRule -> CurricularRule_Base: setParentCompositeRule(CompositeRule):void
+ 		END
+ 		OrRule -> OrRule: setCompositeRuleType(LogicOperator):void
+ 	END
+ END
+ CurricularRule -> NotRule: NotRule(CurricularRule)
+ NotRule -> NotRule: setDegreeModuleToApplyRule(DegreeModule):void
+ NotRule -> CurricularRule: getDegreeModuleToApplyRule():DegreeModule
+ NotRule -> CurricularRule: setDegreeModuleToApplyRule(DegreeModule):void
+ NotRule -> NotRule: setBegin(ExecutionSemester):void
+ NotRule -> CurricularRule: getBegin():ExecutionSemester
+ NotRule -> NotRule: setEnd(ExecutionSemester):void
+ NotRule -> CurricularRule: getEnd():ExecutionSemester
+ NotRule -> NotRule: setWrappedRule(CurricularRule):void
+ @enduml

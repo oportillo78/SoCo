@@ -1,0 +1,77 @@
+@startuml
+ participant "JSP\nJSPApagarTurma" as JSPApagarTurma order 0
+ participant "services.resourceAllocationManager\nApagarTurma" as ApagarTurma order 1
+ participant "predicate\nAccessControl" as AccessControl order 19
+ participant "core.security\nAuthenticate" as Authenticate order 29
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 32
+ participant "core.domain\nUser_Base" as User_Base order 33
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 34
+ participant "domain\nPerson" as Person order 36
+ participant "core.domain\nUser" as User order 46
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 51
+ participant "dto\nInfoClass" as InfoClass order 52
+ participant "domain\nSchoolClass" as SchoolClass order 57
+ participant "domain\nSchoolClass" as SchoolClass order 58
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 80
+ JSPApagarTurma -> ApagarTurma: getConnection()
+ JSPApagarTurma <- ApagarTurma: returnConnection()
+ JSPApagarTurma -> ApagarTurma: executeAction()
+ ApagarTurma -> ApagarTurma: run(InfoClass):Boolean
+ ApagarTurma -> ApagarTurma: check(AccessControlPredicate<?>):void
+ ApagarTurma -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ ApagarTurma -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		ApagarTurma -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ ApagarTurma -> FenixFramework: getDomainObject(String):T
+ ApagarTurma -> InfoClass: getExternalId():String
+ InfoClass -> InfoClass: getSchoolClass():SchoolClass
+ InfoClass -> SchoolClass: getExternalId():String
+ ApagarTurma -> SchoolClass: delete():void
+ SchoolClass -> SchoolClass: check(T,AccessControlPredicate<T>):void
+ SchoolClass -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ SchoolClass -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		SchoolClass -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ 	SchoolClass -> DomainObject: getExternalId():String
+ END
+ SchoolClass -> SchoolClass: getAssociatedShiftsSet():Set<Shift>
+ SchoolClass -> SchoolClass: setExecutionDegree(ExecutionDegree):void
+ SchoolClass -> SchoolClass: setExecutionDegree(ExecutionDegree):void
+ SchoolClass -> SchoolClass: setExecutionPeriod(ExecutionSemester):void
+ SchoolClass -> SchoolClass: setExecutionPeriod(ExecutionSemester):void
+ SchoolClass -> SchoolClass: setRootDomainObject(Bennu):void
+ SchoolClass -> SchoolClass: deleteDomainObject():void
+ @enduml

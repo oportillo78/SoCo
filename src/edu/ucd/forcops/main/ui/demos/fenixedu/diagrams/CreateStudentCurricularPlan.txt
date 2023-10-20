@@ -1,0 +1,66 @@
+@startuml
+ participant "JSP\nJSPCreateStudentCurricularPlan" as JSPCreateStudentCurricularPlan order 0
+ participant "services.manager\nCreateStudentCurricularPlan" as CreateStudentCurricularPlan order 1
+ participant "domain.student\nRegistration" as Registration order 13
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 14
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 15
+ participant "domain.studentCurriculum\nCurriculumGroupFactory" as CurriculumGroupFactory order 34
+ participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 41
+ participant "domain.studentCurriculum\nNoCourseGroupCurriculumGroup" as NoCourseGroupCurriculumGroup order 66
+ participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 68
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 92
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 93
+ JSPCreateStudentCurricularPlan -> CreateStudentCurricularPlan: getConnection()
+ JSPCreateStudentCurricularPlan <- CreateStudentCurricularPlan: returnConnection()
+ JSPCreateStudentCurricularPlan -> CreateStudentCurricularPlan: executeAction()
+ CreateStudentCurricularPlan -> CreateStudentCurricularPlan: run\n(Integer,DegreeType,StudentCurricularPlanState,String,Date):void
+ CreateStudentCurricularPlan -> Registration: readStudentByNumberAndDegreeType(Integer,DegreeType):Registration
+ CreateStudentCurricularPlan -> FenixFramework: getDomainObject(String):T
+ CreateStudentCurricularPlan -> StudentCurricularPlan: createWithEmptyStructure\n(Registration,DegreeCurricularPlan,YearMonthDay):StudentCurricularPlan
+ StudentCurricularPlan -> StudentCurricularPlan: StudentCurricularPlan\n(Registration,DegreeCurricularPlan,YearMonthDay)
+ StudentCurricularPlan -> StudentCurricularPlan: StudentCurricularPlan()
+ StudentCurricularPlan -> StudentCurricularPlan: init\n(Registration,DegreeCurricularPlan,YearMonthDay):void
+ StudentCurricularPlan -> StudentCurricularPlan: checkParameters\n(Registration,DegreeCurricularPlan,YearMonthDay):void
+ StudentCurricularPlan -> StudentCurricularPlan: setDegreeCurricularPlan(DegreeCurricularPlan):void
+ StudentCurricularPlan -> StudentCurricularPlan: setRegistration(Registration):void
+ StudentCurricularPlan -> StudentCurricularPlan: setStartDateYearMonthDay(YearMonthDay):void
+ StudentCurricularPlan -> CurriculumGroupFactory: createRoot\n(StudentCurricularPlan,RootCourseGroup,CycleType):RootCurriculumGroup
+ CurriculumGroupFactory -> CurriculumGroupFactory: createRoot\n(StudentCurricularPlan,RootCourseGroup,ExecutionSemester,CycleType):RootCurriculumGroup
+ ALT (executionSemester != null)
+ 	CurriculumGroupFactory -> RootCurriculumGroup: RootCurriculumGroup\n(StudentCurricularPlan,RootCourseGroup,ExecutionSemester,CycleType)
+ 	RootCurriculumGroup -> RootCurriculumGroup: RootCurriculumGroup()
+ 	RootCurriculumGroup -> RootCurriculumGroup: RootCurriculumGroup_Base()
+ 	RootCurriculumGroup -> RootCurriculumGroup: createExtraCurriculumGroup():void
+ 	RootCurriculumGroup -> RootCurriculumGroup: createPropaedeuticsCurriculumGroup():void
+ 	RootCurriculumGroup -> RootCurriculumGroup: init\n(StudentCurricularPlan,RootCourseGroup,ExecutionSemester,CycleType):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: checkParameters\n(StudentCurricularPlan,RootCourseGroup,ExecutionSemester):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: checkInitConstraints\n(StudentCurricularPlan,RootCourseGroup):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: setParentStudentCurricularPlan(StudentCurricularPlan):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: setDegreeModule(DegreeModule):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: addChildCurriculumGroups\n(RootCourseGroup,ExecutionSemester,CycleType):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: createStandaloneCurriculumGroupIfNecessary\n():void
+ 	OPT hasStudentCurricularPlan() && getStudentCurricularPlan().isEmptyDegree()
+ 		RootCurriculumGroup -> NoCourseGroupCurriculumGroup: create\n(NoCourseGroupCurriculumGroupType,RootCurriculumGroup):NoCourseGroupCurriculumGroup
+ 	END
+ ELSE else
+ 	CurriculumGroupFactory -> RootCurriculumGroup: RootCurriculumGroup\n(StudentCurricularPlan,RootCourseGroup,CycleType)
+ 	RootCurriculumGroup -> RootCurriculumGroup: RootCurriculumGroup()
+ 	RootCurriculumGroup -> RootCurriculumGroup: RootCurriculumGroup_Base()
+ 	RootCurriculumGroup -> RootCurriculumGroup: createExtraCurriculumGroup():void
+ 	RootCurriculumGroup -> RootCurriculumGroup: createPropaedeuticsCurriculumGroup():void
+ 	RootCurriculumGroup -> RootCurriculumGroup: init\n(StudentCurricularPlan,RootCourseGroup,CycleType):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: checkParameters\n(StudentCurricularPlan,RootCourseGroup):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: checkInitConstraints\n(StudentCurricularPlan,RootCourseGroup):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: setParentStudentCurricularPlan(StudentCurricularPlan):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: setDegreeModule(DegreeModule):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: addChildCurriculumGroups(RootCourseGroup,CycleType):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: createStandaloneCurriculumGroupIfNecessary\n():void
+ 	OPT hasStudentCurricularPlan() && getStudentCurricularPlan().isEmptyDegree()
+ 		RootCurriculumGroup -> NoCourseGroupCurriculumGroup: create\n(NoCourseGroupCurriculumGroupType,RootCurriculumGroup):NoCourseGroupCurriculumGroup
+ 	END
+ END
+ StudentCurricularPlan -> DegreeCurricularPlan_Base: getRoot():RootCourseGroup
+ CreateStudentCurricularPlan -> YearMonthDay: fromDateFields(Date):YearMonthDay
+ YearMonthDay -> YearMonthDay: YearMonthDay(int,int,int)
+ YearMonthDay -> YearMonthDay: YearMonthDay(int,int,int,Chronology)
+ @enduml

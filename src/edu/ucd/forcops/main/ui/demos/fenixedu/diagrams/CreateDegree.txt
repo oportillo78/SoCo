@@ -1,0 +1,143 @@
+@startuml
+ participant "JSP\nJSPCreateDegree" as JSPCreateDegree order 0
+ participant "services.scientificCouncil.curricularPlans\nCreateDegree" as CreateDegree order 1
+ participant "predicate\nAccessControl" as AccessControl order 23
+ participant "core.security\nAuthenticate" as Authenticate order 28
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 31
+ participant "core.domain\nUser_Base" as User_Base order 32
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 33
+ participant "domain\nPerson" as Person order 34
+ participant "core.domain\nUser" as User order 39
+ participant "domain\nDegree" as Degree order 40
+ participant "domain\nEmptyDegree" as EmptyDegree order 49
+ participant "core.domain\nBennu" as Bennu order 50
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 78
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 79
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 80
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 81
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 86
+ participant "core.domain\nBennu" as Bennu order 87
+ participant "domain\nExecutionYear" as ExecutionYear order 88
+ participant "domain\nExecutionSemester" as ExecutionSemester order 98
+ participant "core.domain\nBennu" as Bennu order 105
+ participant "core.domain\nBennu" as Bennu order 106
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 107
+ participant "domain\nDegree" as Degree order 108
+ participant "domain\nDegreeInfo" as DegreeInfo order 149
+ participant "i18n\nLocalizedString" as LocalizedString order 150
+ participant "core.signals\nSignal" as Signal order 151
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 164
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 165
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 166
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 167
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 168
+ JSPCreateDegree -> CreateDegree: getConnection()
+ JSPCreateDegree <- CreateDegree: returnConnection()
+ JSPCreateDegree -> CreateDegree: executeAction()
+ CreateDegree -> CreateDegree: run\n(String,String,String,DegreeType,Double,GradeScale,String,AdministrativeOffice):void
+ CreateDegree -> CreateDegree: check(AccessControlPredicate<?>):void
+ CreateDegree -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CreateDegree -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CreateDegree -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ CreateDegree -> Degree: readNotEmptyDegrees():List<Degree>
+ Degree -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Degree -> Bennu: getDegreesSet():Set<Degree>
+ Degree -> Degree: readEmptyDegree():Degree
+ Degree -> EmptyDegree: getInstance():EmptyDegree
+ LOOP for: degrees
+ 	CreateDegree -> ExecutionYear: readCurrentExecutionYear():ExecutionYear
+ 	ExecutionYear -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 	ExecutionSemester -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ 	ALT semester != null
+ 		ExecutionYear -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ 	END
+ END
+ CreateDegree -> Degree: Degree\n(String,String,String,Degree\nType,Double,GradeScale,String,AdministrativeOffice)
+ Degree -> Degree: Degree()
+ Degree -> Degree: Degree_Base()
+ Degree -> Degree: setRootDomainObject(Bennu):void
+ Degree -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Degree -> Degree: commonFieldsChange\n(String,String,String,GradeScale,ExecutionYear):void
+ Degree -> Degree: getDegreeInfoFor(ExecutionYear):DegreeInfo
+ OPT degreeInfo == null
+ 	Degree -> Degree: tryCreateUsingMostRecentInfo(ExecutionYear):DegreeInfo
+ END
+ Degree -> DegreeInfo: setName(LocalizedString):void
+ Degree -> LocalizedString: LocalizedString()
+ Degree -> LocalizedString: with(Locale,String):LocalizedString
+ Degree -> LocalizedString: with(Locale,String):LocalizedString
+ Degree -> Degree: setNome(String):void
+ Degree -> Degree: setNameEn(String):void
+ Degree -> Degree: setSigla(String):void
+ Degree -> Degree: setGradeScale(GradeScale):void
+ Degree -> ExecutionYear: readCurrentExecutionYear():ExecutionYear
+ ExecutionYear -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ ExecutionSemester -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ ALT semester != null
+ 	ExecutionYear -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ END
+ Degree -> Degree: newStructureFieldsChange(DegreeType,Double,String):void
+ Degree -> Degree: setDegreeType(DegreeType):void
+ Degree -> Degree: setEctsCredits(Double):void
+ Degree -> Degree: setPrevailingScientificArea(String):void
+ Degree -> Degree: setAdministrativeOffice(AdministrativeOffice):void
+ CreateDegree -> Signal: emit(String,Object):void
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ CreateDegree -> DomainObjectEvent: DomainObjectEvent(T)
+ @enduml

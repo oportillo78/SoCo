@@ -1,0 +1,187 @@
+@startuml
+ participant "JSP\nJSPCreateLesson" as JSPCreateLesson order 0
+ participant "services.resourceAllocationManager\nCreateLesson" as CreateLesson order 1
+ participant "predicate\nAccessControl" as AccessControl order 33
+ participant "core.security\nAuthenticate" as Authenticate order 38
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 41
+ participant "core.domain\nUser_Base" as User_Base order 42
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 43
+ participant "domain\nPerson" as Person order 44
+ participant "core.domain\nUser" as User order 49
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 50
+ participant "dto\nInfoShift" as InfoShift order 53
+ participant "domain\nShift" as Shift order 58
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 59
+ participant "domain\nExecutionCourse" as ExecutionCourse order 70
+ participant "dto\nInfoExecutionPeriod" as InfoExecutionPeriod order 71
+ participant "domain\nExecutionCourse" as ExecutionCourse order 74
+ participant "domain.space\nSpaceUtils" as SpaceUtils order 75
+ participant "domain\nSpace" as Space order 82
+ participant "dto\nInfoRoomOccupationEditor" as InfoRoomOccupationEditor order 85
+ participant "dto\nInfoRoom" as InfoRoom order 86
+ participant "domain\nLesson" as Lesson order 87
+ participant "domain\nShift" as Shift order 116
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 121
+ participant "domain\nExecutionCourse" as ExecutionCourse order 122
+ participant "domain\nExecutionSemester" as ExecutionSemester order 145
+ participant "domain\nCurricularCourse" as CurricularCourse order 146
+ participant "domain\nExecutionDegree" as ExecutionDegree order 148
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 150
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 151
+ participant "dto\nGenericPair" as GenericPair order 152
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 153
+ participant "util.date\nIntervalTools" as IntervalTools order 174
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 175
+ participant "core.domain\nBennu" as Bennu order 176
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 187
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 188
+ participant "domain.space\nLessonSpaceOccupation" as LessonSpaceOccupation order 189
+ JSPCreateLesson -> CreateLesson: getConnection()
+ JSPCreateLesson <- CreateLesson: returnConnection()
+ JSPCreateLesson -> CreateLesson: executeAction()
+ CreateLesson -> CreateLesson: run\n(DiaSemana,Calendar,Calendar,FrequencyType,InfoRoomOccupationEditor,InfoShift,YearMonthDay,YearMonthDay):Lesson
+ CreateLesson -> CreateLesson: check(AccessControlPredicate<?>):void
+ CreateLesson -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CreateLesson -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CreateLesson -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ CreateLesson -> FenixFramework: getDomainObject(String):T
+ CreateLesson -> InfoShift: getInfoDisciplinaExecucao():InfoExecutionCourse
+ CreateLesson -> InfoExecutionCourse: getInfoExecutionPeriod():InfoExecutionPeriod
+ InfoExecutionCourse -> InfoExecutionPeriod: newInfoFromDomain(ExecutionSemester):InfoExecutionPeriod
+ ALT executionSemester == null
+ ELSE else
+ 	InfoExecutionPeriod -> InfoExecutionPeriod: InfoExecutionPeriod(ExecutionSemester)
+ END
+ InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ InfoExecutionCourse -> ExecutionCourse: getExecutionPeriod():ExecutionSemester
+ CreateLesson -> InfoExecutionCourse: getExternalId():String
+ InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ CreateLesson -> FenixFramework: getDomainObject(String):T
+ CreateLesson -> InfoShift: getExternalId():String
+ InfoShift -> InfoShift: getShift():Shift
+ InfoShift -> Shift: getExternalId():String
+ OPT infoRoomOccupation != null
+ 	ALT infoRoomOccupation.getInfoRoom() != null
+ 		CreateLesson -> SpaceUtils: findAllocatableSpaceForEducationByName(String):Space
+ 		SpaceUtils -> SpaceUtils: allocatableSpacesForEducation():Stream<Space>
+ 		SpaceUtils -> SpaceUtils: allocatableSpaces():Stream<Space>
+ 		SpaceUtils -> Space: getSpaces():Stream<Space>
+ 		Space -> Space: getAllSpaces():Stream<Space>
+ 		CreateLesson -> InfoRoomOccupationEditor: getInfoRoom():InfoRoom
+ 		CreateLesson -> InfoRoom: getNome():String
+ 	END
+ END
+ CreateLesson -> Lesson: Lesson\n(DiaSemana,Calendar,Calendar,Shift,FrequencyType,ExecutionSemester,YearMonthDay,YearMonthDay,Space)
+ Lesson -> Lesson: Lesson_Base()
+ OPT shift != null
+ 	Lesson -> Shift: getExecutionCourse():ExecutionCourse
+ 	Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ 	ALT courseLoad != null
+ 		Shift -> CourseLoad_Base: getExecutionCourse():ExecutionCourse
+ 	END
+ 	Lesson -> ExecutionCourse: getMaxLessonsPeriod():GenericPair<YearMonthDay,YearMonthDay>
+ 	ExecutionCourse -> ExecutionCourse: getExecutionPeriod():ExecutionSemester
+ 	ExecutionCourse -> ExecutionSemester: getSemester():Integer
+ 	LOOP for: getAssociatedCurricularCoursesSet()
+ 		ExecutionCourse -> CurricularCourse: getExecutionDegreeFor(ExecutionYear):ExecutionDegree
+ 		ExecutionCourse -> ExecutionCourse: getExecutionYear():ExecutionYear
+ 		ALT semester == 1
+ 			ExecutionCourse -> ExecutionDegree: getPeriodLessonsFirstSemester():OccupationPeriod
+ 			OPT periodLessonsFirstSemester != null
+ 				OPT minBeginDate == null || minBeginDate.isAfter(periodLessonsFirstSemester.getStartYearMonthDay())
+ 					ExecutionCourse -> OccupationPeriod: getStartYearMonthDay():YearMonthDay
+ 				END
+ 				OPT maxEndDate == null || maxEndDate.isBefore(periodLessonsFirstSemester.getEndYearMonthDayWithNextPeriods())
+ 					ExecutionCourse -> OccupationPeriod: getEndYearMonthDayWithNextPeriods():YearMonthDay
+ 				END
+ 			END
+ 		ELSE else
+ 			ExecutionCourse -> ExecutionDegree: getPeriodLessonsSecondSemester():OccupationPeriod
+ 			OPT periodLessonsSecondSemester != null
+ 				OPT minBeginDate == null || minBeginDate.isAfter(periodLessonsSecondSemester.getStartYearMonthDay())
+ 					ExecutionCourse -> OccupationPeriod: getStartYearMonthDay():YearMonthDay
+ 				END
+ 				OPT maxEndDate == null                            || maxEndDate.isBefore(periodLessonsSecondSemester.getEndYearMonthDayWithNextPeriods())
+ 					ExecutionCourse -> OccupationPeriod: getEndYearMonthDayWithNextPeriods():YearMonthDay
+ 				END
+ 			END
+ 		END
+ 	END
+ 	OPT minBeginDate != null && maxEndDate != null
+ 		ExecutionCourse -> GenericPair: GenericPair(T,V)
+ 	END
+ 	Lesson -> OccupationPeriod: createOccupationPeriodForLesson\n(ExecutionCourse,YearMonthDay,YearMonthDay):OccupationPeriod
+ 	LOOP for: executionCourse.getAssociatedCurricularCoursesSet()
+ 		OccupationPeriod -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		LOOP for: degreeCurricularPlan.getExecutionDegreesSet()
+ 			OPT executionCourse.getExecutionYear() == executionDegree.getExecutionYear()
+ 				OccupationPeriod -> ExecutionDegree: getPeriodLessons(ExecutionSemester):OccupationPeriod
+ 				OccupationPeriod -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 			END
+ 		END
+ 	END
+ 	OPT ok && result != null
+ 		OccupationPeriod -> OccupationPeriod: createNewPeriodWithExclusions\n(YearMonthDay,YearMonthDay,OccupationPeriod):OccupationPeriod
+ 		LOOP for:nop != null
+ 			OPT pop.getEndYearMonthDay().isAfter(beginDate) && pop.getEndYearMonthDay().isBefore(endDate)
+ 				OccupationPeriod -> OccupationPeriod: getEndYearMonthDay():YearMonthDay
+ 			END
+ 			OPT nop.getStartYearMonthDay().isAfter(beginDate) && nop.getStartYearMonthDay().isBefore(endDate)
+ 				OccupationPeriod -> OccupationPeriod: getStartYearMonthDay():YearMonthDay
+ 			END
+ 		END
+ 		OccupationPeriod -> OccupationPeriod: OccupationPeriod(YearMonthDay[])
+ 	END
+ 	OccupationPeriod -> OccupationPeriod: OccupationPeriod(YearMonthDay,YearMonthDay)
+ 	OccupationPeriod -> OccupationPeriod: OccupationPeriod()
+ 	OccupationPeriod -> OccupationPeriod: setPeriodInterval(Interval):void
+ 	OccupationPeriod -> IntervalTools: getInterval(YearMonthDay,YearMonthDay):Interval
+ END
+ Lesson -> Lesson: setRootDomainObject(Bennu):void
+ Lesson -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: Bennu()
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Lesson -> Lesson: setDiaSemana(DiaSemana):void
+ Lesson -> Lesson: setInicio(Calendar):void
+ Lesson -> Lesson: setFim(Calendar):void
+ Lesson -> Lesson: setShift(Shift):void
+ Lesson -> Lesson: setFrequency(FrequencyType):void
+ Lesson -> Lesson: setPeriod(OccupationPeriod):void
+ Lesson -> Lesson: checkShiftLoad(Shift):void
+ OPT room != null
+ 	Lesson -> LessonSpaceOccupation: LessonSpaceOccupation(Space,Lesson)
+ 	LessonSpaceOccupation -> LessonSpaceOccupation: LessonSpaceOccupation_Base()
+ 	LessonSpaceOccupation -> LessonSpaceOccupation: EventSpaceOccupation()
+ 	LessonSpaceOccupation -> LessonSpaceOccupation: EventSpaceOccupation_Base()
+ 	LessonSpaceOccupation -> LessonSpaceOccupation: setLesson(Lesson):void
+ 	LessonSpaceOccupation -> LessonSpaceOccupation: setResource(Space):void
+ END
+ @enduml

@@ -1,0 +1,213 @@
+@startuml
+scale 1/4
+participant "JSP\nJSPCreateStudent" as JSPCreateStudent order 0
+participant "services.student.administrativeOfficeServices\nCreateStudent" as CreateStudent order 1
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 77
+participant "domain\nPerson" as Person order 78
+participant "domain.candidacy\nStudentCandidacy" as StudentCandidacy order 79
+participant "domain.candidacy\nDegreeCandidacy" as DegreeCandidacy order 96
+participant "domain.candidacy\nSDCandidacy" as SDCandidacy order 97
+participant "domain.phd.candidacy\nPHDProgramCandidacy" as PHDProgramCandidacy order 98
+participant "domain.candidacy\nDFACandidacy" as DFACandidacy order 99
+participant "domain.candidacy\nDegreeCandidacy" as DegreeCandidacy order 100
+participant "domain.candidacy\nMDCandidacy" as MDCandidacy order 101
+participant "domain.candidacy\nIMDCandidacy" as IMDCandidacy order 102
+participant "domain.candidacy\nDegreeCandidacy" as DegreeCandidacy order 103
+participant "dto.administrativeOffice\nExecutionDegreeBean" as ExecutionDegreeBean order 104
+participant "dto.candidacy\nIngressionInformationBean" as IngressionInformationBean order 105
+participant "dto.person\nPersonBean" as PersonBean order 106
+participant "domain.candidacy\nRegisteredCandidacySituation" as RegisteredCandidacySituation order 117
+participant "predicate\nAccessControl" as AccessControl order 130
+participant "domain.candidacy\nStudentCandidacy" as StudentCandidacy order 131
+participant "domain.candidacy\nStudentCandidacy" as StudentCandidacy order 132
+participant "domain.candidacy\nStudentCandidacy_Base" as StudentCandidacy_Base order 133
+participant "domain.student\nRegistration" as Registration order 134
+participant "domain.student\nRegistration_Base" as Registration_Base order 135
+participant "domain\nExecutionDegree" as ExecutionDegree order 136
+participant "domain.student\nStudent" as Student order 137
+participant "domain.student\nPersonalIngressionData" as PersonalIngressionData order 138
+participant "dto.candidacy\nOriginInformationBean" as OriginInformationBean order 267
+participant "org.joda.time\nDateTime" as DateTime order 268
+participant "domain\nExecutionDegree" as ExecutionDegree order 269
+participant "domain.student\nPrecedentDegreeInformation" as PrecedentDegreeInformation order 270
+participant "domain\nQualification" as Qualification order 271
+participant "domain.student\nPrecedentDegreeInformation_Base" as PrecedentDegreeInformation_Base order 300
+participant "domain.organizationalStructure\nUnit" as Unit order 301
+participant "org.joda.time\nYearMonthDay" as YearMonthDay order 302
+JSPCreateStudent -> CreateStudent: getConnection()
+JSPCreateStudent <- CreateStudent: returnConnection()
+JSPCreateStudent -> CreateStudent: executeAction()
+CreateStudent -> CreateStudent: run\n(PersonBean,ExecutionDegreeBean,\nPrecedentDegreeInformationBean,\nIngressionInformationBean,\nOriginInformationBean)\n:Registration
+CreateStudent -> CreateStudent: check(AccessControlPredicate<?>):void
+CreateStudent -> AccessControl: getPerson():Person
+CreateStudent -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt requester == null
+	else else
+		CreateStudent -> Person: getUsername():String
+	end
+end
+CreateStudent -> CreateStudent: getPerson(PersonBean):Person
+CreateStudent -> StudentCandidacy: createStudentCandidacy\n(ExecutionDegree,Person)\n:StudentCandidacy
+opt executionDegree.\ngetDegree().\ngetDegreeType().isEmpty()
+	StudentCandidacy -> DegreeCandidacy: DegreeCandidacy\n(Person,ExecutionDegree)
+end
+opt executionDegree.\ngetDegree().getDegreeType()\n.isSpecializationDegree()
+	StudentCandidacy -> SDCandidacy: SDCandidacy\n(Person,ExecutionDegree)
+end
+opt executionDegree\n.getDegree().getDegreeType()\n.isAdvancedSpecializationDiploma()
+	StudentCandidacy -> PHDProgramCandidacy: PHDProgramCandidacy\n(Person,ExecutionDegree)
+end
+opt executionDegree\n.getDegree().getDegreeType()\n.isAdvancedFormationDiploma()
+	StudentCandidacy -> DFACandidacy: DFACandidacy\n(Person,ExecutionDegree)
+end
+opt executionDegree\n.getDegree()\n.getDegreeType().isDegree()
+	StudentCandidacy -> DegreeCandidacy: DegreeCandidacy\n(Person,ExecutionDegree)
+end
+opt executionDegree\n.getDegree().getDegreeType()\n.isBolonhaMasterDegree()
+	StudentCandidacy -> MDCandidacy: MDCandidacy\n(Person,ExecutionDegree)
+end
+opt executionDegree\n.getDegree().getDegreeType()\n.isIntegratedMasterDegree()
+	StudentCandidacy -> IMDCandidacy: IMDCandidacy\n(Person,ExecutionDegree)
+end
+StudentCandidacy -> DegreeCandidacy: DegreeCandidacy\n(Person,ExecutionDegree)
+CreateStudent -> ExecutionDegreeBean: getExecutionDegree()\n:ExecutionDegree
+CreateStudent -> IngressionInformationBean: getRegistrationProtocol()\n:RegistrationProtocol
+CreateStudent -> ExecutionDegreeBean: getCycleType()\n:CycleType
+CreateStudent -> IngressionInformationBean: getIngressionType()\n:IngressionType
+CreateStudent -> IngressionInformationBean: getEntryPhase()\n:EntryPhase
+CreateStudent -> PersonBean: getStudentNumber()\n:Integer
+CreateStudent -> RegisteredCandidacySituation: RegisteredCandidacySituation\n(Candidacy,RegistrationProtocol\n,CycleType,IngressionType\n,EntryPhase,Integer)
+RegisteredCandidacySituation -> RegisteredCandidacySituation: RegisteredCandidacySituation\n_Base()
+RegisteredCandidacySituation -> RegisteredCandidacySituation: init(Candidacy,Person):void
+RegisteredCandidacySituation -> AccessControl: getPerson():Person
+RegisteredCandidacySituation -> RegisteredCandidacySituation: registerCandidacy\n(RegistrationProtocol,\nCycleType,Integer):void
+RegisteredCandidacySituation -> StudentCandidacy: setIngressionType\n(IngressionType):void
+RegisteredCandidacySituation -> StudentCandidacy: setEntryPhase\n(EntryPhase):void
+CreateStudent -> StudentCandidacy_Base: getRegistration()\n:Registration
+opt registration == null
+	CreateStudent -> Registration: createRegistration\nWithCustomStudentNumber\n(Person,DegreeCurricularPlan,\nStudentCandidacy,RegistrationProtocol,\nCycleType,ExecutionYear,\nInteger):Registration
+	CreateStudent -> ExecutionDegreeBean: getDegreeCurricularPlan()\n:DegreeCurricularPlan
+	CreateStudent -> IngressionInformationBean: getRegistrationProtocol()\n:RegistrationProtocol
+	CreateStudent -> ExecutionDegreeBean: getCycleType()\n:CycleType
+	CreateStudent -> ExecutionDegreeBean: getExecutionYear()\n:ExecutionYear
+	CreateStudent -> PersonBean: getStudentNumber()\n:Integer
+end
+CreateStudent -> Registration_Base: setHomologationDate\n(YearMonthDay):void
+CreateStudent -> IngressionInformationBean: getHomologationDate()\n:YearMonthDay
+CreateStudent -> Registration_Base: setStudiesStartDate\n(YearMonthDay):void
+CreateStudent -> IngressionInformationBean: getStudiesStartDate()\n:YearMonthDay
+CreateStudent -> Registration_Base: getStudent()\n:Student
+CreateStudent -> ExecutionDegreeBean: getExecutionDegree()\n:ExecutionDegree
+CreateStudent -> ExecutionDegree: getExecutionYear()\n:ExecutionYear
+CreateStudent -> Student: getPersonalIngressionData\nByExecutionYear(ExecutionYear)\n:PersonalIngressionData
+alt personalIngressionData == null
+	CreateStudent -> PersonalIngressionData: PersonalIngressionData\n(OriginInformationBean,PersonBean,\nStudent,ExecutionYear)
+	PersonalIngressionData -> PersonalIngressionData: newPersonalIngressionData()
+	PersonalIngressionData -> PersonalIngressionData: setStudent(Student):void
+	PersonalIngressionData -> PersonalIngressionData: setExecutionYear\n(ExecutionYear):void
+	PersonalIngressionData -> PersonalIngressionData: setDistrict\nSubdivisionOfResidence\n(DistrictSubdivision):void
+	PersonalIngressionData -> PersonBean: getDistrict\nSubdivisionOfResidenceObject\n():DistrictSubdivision
+	PersonalIngressionData -> PersonalIngressionData: setCountryOfResidence\n(Country):void
+	PersonalIngressionData -> PersonBean: getCountryOfResidence \n():Country
+	PersonalIngressionData -> PersonalIngressionData: setSchoolTime\nDistrictSubDivisionOfResidence\n(DistrictSubdivision):void
+	PersonalIngressionData -> OriginInformationBean: getSchoolTime\nDistrictSubdivisionOfResidence\n():DistrictSubdivision
+	PersonalIngressionData -> PersonalIngressionData: setDislocated\nFromPermanentResidence\n(Boolean):void
+	PersonalIngressionData -> OriginInformationBean: getDislocated\nFromPermanentResidence()\n:Boolean
+	PersonalIngressionData -> PersonalIngressionData: setGrantOwnerType\n(GrantOwnerType):void
+	PersonalIngressionData -> OriginInformationBean: getGrantOwnerType()\n:GrantOwnerType
+	PersonalIngressionData -> PersonalIngressionData: setGrantOwnerProvider\n(Unit):void
+	PersonalIngressionData -> OriginInformationBean: getGrantOwnerProvider()\n:Unit
+	PersonalIngressionData -> PersonalIngressionData: setHighSchoolType\n(AcademicalInstitutionType)\n:void
+	PersonalIngressionData -> OriginInformationBean: getHighSchoolType()\n:AcademicalInstitutionType
+	PersonalIngressionData -> PersonalIngressionData: setMaritalStatus\n(MaritalStatus):void
+	PersonalIngressionData -> PersonBean: getMaritalStatus()\n:MaritalStatus
+	PersonalIngressionData -> PersonalIngressionData: setProfessionType\n(ProfessionType):void
+	PersonalIngressionData -> PersonBean: getProfessionType()\n:ProfessionType
+	PersonalIngressionData -> PersonalIngressionData: setProfessionalCondition\n(ProfessionalSituation\nConditionType):void
+	PersonalIngressionData -> PersonBean: getProfessionalCondition()\n:ProfessionalSituation\nConditionType
+	PersonalIngressionData -> PersonalIngressionData: setMotherSchoolLevel\n(SchoolLevelType):void
+	PersonalIngressionData -> OriginInformationBean: getMotherSchoolLevel()\n:SchoolLevelType
+	PersonalIngressionData -> PersonalIngressionData: setMotherProfessionType\n(ProfessionType):void
+	PersonalIngressionData -> OriginInformationBean: getMotherProfessionType()\n:ProfessionType
+	PersonalIngressionData -> PersonalIngressionData: setMotherProfessionalCondition\n(ProfessionalSituationConditionType)\n:void
+	PersonalIngressionData -> OriginInformationBean: getMotherProfessionalCondition()\n:ProfessionalSituationConditionType
+	PersonalIngressionData -> PersonalIngressionData: setFatherSchoolLevel\n(SchoolLevelType):void
+	PersonalIngressionData -> OriginInformationBean: getFatherSchoolLevel()\n:SchoolLevelType
+	PersonalIngressionData -> PersonalIngressionData: setFatherProfessionType\n(ProfessionType):void
+	PersonalIngressionData -> OriginInformationBean: getFatherProfessionType()\n:ProfessionType
+	PersonalIngressionData -> PersonalIngressionData: setFatherProfessionalCondition\n(ProfessionalSituationConditionType)\n:void
+	PersonalIngressionData -> OriginInformationBean: getFatherProfessionalCondition()\n:ProfessionalSituationConditionType
+	CreateStudent -> Registration_Base: getStudent()\n:Student
+	CreateStudent -> ExecutionDegreeBean: getExecutionDegree()\n:ExecutionDegree
+else else
+	CreateStudent -> ExecutionDegree: getExecutionYear()\n:ExecutionYear
+	CreateStudent -> PersonalIngressionData: edit(OriginInformationBean,\nPersonBean):void
+	PersonalIngressionData -> PersonalIngressionData: setDistrictSubdivisionOfResidence\n(DistrictSubdivision):void
+	PersonalIngressionData -> PersonBean: getDistrictSubdivisionOfResidenceObject\n():DistrictSubdivision
+	PersonalIngressionData -> PersonalIngressionData: setCountryOfResidence\n(Country):void
+	PersonalIngressionData -> PersonBean: getCountryOfResidence()\n:Country
+	PersonalIngressionData -> PersonalIngressionData: setSchoolTime\nDistrictSubDivisionOfResidence\n(DistrictSubdivision):void
+	PersonalIngressionData -> OriginInformationBean: getSchoolTime\nDistrictSubdivisionOfResidence\n():DistrictSubdivision
+	PersonalIngressionData -> PersonalIngressionData: setDislocated\nFromPermanentResidence\n(Boolean):void
+	PersonalIngressionData -> OriginInformationBean: getDislocated\nFromPermanentResidence()\n:Boolean
+	PersonalIngressionData -> PersonalIngressionData: setGrantOwnerType\n(GrantOwnerType):void
+	PersonalIngressionData -> OriginInformationBean: getGrantOwnerType()\n:GrantOwnerType
+	PersonalIngressionData -> PersonalIngressionData: setGrantOwnerProvider\n(Unit):void
+	PersonalIngressionData -> OriginInformationBean: getGrantOwnerProvider()\n:Unit
+	PersonalIngressionData -> PersonalIngressionData: setHighSchoolType\n(AcademicalInstitutionType)\n:void
+	PersonalIngressionData -> OriginInformationBean: getHighSchoolType()\n:AcademicalInstitutionType
+	PersonalIngressionData -> PersonalIngressionData: setMaritalStatus\n(MaritalStatus):void
+	PersonalIngressionData -> PersonBean: getMaritalStatus()\m:MaritalStatus
+	PersonalIngressionData -> PersonalIngressionData: setProfessionType\n(ProfessionType):void
+	PersonalIngressionData -> PersonBean: getProfessionType()\n:ProfessionType
+	PersonalIngressionData -> PersonalIngressionData: setProfessionalCondition\n(ProfessionalSituation\nConditionType):void
+	PersonalIngressionData -> PersonBean: getProfessionalCondition()\n:ProfessionalSituationConditionType
+	PersonalIngressionData -> PersonalIngressionData: setMotherSchoolLevel\n(SchoolLevelType):void
+	PersonalIngressionData -> OriginInformationBean: getMotherSchoolLevel()\n:SchoolLevelType
+	PersonalIngressionData -> PersonalIngressionData: setMotherProfessionType\n(ProfessionType):void
+	PersonalIngressionData -> OriginInformationBean: getMotherProfessionType()\n:ProfessionType
+	PersonalIngressionData -> PersonalIngressionData: setMotherProfessionalCondition\n(ProfessionalSituationConditionType)\n:void
+	PersonalIngressionData -> OriginInformationBean: getMotherProfessionalCondition()\n:ProfessionalSituation\nConditionType
+	PersonalIngressionData -> PersonalIngressionData: setFatherSchoolLevel\n(SchoolLevelType):void
+	PersonalIngressionData -> OriginInformationBean: getFatherSchoolLevel()\n:SchoolLevelType
+	PersonalIngressionData -> PersonalIngressionData: setFatherProfessionType\n(ProfessionType):void
+	PersonalIngressionData -> OriginInformationBean: getFatherProfessionType()\n:ProfessionType
+	PersonalIngressionData -> PersonalIngressionData: setFatherProfessionalCondition\n(ProfessionalSituation\nConditionType):void
+	PersonalIngressionData -> OriginInformationBean: getFatherProfessionalCondition()\n:ProfessionalSituation\nConditionType
+	PersonalIngressionData -> PersonalIngressionData: setLastModifiedDate\n(DateTime):void
+	PersonalIngressionData -> DateTime: newDateTime()
+end
+CreateStudent -> StudentCandidacy_Base: getPrecedentDegreeInformation()\n:PrecedentDegreeInformation
+CreateStudent -> PrecedentDegreeInformation: edit\n(PersonalIngressionData,Registration,\nPrecedentDegreeInformationBean,\nStudentCandidacy):void
+CreateStudent -> Qualification: Qualification(Person,\nPrecedentDegreeInformation)
+Qualification -> Qualification: newQualification()
+Qualification -> Qualification: setPerson(Person):void
+Qualification -> Qualification: setMark(String):void
+alt precedentDegreeInformation\n.getConclusionGrade() == null
+else else
+	Qualification -> PrecedentDegreeInformation_Base: getConclusionGrade()\n:String
+end
+Qualification -> Qualification: setSchool(String):void
+alt precedentDegreeInformation\n.getInstitution() == null
+else else
+	Qualification -> PrecedentDegreeInformation_Base: getInstitution():Unit
+	Qualification -> Unit: getName():String
+end
+Qualification -> Qualification: setDegree(String):void
+alt precedentDegreeInformation\n.getDegreeDesignation() == null
+else else
+	Qualification -> PrecedentDegreeInformation_Base: getDegreeDesignation():String
+end
+Qualification -> Qualification: setDateYearMonthDay\n(YearMonthDay):void
+alt precedentDegreeInformation\n.getConclusionYear() == null
+else else
+	Qualification -> PrecedentDegreeInformation_Base: getConclusionYear():Integer
+	Qualification -> YearMonthDay: YearMonthDay\n(int,int,int)
+end
+Qualification -> Qualification: setCountry\n(Country):void
+alt precedentDegreeInformation\n.getCountry() == null
+else else
+	Qualification -> PrecedentDegreeInformation_Base: getCountry():Country
+end
+@enduml

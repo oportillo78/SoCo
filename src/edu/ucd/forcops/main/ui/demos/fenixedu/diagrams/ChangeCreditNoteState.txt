@@ -1,0 +1,74 @@
+@startuml
+ participant "JSP\nJSPChangeCreditNoteState" as JSPChangeCreditNoteState order 0
+ participant "services.accounting\nChangeCreditNoteState" as ChangeCreditNoteState order 1
+ participant "predicate\nAccessControl" as AccessControl order 17
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 18
+ participant "domain\nPerson" as Person order 19
+ participant "domain.accounting\nCreditNote" as CreditNote order 20
+ participant "org.joda.time\nDateTime" as DateTime order 49
+ participant "domain.accounting\nCreditNoteEntry" as CreditNoteEntry order 50
+ participant "domain.accounting\nEntry" as Entry order 63
+ participant "org.joda.time\nDateTime" as DateTime order 72
+ participant "domain.accounting\nAccountingTransaction" as AccountingTransaction order 73
+ participant "domain\nPerson_Base" as Person_Base order 76
+ participant "org.joda.time\nDateTime" as DateTime order 77
+ participant "domain.accounting\nPaymentMethod" as PaymentMethod order 78
+ participant "core.domain\nBennu" as Bennu order 83
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 90
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 91
+ participant "core.domain\nBennu" as Bennu order 92
+ JSPChangeCreditNoteState -> ChangeCreditNoteState: getConnection()
+ JSPChangeCreditNoteState <- ChangeCreditNoteState: returnConnection()
+ JSPChangeCreditNoteState -> ChangeCreditNoteState: executeAction()
+ ChangeCreditNoteState -> ChangeCreditNoteState: run(Person,CreditNote,CreditNoteState):void
+ ChangeCreditNoteState -> ChangeCreditNoteState: check(AccessControlPredicate<?>):void
+ ChangeCreditNoteState -> AccessControl: getPerson():Person
+ ChangeCreditNoteState -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		ChangeCreditNoteState -> Person: getUsername():String
+ 	END
+ END
+ ChangeCreditNoteState -> CreditNote: changeState\n(Person,PaymentMethod,String,CreditNoteState):void
+ ALT state == CreditNoteState.ANNULLED
+ 	CreditNote -> CreditNote: annul(Person):void
+ 	CreditNote -> CreditNote: internalChangeState(Person,CreditNoteState):void
+ 	CreditNote -> CreditNote: setWhenUpdated(DateTime):void
+ 	CreditNote -> DateTime: DateTime()
+ 	CreditNote -> CreditNote: setState(CreditNoteState):void
+ 	CreditNote -> CreditNote: setResponsible(Person):void
+ ELSE else
+ 	ALT state == CreditNoteState.PAYED
+ 		CreditNote -> CreditNote: confirm(Person,PaymentMethod,String):void
+ 		CreditNote -> CreditNote: internalChangeState(Person,CreditNoteState):void
+ 		CreditNote -> CreditNote: setWhenUpdated(DateTime):void
+ 		CreditNote -> DateTime: DateTime()
+ 		CreditNote -> CreditNote: setState(CreditNoteState):void
+ 		CreditNote -> CreditNote: setResponsible(Person):void
+ 		LOOP for: getCreditNoteEntriesSet()
+ 			CreditNote -> CreditNoteEntry: createAdjustmentAccountingEntry(User,PaymentMethod,String):void
+ 			CreditNoteEntry -> CreditNoteEntry: getAccountingEntry():Entry
+ 			CreditNoteEntry -> Entry: getAccountingTransaction():AccountingTransaction
+ 			CreditNoteEntry -> CreditNoteEntry: getAmount():Money
+ 			CreditNoteEntry -> Entry: reimburse\n(User,PaymentMethod,String,Money):AccountingTransaction
+ 			Entry -> Entry: reimburse\n(User,PaymentMethod,String,Money,String):AccountingTransaction
+ 			Entry -> Entry: reimburse\n(User,PaymentMethod,String,Money,String,boolean):AccountingTransaction
+ 			Entry -> Entry: reimburse\n(User,PaymentMethod,String,Money,String,boolean,DateTime):AccountingTransaction
+ 			Entry -> DateTime: DateTime()
+ 			CreditNoteEntry -> CreditNoteEntry: setAdjustmentAccountingEntry(Entry):void
+ 			CreditNoteEntry -> AccountingTransaction: getToAccountEntry():Entry
+ 			AccountingTransaction -> AccountingTransaction: getEntry(boolean):Entry
+ 			CreditNote -> Person_Base: getUser():User
+ 		END
+ 	END
+ END
+ ChangeCreditNoteState -> PaymentMethod: getCashPaymentMethod():PaymentMethod
+ PaymentMethod -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ PaymentMethod -> Bennu: getCashPaymentMethod():PaymentMethod
+ @enduml

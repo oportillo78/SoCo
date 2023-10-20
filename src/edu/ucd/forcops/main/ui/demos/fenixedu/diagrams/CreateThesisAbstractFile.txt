@@ -1,0 +1,39 @@
+@startuml
+ participant "JSP\nJSPCreateThesisAbstractFile" as JSPCreateThesisAbstractFile order 0
+ participant "services.thesis\nCreateThesisAbstractFile" as CreateThesisAbstractFile order 1
+ participant "service.filter.student.thesis\nScientificCouncilOrStudentThesisAuthorizationFilter" as ScientificCouncilOrStudentThesisAuthorizationFilter order 9
+ participant "core.security\nAuthenticate" as Authenticate order 18
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 23
+ participant "services.thesis\nCreateThesisFile" as CreateThesisFile order 24
+ participant "domain.thesis\nThesisFile" as ThesisFile order 31
+ JSPCreateThesisAbstractFile -> CreateThesisAbstractFile: getConnection()
+ JSPCreateThesisAbstractFile <- CreateThesisAbstractFile: returnConnection()
+ JSPCreateThesisAbstractFile -> CreateThesisAbstractFile: executeAction()
+ CreateThesisAbstractFile -> CreateThesisAbstractFile: runCreateThesisAbstractFile\n(Thesis,byte[],String,String,String,Locale):ThesisFile
+ CreateThesisAbstractFile -> ScientificCouncilOrStudentThesisAuthorizationFilter: execute(Thesis):void
+ ScientificCouncilOrStudentThesisAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ OPT !RoleType.SCIENTIFIC_COUNCIL.isMember(userView.getPerson().getUser())
+ 	ScientificCouncilOrStudentThesisAuthorizationFilter -> ScientificCouncilOrStudentThesisAuthorizationFilter: execute(Thesis):void
+ 	ScientificCouncilOrStudentThesisAuthorizationFilter -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	OPT !RoleType.SCIENTIFIC_COUNCIL.isMember(userView.getPerson().getUser())
+ 		ScientificCouncilOrStudentThesisAuthorizationFilter -> ScientificCouncilOrStudentThesisAuthorizationFilter: execute(Thesis):void
+ 	END
+ END
+ CreateThesisAbstractFile -> CreateThesisFile: run\n(Thesis,byte[],String,String,String,Locale):ThesisFile
+ CreateThesisFile -> CreateThesisFile: removePreviousFile(Thesis):void
+ CreateThesisFile -> ThesisFile: ThesisFile(String,String,byte[])
+ ThesisFile -> ThesisFile: ThesisFile_Base()
+ ThesisFile -> ThesisFile: init(String,String,byte[]):void
+ ThesisFile -> ThesisFile: setDisplayName(String):void
+ ThesisFile -> ThesisFile: setFilename(String):void
+ ThesisFile -> ThesisFile: setContent(byte[]):void
+ CreateThesisFile -> CreateThesisFile: updateThesis\n(Thesis,ThesisFile,String,String,Locale,String,byte[]):void
+ @enduml

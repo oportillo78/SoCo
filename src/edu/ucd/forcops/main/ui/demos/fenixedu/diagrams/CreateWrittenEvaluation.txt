@@ -1,0 +1,64 @@
+@startuml
+participant "JSP\nJSPCreateWrittenEvaluation" as JSPCreateWrittenEvaluation order 0
+participant "services.resourceAllocationManager.exams\nCreateWrittenEvaluation" as CreateWrittenEvaluation order 1
+participant "domain\nWrittenTest" as WrittenTest order 47
+participant "domain\nWrittenTest" as WrittenTest order 48
+participant "domain\nExam" as Exam order 49
+participant "service.filter\nResourceAllocationManager\nAuthorizationFilter" as ResourceAllocationManagerAuthorizationFilter order 50
+participant "service.filter\nExecutionCourseLecturingTeacher\nAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 51
+participant "service.filter\nExecutionCourseCoordinator\nAuthorizationFilter" as ExecutionCourseCoordinatorAuthorizationFilter order 52
+JSPCreateWrittenEvaluation -> CreateWrittenEvaluation: getConnection()
+JSPCreateWrittenEvaluation <- CreateWrittenEvaluation: returnConnection()
+JSPCreateWrittenEvaluation -> CreateWrittenEvaluation: executeAction()
+CreateWrittenEvaluation -> CreateWrittenEvaluation: runCreateWrittenEvaluation\n(String,Date,Date,Date,List<String>,List<String>,List<String>,GradeScale,Season,String):void
+CreateWrittenEvaluation -> ResourceAllocationManagerAuthorizationFilter: execute():void
+CreateWrittenEvaluation -> CreateWrittenEvaluation: run\n(String,Date,Date,Date,List<String>,List<String>,List<String>,GradeScale,Season,String):void
+CreateWrittenEvaluation -> CreateWrittenEvaluation: readExecutionCourses(List<String>):List<ExecutionCourse>
+CreateWrittenEvaluation -> CreateWrittenEvaluation: readCurricularCourseScopesAndContexts(List<String>):List<DegreeModuleScope>
+opt roomIDs != null
+	CreateWrittenEvaluation -> CreateWrittenEvaluation: readRooms(List<String>):List<Space>
+end
+alt examSeason != null
+	CreateWrittenEvaluation -> Exam: Exam\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,Season)
+else else
+	alt writtenTestDescription != null
+		CreateWrittenEvaluation -> WrittenTest: WrittenTest\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,String)
+	else else
+	end
+end
+opt NotAuthorizedException ex1
+	CreateWrittenEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute():void
+	CreateWrittenEvaluation -> CreateWrittenEvaluation: run\n(String,Date,Date,Date,List<String>,List<String>,List<String>,GradeScale,Season,String):void
+	CreateWrittenEvaluation -> CreateWrittenEvaluation: readExecutionCourses(List<String>):List<ExecutionCourse>
+	CreateWrittenEvaluation -> CreateWrittenEvaluation: readCurricularCourseScopesAndContexts(List<String>):List<DegreeModuleScope>
+	alt examSeason != null
+		CreateWrittenEvaluation -> Exam: Exam\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,Season)
+	else else
+		alt writtenTestDescription != null
+			CreateWrittenEvaluation -> WrittenTest: WrittenTest\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,String)
+		else else
+		end
+	end
+	CreateWrittenEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute():void
+	opt NotAuthorizedException ex2
+		alt examSeason != null
+			CreateWrittenEvaluation -> Exam: Exam\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,Season)
+		else else
+			alt writtenTestDescription != null
+				CreateWrittenEvaluation -> Exam: WrittenTest\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,String)
+			else else
+			end
+		end
+		CreateWrittenEvaluation -> ExecutionCourseCoordinatorAuthorizationFilter: execute(String):void
+		CreateWrittenEvaluation -> CreateWrittenEvaluation: run\n(String,Date,Date,Date,List<String>,List<String>,List<String>,GradeScale,Season,String):void
+		CreateWrittenEvaluation -> CreateWrittenEvaluation: readExecutionCourses(List<String>):List<ExecutionCourse>
+		CreateWrittenEvaluation -> CreateWrittenEvaluation: readCurricularCourseScopesAndContexts(List<String>):List<DegreeModuleScope>
+		opt roomIDs != null
+			CreateWrittenEvaluation -> CreateWrittenEvaluation: readRooms(List<String>):List<Space>
+		end
+	end
+	opt roomIDs != null
+		CreateWrittenEvaluation -> CreateWrittenEvaluation: readRooms(List<String>):List<Space>
+	end
+end
+@enduml

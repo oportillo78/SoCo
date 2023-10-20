@@ -1,0 +1,31 @@
+@startuml
+ participant "JSP\nJSPCreateStudentCurricularPlanEquivalencePlan" as JSPCreateStudentCurricularPlanEquivalencePlan order 0
+ participant "services.coordinator\nCreateStudentCurricularPlanEquivalencePlan" as CreateStudentCurricularPlanEquivalencePlan order 1
+ participant "services.coordinator\nCreateStudentCurricularPlanEquivalencePlan" as CreateStudentCurricularPlanEquivalencePlan order 5
+ participant "domain.student\nRegistration" as Registration order 12
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 17
+ participant "domain\nStudentCurricularPlanEquivalencePlan" as StudentCurricularPlanEquivalencePlan order 20
+ JSPCreateStudentCurricularPlanEquivalencePlan -> CreateStudentCurricularPlanEquivalencePlan: getConnection()
+ JSPCreateStudentCurricularPlanEquivalencePlan <- CreateStudentCurricularPlanEquivalencePlan: returnConnection()
+ JSPCreateStudentCurricularPlanEquivalencePlan -> CreateStudentCurricularPlanEquivalencePlan: executeAction()
+ CreateStudentCurricularPlanEquivalencePlan -> CreateStudentCurricularPlanEquivalencePlan: run\n(Student):StudentCurricularPlanEquivalencePlan
+ LOOP for: student.getRegistrationsSet()
+ 	CreateStudentCurricularPlanEquivalencePlan -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	ALT isActive()
+ 		Registration -> Registration: getLastStudentCurricularPlan():StudentCurricularPlan
+ 		Registration -> Registration: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ 	END
+ 	OPT studentCurricularPlan != null && !studentCurricularPlan.isBolonhaDegree()
+ 		CreateStudentCurricularPlanEquivalencePlan -> StudentCurricularPlan_Base: getEquivalencePlan():StudentCurricularPlanEquivalencePlan
+ 		ALT studentCurricularPlanEquivalencePlan == null
+ 			CreateStudentCurricularPlanEquivalencePlan -> StudentCurricularPlan_Base: createStudentCurricularPlanEquivalencePlan\n():StudentCurricularPlanEquivalencePlan
+ 			StudentCurricularPlan_Base -> StudentCurricularPlanEquivalencePlan: StudentCurricularPlanEquivalencePlan(StudentCurricularPlan)
+ 			StudentCurricularPlanEquivalencePlan -> StudentCurricularPlanEquivalencePlan: StudentCurricularPlanEquivalencePlan_Base\n()
+ 			StudentCurricularPlanEquivalencePlan -> StudentCurricularPlanEquivalencePlan: EquivalencePlan()
+ 			StudentCurricularPlanEquivalencePlan -> StudentCurricularPlanEquivalencePlan: init(StudentCurricularPlan):void
+ 			StudentCurricularPlanEquivalencePlan -> StudentCurricularPlanEquivalencePlan: checkParameters(StudentCurricularPlan):void
+ 			StudentCurricularPlanEquivalencePlan -> StudentCurricularPlanEquivalencePlan: setOldStudentCurricularPlan(StudentCurricularPlan):void
+ 		END
+ 	END
+ END
+ @enduml

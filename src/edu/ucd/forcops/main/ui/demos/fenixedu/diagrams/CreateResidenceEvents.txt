@@ -1,0 +1,41 @@
+@startuml
+ participant "JSP\nJSPCreateResidenceEvents" as JSPCreateResidenceEvents order 0
+ participant "services.residenceManagement\nCreateResidenceEvents" as CreateResidenceEvents order 1
+ participant "dto.residenceManagement\nResidenceEventBean" as ResidenceEventBean order 15
+ participant "domain.student\nStudent" as Student order 16
+ participant "domain.accounting\nResidenceEvent" as ResidenceEvent order 17
+ participant "org.joda.time\nDateTime" as DateTime order 50
+ participant "domain.accounting\nPostingRule" as PostingRule order 51
+ participant "domain.accounting\nDueDateAmountMap" as DueDateAmountMap order 52
+ JSPCreateResidenceEvents -> CreateResidenceEvents: getConnection()
+ JSPCreateResidenceEvents <- CreateResidenceEvents: returnConnection()
+ JSPCreateResidenceEvents -> CreateResidenceEvents: executeAction()
+ CreateResidenceEvents -> CreateResidenceEvents: run\n(List<ResidenceEventBean>,ResidenceMonth):void
+ LOOP for: beans
+ 	OPT !month.isEventPresent(bean.getStudent().getPerson())
+ 		CreateResidenceEvents -> ResidenceEventBean: getStudent():Student
+ 		CreateResidenceEvents -> Student: getPerson():Person
+ 		CreateResidenceEvents -> ResidenceEventBean: getRoomValue():Money
+ 		CreateResidenceEvents -> ResidenceEventBean: getRoom():String
+ 		CreateResidenceEvents -> ResidenceEvent: ResidenceEvent(ResidenceMonth,Person,Money,String)
+ 		ResidenceEvent -> ResidenceEvent: init\n(EventType,Person,ResidenceMonth,Money,String):void
+ 		ResidenceEvent -> ResidenceEvent: init(EventType,Person):void
+ 		ResidenceEvent -> ResidenceEvent: checkParameters(EventType,Party):void
+ 		ResidenceEvent -> ResidenceEvent: setEventType(EventType):void
+ 		ResidenceEvent -> ResidenceEvent: setParty(Party):void
+ 		ResidenceEvent -> ResidenceEvent: setResidenceMonth(ResidenceMonth):void
+ 		ResidenceEvent -> ResidenceEvent: setRoomValue(Money):void
+ 		ResidenceEvent -> ResidenceEvent: setRoom(String):void
+ 		ResidenceEvent -> ResidenceEvent: persistDueDateAmountMap():void
+ 		OPT super.getDueDateAmountMap() == null
+ 			ResidenceEvent -> ResidenceEvent: setDueDateAmountMap(DueDateAmountMap):void
+ 			ResidenceEvent -> ResidenceEvent: calculateDueDateAmountMap():Map<LocalDate,Money>
+ 			ResidenceEvent -> ResidenceEvent: getPaymentLimitDate():DateTime
+ 			ResidenceEvent -> DateTime: toLocalDate():LocalDate
+ 			ResidenceEvent -> ResidenceEvent: getPostingRule():PostingRule
+ 			ResidenceEvent -> PostingRule: doCalculationForAmountToPay(Event):Money
+ 			ResidenceEvent -> DueDateAmountMap: DueDateAmountMap(Map<LocalDate,Money>)
+ 		END
+ 	END
+ END
+ @enduml

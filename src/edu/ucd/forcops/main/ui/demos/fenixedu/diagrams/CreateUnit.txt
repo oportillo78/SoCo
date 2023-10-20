@@ -1,0 +1,114 @@
+@startuml
+ participant "JSP\nJSPCreateUnit" as JSPCreateUnit order 0
+ participant "services.manager.organizationalStructureManagement\nCreateUnit" as CreateUnit order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 47
+ participant "core.security\nAuthenticate" as Authenticate order 52
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 55
+ participant "core.domain\nUser" as User order 56
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 59
+ participant "domain.organizationalStructure\nDepartmentUnit" as DepartmentUnit order 60
+ participant "domain.organizationalStructure\nDegreeUnit" as DegreeUnit order 71
+ participant "domain.organizationalStructure\nPlanetUnit" as PlanetUnit order 82
+ participant "domain.organizationalStructure\nCountryUnit" as CountryUnit order 89
+ participant "domain.organizationalStructure\nAccountabilityType" as AccountabilityType order 100
+ participant "domain.organizationalStructure\nSchoolUnit" as SchoolUnit order 101
+ participant "domain.organizationalStructure\nUniversityUnit" as UniversityUnit order 108
+ participant "domain.organizationalStructure\nUnit" as Unit order 115
+ participant "domain.organizationalStructure\nParty" as Party order 128
+ participant "domain.organizationalStructure\nAggregateUnit" as AggregateUnit order 129
+ participant "domain.organizationalStructure\nCompetenceCourseGroupUnit" as CompetenceCourseGroupUnit order 136
+ participant "domain.organizationalStructure\nScientificAreaUnit" as ScientificAreaUnit order 145
+ participant "domain.organizationalStructure\nSectionUnit" as SectionUnit order 154
+ participant "domain.organizationalStructure\nManagementCouncilUnit" as ManagementCouncilUnit order 161
+ participant "domain.organizationalStructure\nScientificCouncilUnit" as ScientificCouncilUnit order 168
+ JSPCreateUnit -> CreateUnit: getConnection()
+ JSPCreateUnit <- CreateUnit: returnConnection()
+ JSPCreateUnit -> CreateUnit: executeAction()
+ CreateUnit -> CreateUnit: run\n(Unit,LocalizedString,String,String,String,YearMonthDay,YearMonthDay,PartyTypeEnum,String,String,String,AccountabilityType,String,UnitClassification,Boolean,String):Unit
+ CreateUnit -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ User -> User: getUsername():String
+ CreateUnit -> CreateUnit: getCostCenterCode(String):Integer
+ CreateUnit -> FenixFramework: getDomainObject(String):T
+ ALT type != null
+ 	ALT case DEPARTMENT:
+ 		CreateUnit -> FenixFramework: getDomainObject(String):T
+ 		CreateUnit -> DepartmentUnit: createNewInternalDepartmentUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,Department,UnitClassification,Boolean,Space):DepartmentUnit
+ 		DepartmentUnit -> DepartmentUnit: DepartmentUnit()
+ 		DepartmentUnit -> DepartmentUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 		DepartmentUnit -> DepartmentUnit: setDepartment(Department):void
+ 		DepartmentUnit -> DepartmentUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 		DepartmentUnit -> DepartmentUnit: checkIfAlreadyExistsOneDepartmentUnitWithSameAcronymAndName\n(DepartmentUnit):void
+ 	ELSE case DEGREE_UNIT:
+ 		CreateUnit -> FenixFramework: getDomainObject(String):T
+ 		CreateUnit -> DegreeUnit: createNewInternalDegreeUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,Degree,UnitClassification,Boolean,Space):DegreeUnit
+ 		DegreeUnit -> DegreeUnit: DegreeUnit()
+ 		DegreeUnit -> DegreeUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 		DegreeUnit -> DegreeUnit: setDegree(Degree):void
+ 		DegreeUnit -> DegreeUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 		DegreeUnit -> DegreeUnit: checkIfAlreadyExistsOneDegreeWithSameAcronym\n(DegreeUnit):void
+ 	END
+ 	CreateUnit -> PlanetUnit: createNewPlanetUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,String,UnitClassification,Boolean,Space):PlanetUnit
+ 	PlanetUnit -> PlanetUnit: PlanetUnit()
+ 	PlanetUnit -> PlanetUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	PlanetUnit -> PlanetUnit: checkIfAlreadyExistsOnePlanetWithSameAcronymAndName\n(PlanetUnit):void
+ 	CreateUnit -> CountryUnit: createNewCountryUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,String,UnitClassification,Boolean,Space):CountryUnit
+ 	CountryUnit -> CountryUnit: CountryUnit()
+ 	CountryUnit -> CountryUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	CountryUnit -> CountryUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	CountryUnit -> AccountabilityType: readByType\n(AccountabilityTypeEnum):AccountabilityType
+ 	CountryUnit -> CountryUnit: checkIfAlreadyExistsOneCountryWithSameAcronym\n(CountryUnit):void
+ 	CreateUnit -> SchoolUnit: createNewSchoolUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,String,UnitClassification,Boolean,Space):SchoolUnit
+ 	SchoolUnit -> SchoolUnit: SchoolUnit()
+ 	SchoolUnit -> SchoolUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	SchoolUnit -> SchoolUnit: createNewUnit(Unit,SchoolUnit,Boolean):SchoolUnit
+ 	CreateUnit -> UniversityUnit: createNewUniversityUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,String,UnitClassification,Boolean,Space):UniversityUnit
+ 	UniversityUnit -> UniversityUnit: UniversityUnit()
+ 	UniversityUnit -> UniversityUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	UniversityUnit -> UniversityUnit: createNewUnit(Unit,UniversityUnit):UniversityUnit
+ 	CreateUnit -> FenixFramework: getDomainObject(String):T
+ 	CreateUnit -> Unit: createNewUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,AdministrativeOffice,Boolean,Space):Unit
+ 	Unit -> Unit: Unit()
+ 	Unit -> Unit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	Unit -> Unit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	CreateUnit -> Party: setType(PartyTypeEnum):void
+ 	CreateUnit -> AggregateUnit: createNewAggregateUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,Boolean,Space):AggregateUnit
+ 	AggregateUnit -> AggregateUnit: AggregateUnit()
+ 	AggregateUnit -> AggregateUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	AggregateUnit -> AggregateUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	CreateUnit -> CompetenceCourseGroupUnit: createNewInternalCompetenceCourseGroupUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,Boolean,Space):Unit
+ 	CompetenceCourseGroupUnit -> CompetenceCourseGroupUnit: CompetenceCourseGroupUnit()
+ 	CompetenceCourseGroupUnit -> CompetenceCourseGroupUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	CompetenceCourseGroupUnit -> CompetenceCourseGroupUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	CompetenceCourseGroupUnit -> CompetenceCourseGroupUnit: checkIfAlreadyExistsOneCompetenceCourseGroupUnitWithSameAcronymAndName\n(CompetenceCourseGroupUnit):void
+ 	CreateUnit -> ScientificAreaUnit: createNewInternalScientificArea\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,Boolean,Space):ScientificAreaUnit
+ 	ScientificAreaUnit -> ScientificAreaUnit: ScientificAreaUnit()
+ 	ScientificAreaUnit -> ScientificAreaUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	ScientificAreaUnit -> ScientificAreaUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	ScientificAreaUnit -> ScientificAreaUnit: checkIfAlreadyExistsOneScientificAreaUnitWithSameAcronymAndName\n(ScientificAreaUnit):void
+ 	CreateUnit -> SectionUnit: createNewSectionUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,Boolean,Space):Unit
+ 	SectionUnit -> SectionUnit: SectionUnit()
+ 	SectionUnit -> SectionUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	SectionUnit -> SectionUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	CreateUnit -> ManagementCouncilUnit: createManagementCouncilUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,Boolean,Space):ManagementCouncilUnit
+ 	ManagementCouncilUnit -> ManagementCouncilUnit: ManagementCouncilUnit()
+ 	ManagementCouncilUnit -> ManagementCouncilUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	ManagementCouncilUnit -> ManagementCouncilUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	CreateUnit -> ScientificCouncilUnit: createScientificCouncilUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,Boolean,Space):ScientificCouncilUnit
+ 	ScientificCouncilUnit -> ScientificCouncilUnit: ScientificCouncilUnit()
+ 	ScientificCouncilUnit -> ScientificCouncilUnit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	ScientificCouncilUnit -> ScientificCouncilUnit: addParentUnit(Unit,AccountabilityType):Accountability
+ ELSE else
+ 	CreateUnit -> Unit: createNewUnit\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,Unit,AccountabilityType,String,UnitClassification,AdministrativeOffice,Boolean,Space):Unit
+ 	Unit -> Unit: Unit()
+ 	Unit -> Unit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 	OPT parentUnit != null && accountabilityType != null
+ 		Unit -> Unit: addParentUnit(Unit,AccountabilityType):Accountability
+ 	END
+ END
+ @enduml

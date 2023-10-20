@@ -1,0 +1,92 @@
+@startuml
+ participant "JSP\nJSPCreateProjectSubmission" as JSPCreateProjectSubmission order 0
+ participant "services.projectSubmission\nCreateProjectSubmission" as CreateProjectSubmission order 1
+ participant "predicate\nAccessControl" as AccessControl order 27
+ participant "core.security\nAuthenticate" as Authenticate order 32
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 35
+ participant "core.domain\nUser_Base" as User_Base order 36
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 37
+ participant "domain\nPerson" as Person order 38
+ participant "core.domain\nUser" as User order 43
+ participant "domain\nProjectSubmissionFile" as ProjectSubmissionFile order 44
+ participant "domain\nProjectSubmission" as ProjectSubmission order 57
+ participant "core.domain\nBennu" as Bennu order 78
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 92
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 93
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 94
+ participant "org.joda.time\nDateTime" as DateTime order 95
+ participant "domain\nProjectSubmissionLog" as ProjectSubmissionLog order 96
+ JSPCreateProjectSubmission -> CreateProjectSubmission: getConnection()
+ JSPCreateProjectSubmission <- CreateProjectSubmission: returnConnection()
+ JSPCreateProjectSubmission -> CreateProjectSubmission: executeAction()
+ CreateProjectSubmission -> CreateProjectSubmission: run\n(byte[],String,Attends,Project,StudentGroup,Person):void
+ CreateProjectSubmission -> CreateProjectSubmission: check(AccessControlPredicate<?>):void
+ CreateProjectSubmission -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CreateProjectSubmission -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CreateProjectSubmission -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ CreateProjectSubmission -> ProjectSubmissionFile: ProjectSubmissionFile(String,String,byte[])
+ ProjectSubmissionFile -> ProjectSubmissionFile: ProjectSubmissionFile_Base()
+ ProjectSubmissionFile -> ProjectSubmissionFile: GenericFile()
+ ProjectSubmissionFile -> ProjectSubmissionFile: init(String,String,byte[]):void
+ ProjectSubmissionFile -> ProjectSubmissionFile: setDisplayName(String):void
+ ProjectSubmissionFile -> ProjectSubmissionFile: setFilename(String):void
+ ProjectSubmissionFile -> ProjectSubmissionFile: setContent(byte[]):void
+ CreateProjectSubmission -> ProjectSubmission: ProjectSubmission\n(Project,StudentGroup,Attends,ProjectSubmission\nFile)
+ ProjectSubmission -> ProjectSubmission: ProjectSubmission_Base()
+ ProjectSubmission -> ProjectSubmission: AbstractDomainObject()
+ ProjectSubmission -> ProjectSubmission: setRootDomainObject(Bennu):void
+ ProjectSubmission -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ProjectSubmission -> ProjectSubmission: setSubmissionDateTime(DateTime):void
+ ProjectSubmission -> DateTime: DateTime()
+ ProjectSubmission -> ProjectSubmission: setStudentGroup(StudentGroup):void
+ ProjectSubmission -> ProjectSubmission: setAttends(Attends):void
+ ProjectSubmission -> ProjectSubmission: setProjectSubmissionFile(ProjectSubmissionFile):void
+ ProjectSubmission -> ProjectSubmission: setProject(Project):void
+ CreateProjectSubmission -> ProjectSubmission: getSubmissionDateTime():DateTime
+ CreateProjectSubmission -> ProjectSubmissionFile: getContentType():String
+ CreateProjectSubmission -> ProjectSubmissionFile: getChecksum():String
+ CreateProjectSubmission -> ProjectSubmissionFile: getChecksumAlgorithm():String
+ CreateProjectSubmission -> ProjectSubmissionLog: ProjectSubmissionLog\n(DateTime,String,String,String,String,Integer,StudentGroup,Attends,Project)
+ ProjectSubmissionLog -> ProjectSubmissionLog: ProjectSubmissionLog()
+ ProjectSubmissionLog -> ProjectSubmissionLog: ProjectSubmissionLog_Base()
+ ProjectSubmissionLog -> ProjectSubmissionLog: setRootDomainObject(Bennu):void
+ ProjectSubmissionLog -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ProjectSubmissionLog -> ProjectSubmissionLog: setSubmissionDateTime(DateTime):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setFilename(String):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setFileMimeType(String):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setFileChecksum(String):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setFileChecksumAlgorithm(String):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setFileSize(Integer):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setStudentGroup(StudentGroup):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setAttends(Attends):void
+ ProjectSubmissionLog -> ProjectSubmissionLog: setProject(Project):void
+ @enduml

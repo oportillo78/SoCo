@@ -1,0 +1,51 @@
+@startuml
+participant "JSP\nJSPCreateProfessionalInformation" as JSPCreateProfessionalInformation order 0
+participant "services.alumni\nCreateProfessionalInformation" as CreateProfessionalInformation order 1
+participant "dto.alumni\nAlumniJobBean" as AlumniJobBean order 35
+participant "domain\nAlumni" as Alumni order 40
+participant "domain\nJob" as Job order 41
+participant "core.domain\nBennu" as Bennu order 84
+participant "org.joda.time\nDateTime" as DateTime order 85
+JSPCreateProfessionalInformation -> CreateProfessionalInformation: getConnection()
+JSPCreateProfessionalInformation <- CreateProfessionalInformation: returnConnection()
+JSPCreateProfessionalInformation -> CreateProfessionalInformation: executeAction()
+CreateProfessionalInformation -> CreateProfessionalInformation: run(AlumniJobBean):Job
+CreateProfessionalInformation -> AlumniJobBean: getAlumni():Alumni
+CreateProfessionalInformation -> Alumni: getStudent():Student
+CreateProfessionalInformation -> Alumni: getPerson():Person
+CreateProfessionalInformation -> AlumniJobBean: getEmployerName():String
+CreateProfessionalInformation -> AlumniJobBean: getCity():String
+CreateProfessionalInformation -> AlumniJobBean: getCountry():Country
+CreateProfessionalInformation -> AlumniJobBean: getChildBusinessArea():BusinessArea
+CreateProfessionalInformation -> AlumniJobBean: getParentBusinessArea():BusinessArea
+CreateProfessionalInformation -> AlumniJobBean: getPosition():String
+CreateProfessionalInformation -> AlumniJobBean: getBeginDateAsLocalDate():LocalDate
+AlumniJobBean -> AlumniJobBean: getBeginDate():LocalDate
+CreateProfessionalInformation -> AlumniJobBean: getEndDateAsLocalDate():LocalDate
+AlumniJobBean -> AlumniJobBean: getEndDate():LocalDate
+CreateProfessionalInformation -> AlumniJobBean: getApplicationType():JobApplicationType
+CreateProfessionalInformation -> AlumniJobBean: getContractType():ContractType
+CreateProfessionalInformation -> AlumniJobBean: getSalary():Double
+CreateProfessionalInformation -> Job: Job\n(Person,String,String,Country,BusinessArea,BusinessArea,String,LocalDate,LocalDate,Job\nApplicationType,ContractType,Double)
+Job -> Job: newJob()
+Job -> Job: newJob_Base()
+Job -> Job: setRootDomainObject(Bennu):void
+Job -> Bennu: getInstance():Bennu
+Job -> Job: setLastModifiedDate(DateTime):void
+Job -> DateTime: newDateTime()
+Job -> Job: checkParameters\n(Person,String,String,\nCountry,BusinessArea,BusinessArea,\nString,LocalDate,LocalDate,\nJobApplicationType,ContractType,Double)\n:void
+Job -> Job: checkParameters\n(String,String,Country,\nBusinessArea,BusinessArea,\nString,LocalDate,LocalDate,\nJobApplicationType,ContractType,\nDouble):void
+Job -> Job: checkValidDates(LocalDate,LocalDate):void
+Job -> Job: setPerson(Person):void
+Job -> Job: setEmployerName(String):void
+Job -> Job: setCity(String):void
+Job -> Job: setCountry(Country):void
+Job -> Job: setBusinessArea(BusinessArea):void
+Job -> Job: setParentBusinessArea(BusinessArea):void
+Job -> Job: setPosition(String):void
+Job -> Job: setBeginDate(LocalDate):void
+Job -> Job: setEndDate(LocalDate):void
+Job -> Job: setJobApplicationType(JobApplicationType):void
+Job -> Job: setContractType(ContractType):void
+Job -> Job: setSalary(Double):void
+@enduml

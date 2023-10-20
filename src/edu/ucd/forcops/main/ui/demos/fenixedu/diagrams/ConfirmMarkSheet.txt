@@ -1,0 +1,66 @@
+@startuml
+participant "JSP\nJSPConfirmMarkSheet" as JSPConfirmMarkSheet order 0
+participant "services.administrativeOffice.gradeSubmission\nConfirmMarkSheet" as ConfirmMarkSheet order 1
+participant "domain\nMarkSheet" as MarkSheet order 7
+participant "predicate\nAccessControl" as AccessControl order 42
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 43
+participant "domain\nPerson" as Person order 44
+participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 45
+participant "java.util\nHashSet" as HashSet order 46
+participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 47
+participant "org.joda.time\nDateTime" as DateTime order 66
+participant "domain\nEnrolment" as Enrolment order 67
+participant "domain.exceptions\nEnrolmentNotPayedException" as EnrolmentNotPayedException order 68
+participant "org.joda.time\nDateTime" as DateTime order 69
+JSPConfirmMarkSheet -> ConfirmMarkSheet: getConnection()
+JSPConfirmMarkSheet <- ConfirmMarkSheet: returnConnection()
+JSPConfirmMarkSheet -> ConfirmMarkSheet: executeAction()
+ConfirmMarkSheet -> ConfirmMarkSheet: run(MarkSheet,Person):void
+ConfirmMarkSheet -> MarkSheet: confirm(Person):void
+MarkSheet -> MarkSheet: check(T,AccessControlPredicate<T>):void
+MarkSheet -> AccessControl: getPerson():Person
+MarkSheet -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt requester == null
+	else else
+		MarkSheet -> Person: getUsername():String
+	end
+	MarkSheet -> DomainObject: getExternalId():String
+end
+alt isNotConfirmed()
+	MarkSheet -> MarkSheet: setValidator(Person):void
+	MarkSheet -> HashSet: newHashSet()
+	loop for: this.getEnrolmentEvaluationsSet()
+		MarkSheet -> EnrolmentEvaluation: confirmSubmission\n(EnrolmentEvaluationState,Person,String):void
+		opt enrolmentEvaluationState == EnrolmentEvaluationState.RECTIFICATION_OBJ \n&& getRectified() != null
+			EnrolmentEvaluation -> EnrolmentEvaluation: getRectified():EnrolmentEvaluation
+			EnrolmentEvaluation -> EnrolmentEvaluation: setEnrolmentEvaluationState\n(EnrolmentEvaluationState):void
+		end	
+		EnrolmentEvaluation -> Enrolment: setEnrollmentState\n(EnrollmentState):void
+		EnrolmentEvaluation -> EnrolmentEvaluation: setPerson(Person):void
+		EnrolmentEvaluation -> EnrolmentEvaluation: setObservation(String):void
+		EnrolmentEvaluation -> EnrolmentEvaluation: setWhenDateTime(DateTime):void
+		EnrolmentEvaluation -> DateTime: newDateTime()
+		EnrolmentEvaluation -> EnrolmentEvaluation: getEnrolment():Enrolment
+		EnrolmentEvaluation -> EnrolmentEvaluation: setEnrolmentEvaluationState\n(EnrolmentEvaluationState):void
+		MarkSheet -> MarkSheet: getEnrolmentEvaluationStateToConfirm\n():EnrolmentEvaluationState		
+		opt EnrolmentNotPayedException e
+			MarkSheet -> HashSet: add(E):boolean
+			MarkSheet -> EnrolmentNotPayedException: getEnrolment():Enrolment
+		end
+	end
+	MarkSheet -> MarkSheet: setConfirmationDateDateTime(DateTime):void
+	alt isConfirmed()
+	else else
+		MarkSheet -> MarkSheet: setConfirmationDateDateTime(DateTime):void
+	end
+	MarkSheet -> DateTime: newDateTime()
+	MarkSheet -> MarkSheet: setMarkSheetState(MarkSheetState):void
+	alt isConfirmed()
+	else else
+		MarkSheet -> MarkSheet: setMarkSheetState(MarkSheetState):void
+	end
+	MarkSheet -> MarkSheet: getMarkSheetStateToConfirm():MarkSheetState
+else else
+end
+@enduml

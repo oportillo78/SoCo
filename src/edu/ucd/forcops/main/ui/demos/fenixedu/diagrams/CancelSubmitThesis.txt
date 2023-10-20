@@ -1,0 +1,18 @@
+@startuml
+participant "JSP\nJSPCancelSubmitThesis" as JSPCancelSubmitThesis order 0
+participant "services.thesis\nCancelSubmitThesis" as CancelSubmitThesis order 1
+participant "domain.thesis\nThesis" as Thesis order 7
+JSPCancelSubmitThesis -> CancelSubmitThesis: getConnection()
+JSPCancelSubmitThesis <- CancelSubmitThesis: returnConnection()
+JSPCancelSubmitThesis -> CancelSubmitThesis: executeAction()
+CancelSubmitThesis -> CancelSubmitThesis: run(DegreeCurricularPlan,Thesis):void
+CancelSubmitThesis -> Thesis: cancelSubmit():void
+Thesis -> Thesis: setSubmission(DateTime):void
+Thesis -> Thesis: setSubmitter(Person):void
+Thesis -> Thesis: setParticipation(Person,ThesisParticipationType):void
+Thesis -> Thesis: setState(ThesisState):void
+opt state == ThesisState.REVISION
+	Thesis -> Thesis: setConfirmmedDocuments(DateTime):void
+end
+Thesis -> Thesis: setState(ThesisState):void
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+participant "JSP\nJSPAnnulAccountingTransaction" as JSPAnnulAccountingTransaction order 0
+participant "services.accounting\nAnnulAccountingTransaction" as AnnulAccountingTransaction order 1
+participant "dto.accounting\nAnnulAccountingTransactionBean" as AnnulAccountingTransactionBean order 14
+participant "core.security\nAuthenticate" as Authenticate order 15
+participant "domain.accounting\nAccountingTransaction" as AccountingTransaction order 16
+participant "domain.accounting\nEntry" as Entry order 47
+participant "core.signals\nSignal" as Signal order 48
+participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 49
+participant "domain.accounting\nAccountingTransactionDetail" as AccountingTransactionDetail order 50
+participant "domain.accounting\nAccountingTransactionDetail" as AccountingTransactionDetail order 51
+participant "domain.accounting\nRefund" as Refund order 52
+JSPAnnulAccountingTransaction -> AnnulAccountingTransaction: getConnection()
+JSPAnnulAccountingTransaction <- AnnulAccountingTransaction: returnConnection()
+JSPAnnulAccountingTransaction -> AnnulAccountingTransaction: executeAction()
+AnnulAccountingTransaction -> AnnulAccountingTransaction: run(AnnulAccountingTransactionBean):void
+AnnulAccountingTransaction -> AnnulAccountingTransactionBean: getTransaction():AccountingTransaction
+AnnulAccountingTransaction -> Authenticate: getUser():User
+AnnulAccountingTransaction -> AnnulAccountingTransactionBean: getReason():String
+AnnulAccountingTransaction -> AccountingTransaction: annul(User,String):void
+AccountingTransaction -> AccountingTransaction: checkRulesToAnnul():void
+AccountingTransaction -> AccountingTransaction: annulReceipts():void
+AccountingTransaction -> Signal: emit(String,Object):void
+AccountingTransaction -> DomainObjectEvent: newDomainObjectEvent(T)
+AccountingTransaction -> AccountingTransaction: reimburseWithoutRules\n(User,PaymentMethod,String,Money,String):AccountingTransaction
+AccountingTransaction -> AccountingTransaction: getTransactionDetail():AccountingTransactionDetail
+AccountingTransaction -> AccountingTransactionDetail: getPaymentMethod():PaymentMethod
+AccountingTransaction -> AccountingTransaction: getTransactionDetail():AccountingTransactionDetail
+AccountingTransaction -> AccountingTransactionDetail: getPaymentReference():String
+AccountingTransaction -> AccountingTransaction: getAmountWithAdjustment():Money
+AccountingTransaction -> AccountingTransaction: getToAccountEntry():Entry
+AccountingTransaction -> Entry: getAmountWithAdjustment():Money
+AccountingTransaction -> AccountingTransaction: getRefund():Refund
+opt refund != null
+	AccountingTransaction -> AccountingTransaction: setRefund(Refund):void
+	AccountingTransaction -> Refund: delete(boolean):void
+end
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+ participant "JSP\nJSPAddShiftsToSchoolClass" as JSPAddShiftsToSchoolClass order 0
+ participant "services.resourceAllocationManager\nAddShiftsToSchoolClass" as AddShiftsToSchoolClass order 1
+ participant "predicate\nAccessControl" as AccessControl order 21
+ participant "core.security\nAuthenticate" as Authenticate order 26
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 29
+ participant "core.domain\nUser_Base" as User_Base order 30
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 31
+ participant "domain\nPerson" as Person order 32
+ participant "core.domain\nUser" as User order 37
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 40
+ participant "dto\nInfoClass" as InfoClass order 41
+ participant "domain\nSchoolClass" as SchoolClass order 46
+ participant "domain\nSchoolClass" as SchoolClass order 47
+ participant "domain\nShift_Base" as Shift_Base order 52
+ JSPAddShiftsToSchoolClass -> AddShiftsToSchoolClass: getConnection()
+ JSPAddShiftsToSchoolClass <- AddShiftsToSchoolClass: returnConnection()
+ JSPAddShiftsToSchoolClass -> AddShiftsToSchoolClass: executeAction()
+ AddShiftsToSchoolClass -> AddShiftsToSchoolClass: run(InfoClass,List<String>):void
+ AddShiftsToSchoolClass -> AddShiftsToSchoolClass: check(AccessControlPredicate<?>):void
+ AddShiftsToSchoolClass -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ AddShiftsToSchoolClass -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		AddShiftsToSchoolClass -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ AddShiftsToSchoolClass -> FenixFramework: getDomainObject(String):T
+ AddShiftsToSchoolClass -> InfoClass: getExternalId():String
+ InfoClass -> InfoClass: getSchoolClass():SchoolClass
+ InfoClass -> SchoolClass: getExternalId():String
+ LOOP for: shiftOIDs
+ 	AddShiftsToSchoolClass -> FenixFramework: getDomainObject(String):T
+ 	AddShiftsToSchoolClass -> SchoolClass: associateShift(Shift):void
+ 	OPT !this.getAssociatedShiftsSet().contains(shift)
+ 		SchoolClass -> SchoolClass: getAssociatedShiftsSet():Set<Shift>
+ 	END
+ 	OPT !shift.getAssociatedClassesSet().contains(this)
+ 		SchoolClass -> Shift_Base: getAssociatedClassesSet():Set<SchoolClass>
+ 	END
+ END
+ @enduml

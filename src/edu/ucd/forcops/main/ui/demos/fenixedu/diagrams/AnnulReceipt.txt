@@ -1,0 +1,26 @@
+@startuml
+participant "JSP\nJSPAnnulReceipt" as JSPAnnulReceipt order 0
+participant "services.accounting\nAnnulReceipt" as AnnulReceipt order 1
+participant "domain.accounting\nReceipt" as Receipt order 7
+participant "org.joda.time\nDateTime" as DateTime order 36
+participant "org.joda.time\nDateTime" as DateTime order 37
+JSPAnnulReceipt -> AnnulReceipt: getConnection()
+JSPAnnulReceipt <- AnnulReceipt: returnConnection()
+JSPAnnulReceipt -> AnnulReceipt: executeAction()
+AnnulReceipt -> AnnulReceipt: run(Person,Receipt):void
+AnnulReceipt -> Receipt: annul(Person):void
+Receipt -> Receipt: checkRulesToAnnul():void
+Receipt -> Receipt: changeState(Person,ReceiptState):void
+Receipt -> Receipt: markChange(Person):void
+Receipt -> Receipt: setWhenUpdated(org.joda.time.DateTime):void
+Receipt -> DateTime: newDateTime()
+Receipt -> Receipt: setResponsible(Person):void
+Receipt -> Receipt: setState(ReceiptState):void
+Receipt -> Receipt: markChange(Person):void
+Receipt -> Receipt: setState(ReceiptState):void
+Receipt -> Receipt: markChange(Person):void
+Receipt -> Receipt: setWhenUpdated(org.joda.time.DateTime):void
+Receipt -> DateTime: newDateTime()
+Receipt -> Receipt: setResponsible(Person):void
+Receipt -> Receipt: setState(ReceiptState):void
+@enduml

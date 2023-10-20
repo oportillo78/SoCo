@@ -1,0 +1,105 @@
+@startuml
+ participant "JSP\nJSPCreateCompetenceCourse" as JSPCreateCompetenceCourse order 0
+ participant "services.bolonhaManager\nCreateCompetenceCourse" as CreateCompetenceCourse order 1
+ participant "util\nStringFormatter" as StringFormatter order 25
+ participant "predicate\nAccessControl" as AccessControl order 28
+ participant "core.security\nAuthenticate" as Authenticate order 34
+ participant "core.domain\nUser_Base" as User_Base order 35
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 36
+ participant "domain\nPerson" as Person order 38
+ participant "core.domain\nUser" as User order 44
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 45
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 46
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 82
+ participant "domain.degreeStructure\nCompetenceCourseInformation" as CompetenceCourseInformation order 83
+ participant "domain.degreeStructure\nBibliographicReferences" as BibliographicReferences order 108
+ participant "util\nUniqueAcronymCreator" as UniqueAcronymCreator order 109
+ participant "dto\nGenericPair" as GenericPair order 126
+ participant "dto\nGenericPair" as GenericPair order 127
+ participant "dto\nGenericPair" as GenericPair order 128
+ participant "dto\nGenericPair" as GenericPair order 129
+ JSPCreateCompetenceCourse -> CreateCompetenceCourse: getConnection()
+ JSPCreateCompetenceCourse <- CreateCompetenceCourse: returnConnection()
+ JSPCreateCompetenceCourse -> CreateCompetenceCourse: executeAction()
+ CreateCompetenceCourse -> CreateCompetenceCourse: run\n(String,String,String,Boolean,RegimeType,CompetenceCourseLevel,CompetenceCourseType,String,ExecutionSemester,String):CompetenceCourse
+ CreateCompetenceCourse -> CreateCompetenceCourse: check(AccessControlPredicate<?>):void
+ CreateCompetenceCourse -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CreateCompetenceCourse -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CreateCompetenceCourse -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ CreateCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ CreateCompetenceCourse -> CreateCompetenceCourse: checkIfCanCreateCompetenceCourse(String,String):void
+ CreateCompetenceCourse -> StringFormatter: normalize(String):String
+ CreateCompetenceCourse -> StringFormatter: normalize(String):String
+ CreateCompetenceCourse -> CompetenceCourse: CompetenceCourse\n(String,String,Boolean,RegimeType,CompetenceCourse\nLevel,CompetenceCourse\nType,CurricularStage,CompetenceCourse\nGroupUnit,ExecutionSemester)
+ CompetenceCourse -> CompetenceCourse: CompetenceCourse()
+ CompetenceCourse -> CompetenceCourse: setCurricularStage(CurricularStage):void
+ CompetenceCourse -> CompetenceCourse: setType(CompetenceCourseType):void
+ CompetenceCourse -> CompetenceCourseInformation: CompetenceCourseInformation\n(String,String,Boolean,RegimeType,CompetenceCourseLevel,ExecutionSemester,CompetenceCourseGroupUnit)
+ CompetenceCourseInformation -> CompetenceCourseInformation: CompetenceCourseInformation()
+ CompetenceCourseInformation -> CompetenceCourseInformation: checkParameters\n(String,String,Boolean,RegimeType,CompetenceCourseLevel,CompetenceCourseGroupUnit):void
+ CompetenceCourseInformation -> CompetenceCourseInformation: setName(String):void
+ CompetenceCourseInformation -> StringFormatter: prettyPrint(String):String
+ CompetenceCourseInformation -> CompetenceCourseInformation: setNameEn(String):void
+ CompetenceCourseInformation -> StringFormatter: prettyPrint(String):String
+ CompetenceCourseInformation -> CompetenceCourseInformation: setBasic(Boolean):void
+ CompetenceCourseInformation -> CompetenceCourseInformation: setRegime(RegimeType):void
+ CompetenceCourseInformation -> CompetenceCourseInformation: setCompetenceCourseLevel(CompetenceCourseLevel):void
+ CompetenceCourseInformation -> CompetenceCourseInformation: setBibliographicReferences(BibliographicReferences):void
+ CompetenceCourseInformation -> BibliographicReferences: BibliographicReferences()
+ CompetenceCourseInformation -> CompetenceCourseInformation: setExecutionPeriod(ExecutionSemester):void
+ CompetenceCourseInformation -> CompetenceCourseInformation: setCompetenceCourseGroupUnit(CompetenceCourseGroupUnit):void
+ CompetenceCourse -> CompetenceCourse: addCompetenceCourseInformations(CompetenceCourseInformation):void
+ CompetenceCourse -> CompetenceCourse: check(T,AccessControlPredicate<T>):void
+ CompetenceCourse -> CompetenceCourse: addCompetenceCourseInformations(CompetenceCourseInformation):void
+ CompetenceCourse -> CompetenceCourse: readBolonhaCompetenceCourses():Collection<CompetenceCourse>
+ CompetenceCourse -> UniqueAcronymCreator: UniqueAcronymCreator\n(Function<T,String>,Function<T,String>,Set<T>)
+ CompetenceCourse -> CompetenceCourseInformation: setAcronym(String):void
+ CompetenceCourse -> UniqueAcronymCreator: create(T):GenericPair<String,Set<T>>
+ UniqueAcronymCreator -> UniqueAcronymCreator: initialize():void
+ UniqueAcronymCreator -> UniqueAcronymCreator: noAccent(String):String
+ UniqueAcronymCreator -> UniqueAcronymCreator: constructBasicAcronym(StringBuilder):String
+ ALT canAccept(acronym)
+ 	UniqueAcronymCreator -> GenericPair: GenericPair(T,V)
+ ELSE else
+ 	UniqueAcronymCreator -> UniqueAcronymCreator: constructExtendedAcronym(String):String
+ 	ALT canAccept(acronym)
+ 		UniqueAcronymCreator -> GenericPair: GenericPair(T,V)
+ 	ELSE else
+ 		LOOP while: !canAccept(acronym.toString()) && (index <= slotValueWithNoAccents.length())
+ 			UniqueAcronymCreator -> UniqueAcronymCreator: appendLastChar(int,StringBuilder):StringBuilder
+ 			OPT canAccept(acronym)
+ 				UniqueAcronymCreator -> GenericPair: GenericPair(T,V)
+ 			END
+ 		END
+ 	END
+ END
+ CompetenceCourse -> GenericPair: getLeft()
+ CreateCompetenceCourse -> CompetenceCourse: setCode(String):void
+ CompetenceCourse -> CompetenceCourse: check(T,AccessControlPredicate<T>):void
+ CompetenceCourse -> AccessControl: getPerson():Person
+ CompetenceCourse -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CompetenceCourse -> Person: getUsername():String
+ 	END
+ 	CompetenceCourse -> DomainObject: getExternalId():String
+ END
+ CompetenceCourse -> CompetenceCourse: find(String):CompetenceCourse
+ CompetenceCourse -> CompetenceCourse: setCode(String):void
+ @enduml

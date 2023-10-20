@@ -1,0 +1,29 @@
+@startuml
+ participant "JSP\nJSPCreateNewProcess" as JSPCreateNewProcess order 0
+ participant "services.caseHandling\nCreateNewProcess" as CreateNewProcess order 1
+ participant "domain.caseHandling\nProcess" as Process order 9
+ participant "domain.caseHandling\nActivity" as Activity order 16
+ participant "core.security\nAuthenticate" as Authenticate order 25
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 28
+ JSPCreateNewProcess -> CreateNewProcess: getConnection()
+ JSPCreateNewProcess <- CreateNewProcess: returnConnection()
+ JSPCreateNewProcess -> CreateNewProcess: executeAction()
+ CreateNewProcess -> CreateNewProcess: run(String,Object):Process
+ CreateNewProcess -> Process: createNewProcess(User,String,Object)
+ Process -> Process: getStartActivity(String):Activity<?>
+ OPT lock
+ 	OPT startActivities == null
+ 		Process -> Process: load():void
+ 	END
+ END
+ Process -> Activity: execute(P,User,Object)
+ Activity -> Activity: checkPreConditions(P,User):void
+ Activity -> Activity: executeActivity(P,User,Object)
+ Activity -> Activity: executePosConditions(P,User,Object):void
+ Activity -> Activity: log(P,User,Object):void
+ CreateNewProcess -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ @enduml

@@ -1,0 +1,142 @@
+@startuml
+ participant "JSP\nJSPAddCoordinator" as JSPAddCoordinator order 0
+ participant "services.coordinator\nAddCoordinator" as AddCoordinator order 1
+ participant "domain\nPerson" as Person order 13
+ participant "core.domain\nUser" as User order 18
+ participant "core.domain\nUser_Base" as User_Base order 47
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 57
+ participant "domain\nExecutionDegree" as ExecutionDegree order 60
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 66
+ participant "domain\nCoordinator" as Coordinator order 67
+ participant "core.domain\nBennu" as Bennu order 93
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 104
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 105
+ participant "domain\nCoordinationTeamLog" as CoordinationTeamLog order 106
+ participant "core.i18n\nBundleUtil" as BundleUtil order 125
+ participant "i18n\nI18N" as I18N order 130
+ participant "domain\nExecutionDegree_Base" as ExecutionDegree_Base order 132
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 139
+ participant "domain\nPerson" as Person order 143
+ participant "core.domain\nUserProfile" as UserProfile order 163
+ participant "core.domain\nUserProfile" as UserProfile order 164
+ JSPAddCoordinator -> AddCoordinator: getConnection()
+ JSPAddCoordinator <- AddCoordinator: returnConnection()
+ JSPAddCoordinator -> AddCoordinator: executeAction()
+ AddCoordinator -> AddCoordinator: run(String,String):Boolean
+ AddCoordinator -> Person: readPersonByUsername(String):Person
+ Person -> User: findByUsername(String):User
+ ALT ?
+ 	User -> User: manualFind(String):User
+ 	LOOP for: ?
+ 		User -> User: cacheUser(User):void
+ 		User -> User_Base: getUsername():String
+ 		User_Base -> User_Base: getUsername():String
+ 	END
+ END
+ OPT ?
+ 	User -> User: findByUsername(String):User
+ 	ALT ?
+ 		User -> User: manualFind(String):User
+ 		LOOP for: ?
+ 			User -> User: cacheUser(User):void
+ 			User -> User_Base: getUsername():String
+ 			User_Base -> User_Base: getUsername():String
+ 		END
+ 	END
+ 	OPT ?
+ 		User -> User: findByUsername(String):User
+ 		ALT ?
+ 			User -> User: manualFind(String):User
+ 			LOOP for: ?
+ 				User -> User: cacheUser(User):void
+ 				User -> User_Base: getUsername():String
+ 				User_Base -> User_Base: getUsername():String
+ 			END
+ 			LOOP for: ?
+ 				User -> User: cacheUser(User):void
+ 				User -> User_Base: getUsername():String
+ 				User_Base -> User_Base: getUsername():String
+ 			END
+ 		END
+ 		OPT ?
+ 			User -> User: findByUsername(String):User
+ 		END
+ 	END
+ END
+ ALT user == null
+ ELSE else
+ 	Person -> User_Base: getPerson():Person
+ END
+ AddCoordinator -> FenixFramework: getDomainObject(String):T
+ AddCoordinator -> ExecutionDegree: getCoordinatorByTeacher(Person):Coordinator
+ OPT coordinator == null
+ 	AddCoordinator -> Coordinator: createCoordinator\n(ExecutionDegree,Person,Boolean):Coordinator
+ 	Coordinator -> CoordinationTeamLog: createLog\n(Degree,ExecutionYear,String,String,String[]):CoordinationTeamLog
+ 	CoordinationTeamLog -> CoordinationTeamLog: generateLabelDescription(String,String,String[]):String
+ 	CoordinationTeamLog -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ 	CoordinationTeamLog -> CoordinationTeamLog: createCoordinationTeamLog\n(Degree,ExecutionYear,String):CoordinationTeamLog
+ 	CoordinationTeamLog -> CoordinationTeamLog: CoordinationTeamLog(Degree,ExecutionYear,String)
+ 	CoordinationTeamLog -> CoordinationTeamLog: CoordinationTeamLog_Base()
+ 	CoordinationTeamLog -> CoordinationTeamLog: DegreeLog()
+ 	OPT getDegree() == null
+ 		CoordinationTeamLog -> CoordinationTeamLog: setDegree(Degree):void
+ 	END
+ 	OPT getExecutionYear() == null
+ 		CoordinationTeamLog -> CoordinationTeamLog: setExecutionYear(ExecutionYear):void
+ 	END
+ 	CoordinationTeamLog -> CoordinationTeamLog: setDescription(String):void
+ 	Coordinator -> ExecutionDegree: getDegree():Degree
+ 	ExecutionDegree -> ExecutionDegree: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ExecutionDegree -> DegreeCurricularPlan: getDegree():Degree
+ 	Coordinator -> ExecutionDegree_Base: getExecutionYear():ExecutionYear
+ 	Coordinator -> Person: getPresentationName():String
+ 	Person -> Person: getUsername():String
+ 	ALT username == null
+ 		Person -> Person: getName():String
+ 		Person -> Person: getProfile():UserProfile
+ 		Person -> UserProfile: getFullName():String
+ 		OPT ?
+ 			UserProfile -> UserProfile: getGivenNames():String
+ 		END
+ 		OPT ?
+ 			UserProfile -> UserProfile: getFamilyNames():String
+ 		END
+ 	ELSE else
+ 		Person -> Person: getName():String
+ 		Person -> Person: getProfile():UserProfile
+ 		Person -> UserProfile: getFullName():String
+ 		Person -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User_Base: getUsername():String
+ 		END
+ 	END
+ 	Coordinator -> ExecutionDegree_Base: getPresentationName():String
+ 	ExecutionDegree_Base -> ExecutionDegree_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ExecutionDegree_Base -> ExecutionDegree_Base: getExecutionYear():ExecutionYear
+ 	ExecutionDegree_Base -> DegreeCurricularPlan: getPresentationName(ExecutionYear):String
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: getPresentationName(ExecutionYear,Locale):String
+ 	DegreeCurricularPlan -> I18N: getLocale():Locale
+ 	Coordinator -> Coordinator: Coordinator(ExecutionDegree,Person,Boolean)
+ 	Coordinator -> Coordinator: Coordinator()
+ 	Coordinator -> Coordinator: Coordinator_Base()
+ 	Coordinator -> Coordinator: setRootDomainObject(Bennu):void
+ 	Coordinator -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: Bennu()
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	Coordinator -> Coordinator: setExecutionDegree(ExecutionDegree):void
+ 	Coordinator -> Coordinator: setPerson(Person):void
+ 	Coordinator -> Coordinator: setResponsible(Boolean):void
+ END
+ @enduml

@@ -1,0 +1,56 @@
+@startuml
+ participant "JSP\nJSPCreateCreditNote" as JSPCreateCreditNote order 0
+ participant "services.accounting\nCreateCreditNote" as CreateCreditNote order 1
+ participant "predicate\nAccessControl" as AccessControl order 21
+ participant "core.security\nAuthenticate" as Authenticate order 26
+ participant "core.domain\nUser_Base" as User_Base order 27
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 28
+ participant "domain\nPerson" as Person order 29
+ participant "dto.accounting\nCreateCreditNoteBean" as CreateCreditNoteBean order 30
+ participant "domain.accounting\nPaymentMethod" as PaymentMethod order 31
+ participant "core.domain\nBennu" as Bennu order 36
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 43
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 44
+ participant "core.domain\nBennu" as Bennu order 45
+ participant "domain.accounting\nReceipt" as Receipt order 46
+ participant "domain.accounting\nCreditNote" as CreditNote order 49
+ participant "dto.accounting\nCreditNoteEntryDTO" as CreditNoteEntryDTO order 60
+ participant "domain.accounting\nCreditNoteEntry" as CreditNoteEntry order 61
+ JSPCreateCreditNote -> CreateCreditNote: getConnection()
+ JSPCreateCreditNote <- CreateCreditNote: returnConnection()
+ JSPCreateCreditNote -> CreateCreditNote: executeAction()
+ CreateCreditNote -> CreateCreditNote: run(Person,CreateCreditNoteBean):CreditNote
+ CreateCreditNote -> CreateCreditNote: check(AccessControlPredicate<?>):void
+ CreateCreditNote -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CreateCreditNote -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CreateCreditNote -> Person: getUsername():String
+ 	END
+ END
+ CreateCreditNote -> CreateCreditNoteBean: getReceipt():Receipt
+ CreateCreditNote -> PaymentMethod: getCashPaymentMethod():PaymentMethod
+ PaymentMethod -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ PaymentMethod -> Bennu: getCashPaymentMethod():PaymentMethod
+ CreateCreditNote -> CreateCreditNoteBean: getSelectedEntries():List<CreditNoteEntryDTO>
+ CreateCreditNote -> Receipt: createCreditNote\n(Person,PaymentMethod,List<CreditNoteEntryDTO>):CreditNote
+ Receipt -> CreditNote: create\n(Receipt,Person,List<CreditNoteEntryDTO>):CreditNote
+ CreditNote -> CreditNote: CreditNote(Receipt,Person)
+ LOOP for: entryDTOs
+ 	CreditNote -> CreditNoteEntryDTO: getEntry():Entry
+ 	CreditNote -> CreditNoteEntryDTO: getAmountToPay():Money
+ 	CreditNote -> CreditNoteEntry: CreditNoteEntry(CreditNote,Entry,Money)
+ END
+ CreditNote -> CreditNote: checkIfEmittedCreditNotesExceedEventsMaxReimbursableAmounts\n(Receipt):void
+ @enduml

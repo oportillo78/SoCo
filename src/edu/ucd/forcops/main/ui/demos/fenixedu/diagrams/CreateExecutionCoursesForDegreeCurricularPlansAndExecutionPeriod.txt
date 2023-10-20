@@ -1,0 +1,133 @@
+@startuml
+ participant "JSP\nJSPCreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod" as JSPCreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod order 0
+ participant "services.manager\nCreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod" as CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod order 1
+ participant "domain\nCurricularCourse_Base" as CurricularCourse_Base order 37
+ participant "domain\nCompetenceCourse_Base" as CompetenceCourse_Base order 38
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 39
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 40
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 46
+ participant "domain\nExecutionCourse" as ExecutionCourse order 49
+ participant "i18n\nLocalizedString" as LocalizedString order 108
+ participant "domain\nCurricularCourse" as CurricularCourse order 109
+ participant "core.domain\nBennu" as Bennu order 110
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 116
+ participant "domain\nFinalEvaluation" as FinalEvaluation order 117
+ participant "domain.messaging\nExecutionCourseForum" as ExecutionCourseForum order 118
+ participant "core.signals\nSignal" as Signal order 119
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 132
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 133
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 134
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 135
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 136
+ participant "domain\nCurricularCourse" as CurricularCourse order 137
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 152
+ participant "util\nPair" as Pair order 153
+ JSPCreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: getConnection()
+ JSPCreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod <- CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: returnConnection()
+ JSPCreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: executeAction()
+ CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: run\n(String[],String):HashMap<String,Pair<Integer,String>>
+ CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> FenixFramework: getDomainObject(String):T
+ CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: readExistingExecutionCoursesSiglas(ExecutionSemester):Set<String>
+ LOOP for: executionSemester.getAssociatedExecutionCoursesSet()
+ 	CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> ExecutionCourse_Base: getSigla():String
+ END
+ LOOP for: degreeCurricularPlansIDs
+ 	CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> FenixFramework: getDomainObject(String):T
+ 	CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> DegreeCurricularPlan: getCurricularCoursesSet():Set<CurricularCourse>
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: getCurricularCourses(ExecutionYear):Set<CurricularCourse>
+ 	LOOP for: curricularCourses
+ 		OPT curricularCourse.getExecutionCoursesByExecutionPeriod(executionSemester).isEmpty()
+ 			CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: getCodeForCurricularCourse(CurricularCourse):String
+ 			OPT curricularCourse.getAcronym() != null
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CurricularCourse: getAcronym():String
+ 			END
+ 			CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CurricularCourse_Base: getCompetenceCourse():CompetenceCourse
+ 			OPT competenceCourse != null
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CompetenceCourse_Base: getCode():String
+ 			END
+ 			OPT curricularCourse.getCode() != null
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CurricularCourse_Base: getCode():String
+ 			END
+ 			OPT originalCode != null
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod: getUniqueSigla(Set<String>,String):String
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> ExecutionCourse: ExecutionCourse\n(String,String,ExecutionSemester,EntryPhase)
+ 				ExecutionCourse -> ExecutionCourse: ExecutionCourse_Base()
+ 				ExecutionCourse -> ExecutionCourse: setRootDomainObject(Bennu):void
+ 				ExecutionCourse -> Bennu: getInstance():Bennu
+ 				OPT ?
+ 					Bennu -> Bennu: initialize():Bennu
+ 				END
+ 				Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 				Bennu -> DomainRoot: getBennu():Bennu
+ 				ExecutionCourse -> ExecutionCourse: addAssociatedEvaluations(Evaluation):void
+ 				ExecutionCourse -> FinalEvaluation: FinalEvaluation()
+ 				ExecutionCourse -> ExecutionCourse: setAvailableGradeSubmission(Boolean):void
+ 				ExecutionCourse -> ExecutionCourse: setNome(String):void
+ 				ExecutionCourse -> ExecutionCourse: setExecutionPeriod(ExecutionSemester):void
+ 				ExecutionCourse -> ExecutionCourse: setSigla(String):void
+ 				ExecutionCourse -> ExecutionCourse: setComment(String):void
+ 				ExecutionCourse -> ExecutionCourse: setEntryPhase(EntryPhase):void
+ 				ExecutionCourse -> ExecutionCourse: setProjectTutorialCourse(Boolean):void
+ 				ExecutionCourse -> ExecutionCourse: setUnitCreditValue(BigDecimal):void
+ 				ExecutionCourse -> ExecutionCourseForum: ExecutionCourseForum()
+ 				ExecutionCourse -> ExecutionCourseForum: setName(LocalizedString):void
+ 				ExecutionCourse -> ExecutionCourse: getNameI18N():LocalizedString
+ 				ExecutionCourse -> LocalizedString: LocalizedString()
+ 				ExecutionCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 				ExecutionCourse -> ExecutionCourse: getNome():String
+ 				LOOP for: getAssociatedCurricularCoursesSet()
+ 					OPT !curricularCourse.getActiveDegreeModuleScopesInExecutionPeriod(getExecutionPeriod()).isEmpty()
+ 						ExecutionCourse -> CurricularCourse: getNameEn():String
+ 					END
+ 				END
+ 				OPT stringBuilder.length() > 0
+ 					ExecutionCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 				END
+ 				ALT getAssociatedCurricularCoursesSet().isEmpty()
+ 				ELSE else
+ 					ExecutionCourse -> ExecutionCourse: getAssociatedCurricularCoursesSet():Set<CurricularCourse>
+ 					ExecutionCourse -> CurricularCourse: getNameEn():String
+ 				END
+ 				ALT unique && nameEn != null
+ 					ExecutionCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 				ELSE else
+ 					ExecutionCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 					ExecutionCourse -> ExecutionCourse: getNome():String
+ 				END
+ 				ExecutionCourse -> ExecutionCourse: addForum(ExecutionCourseForum):void
+ 				ExecutionCourse -> Signal: emit(String,Object):void
+ 				OPT ?
+ 					Signal -> FenixFramework: getTransaction():Transaction
+ 					Signal -> Transaction: getFromContext(String):T
+ 					OPT ?
+ 						Signal -> FenixFramework: getTransaction():Transaction
+ 						Signal -> Transaction: putInContext(String,Object):void
+ 					END
+ 				END
+ 				OPT ?
+ 					Signal -> FenixFramework: getTransaction():Transaction
+ 					Signal -> Transaction: getFromContext(String):T
+ 					OPT ?
+ 						Signal -> FenixFramework: getTransaction():Transaction
+ 						Signal -> Transaction: putInContext(String,Object):void
+ 					END
+ 				END
+ 				ExecutionCourse -> DomainObjectEvent: DomainObjectEvent(T)
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CurricularCourse: getName():String
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CurricularCourse: addAssociatedExecutionCourses(ExecutionCourse):void
+ 				CurricularCourse -> CurricularCourse: getAssociatedExecutionCoursesSet():Set<ExecutionCourse>
+ 				CurricularCourse -> CurricularCourse: addAssociatedExecutionCourses(ExecutionCourse):void
+ 				CurricularCourse -> CurricularCourse: getAssociatedExecutionCoursesSet():Set<ExecutionCourse>
+ 				CurricularCourse -> CurricularCourse: addAssociatedExecutionCourses(ExecutionCourse):void
+ 				CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> CurricularCourse: getAcronym():String
+ 				CurricularCourse -> CurricularCourse: getAcronym(ExecutionSemester):String
+ 				ALT getCompetenceCourse() != null
+ 					CurricularCourse -> CurricularCourse: getCompetenceCourse():CompetenceCourse
+ 					CurricularCourse -> CompetenceCourse: getAcronym(ExecutionSemester):String
+ 				END
+ 			END
+ 		END
+ 	END
+ 	CreateExecutionCoursesForDegreeCurricularPlansAndExecutionPeriod -> Pair: Pair(K,V)
+ END
+ @enduml

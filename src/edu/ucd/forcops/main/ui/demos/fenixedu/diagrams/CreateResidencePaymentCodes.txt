@@ -1,0 +1,8 @@
+@startuml
+ participant "JSP\nJSPCreateResidencePaymentCodes" as JSPCreateResidencePaymentCodes order 0
+ participant "services.residenceManagement\nCreateResidencePaymentCodes" as CreateResidencePaymentCodes order 1
+ JSPCreateResidencePaymentCodes -> CreateResidencePaymentCodes: getConnection()
+ JSPCreateResidencePaymentCodes <- CreateResidencePaymentCodes: returnConnection()
+ JSPCreateResidencePaymentCodes -> CreateResidencePaymentCodes: executeAction()
+ CreateResidencePaymentCodes -> CreateResidencePaymentCodes: run(Collection<ResidenceEvent>):void
+ @enduml

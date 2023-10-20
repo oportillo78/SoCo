@@ -1,0 +1,62 @@
+@startuml
+ participant "JSP\nJSPAddContextToCourseGroup" as JSPAddContextToCourseGroup order 0
+ participant "services.bolonhaManager\nAddContextToCourseGroup" as AddContextToCourseGroup order 1
+ participant "domain\nExecutionSemester" as ExecutionSemester order 17
+ participant "domain.degreeStructure\nCourseGroup" as CourseGroup order 18
+ participant "domain.degreeStructure\nContext" as Context order 21
+ participant "domain.degreeStructure\nCourseGroup" as CourseGroup order 76
+ participant "domain.degreeStructure\nDegreeModule_Base" as DegreeModule_Base order 77
+ participant "core.domain\nBennu" as Bennu order 78
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 85
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 86
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 87
+ JSPAddContextToCourseGroup -> AddContextToCourseGroup: getConnection()
+ JSPAddContextToCourseGroup <- AddContextToCourseGroup: returnConnection()
+ JSPAddContextToCourseGroup -> AddContextToCourseGroup: executeAction()
+ AddContextToCourseGroup -> AddContextToCourseGroup: run\n(CourseGroup,CourseGroup,String,String):void
+ AddContextToCourseGroup -> CourseGroup: addContext\n(DegreeModule,CurricularPeriod,ExecutionSemester,ExecutionSemester):Context
+ CourseGroup -> Context: Context\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionSemester,ExecutionSemester)
+ Context -> Context: Context()
+ Context -> Context: Context_Base()
+ Context -> Context: setRootDomainObject(Bennu):void
+ Context -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Context -> Context: setChildOrder(Integer):void
+ Context -> Context: checkParameters\n(CourseGroup,DegreeModule,ExecutionSemester):void
+ Context -> Context: checkExecutionPeriods\n(ExecutionSemester,ExecutionSemester):void
+ Context -> Context: checkIfCanAddDegreeModuleToCourseGroup\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionYear):void
+ ALT degreeModule.isLeaf()
+ 	Context -> Context: checkIfCanAddCurricularCourseToCourseGroup\n(CourseGroup,CurricularCourse,CurricularPeriod,ExecutionYear):void
+ ELSE else
+ 	Context -> Context: checkIfCanAddCourseGroupToCourseGroup(CourseGroup,CourseGroup):void
+ 	Context -> CourseGroup: checkDuplicateChildNames(String,String):void
+ 	Context -> DegreeModule_Base: getName():String
+ 	Context -> DegreeModule_Base: getNameEn():String
+ END
+ Context -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ Context -> Context: checkExistingCourseGroupContexts\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionSemester,ExecutionSemester):void
+ Context -> Context: setParentCourseGroup(CourseGroup):void
+ Context -> Context: check(T,AccessControlPredicate<T>):void
+ Context -> Context: setParentCourseGroup(CourseGroup):void
+ Context -> Context: setChildDegreeModule(DegreeModule):void
+ Context -> Context: check(T,AccessControlPredicate<T>):void
+ Context -> Context: setChildDegreeModule(DegreeModule):void
+ Context -> Context: setCurricularPeriod(CurricularPeriod):void
+ Context -> Context: check(T,AccessControlPredicate<T>):void
+ Context -> Context: setCurricularPeriod(CurricularPeriod):void
+ Context -> Context: setBeginExecutionPeriod(ExecutionSemester):void
+ Context -> Context: setBeginExecutionPeriod(ExecutionSemester):void
+ Context -> Context: setEndExecutionPeriod(ExecutionSemester):void
+ AddContextToCourseGroup -> AddContextToCourseGroup: getBeginExecutionPeriod(String):ExecutionSemester
+ ALT beginExecutionPeriodID == null
+ 	AddContextToCourseGroup -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ ELSE else
+ 	AddContextToCourseGroup -> FenixFramework: getDomainObject(String):T
+ END
+ AddContextToCourseGroup -> AddContextToCourseGroup: getEndExecutionPeriod(String):ExecutionSemester
+ AddContextToCourseGroup -> FenixFramework: getDomainObject(String):T
+ @enduml

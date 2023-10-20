@@ -1,0 +1,89 @@
+@startuml
+ participant "JSP\nJSPCriarTurno" as JSPCriarTurno order 0
+ participant "services.resourceAllocationManager\nCriarTurno" as CriarTurno order 1
+ participant "predicate\nAccessControl" as AccessControl order 27
+ participant "core.security\nAuthenticate" as Authenticate order 32
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 35
+ participant "core.domain\nUser_Base" as User_Base order 36
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 37
+ participant "domain\nPerson" as Person order 38
+ participant "core.domain\nUser" as User order 43
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 46
+ participant "dto\nInfoShiftEditor" as InfoShiftEditor order 48
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 49
+ participant "domain\nExecutionCourse" as ExecutionCourse order 54
+ participant "domain\nShift" as Shift order 55
+ participant "core.domain\nBennu" as Bennu order 76
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 82
+ participant "domain\nExecutionCourse" as ExecutionCourse order 83
+ participant "dto\nInfoShift" as InfoShift order 84
+ participant "domain\nShift" as Shift order 93
+ participant "domain\nShiftGroupingProperties_Base" as ShiftGroupingProperties_Base order 94
+ JSPCriarTurno -> CriarTurno: getConnection()
+ JSPCriarTurno <- CriarTurno: returnConnection()
+ JSPCriarTurno -> CriarTurno: executeAction()
+ CriarTurno -> CriarTurno: run(InfoShiftEditor):InfoShift
+ CriarTurno -> CriarTurno: check(AccessControlPredicate<?>):void
+ CriarTurno -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CriarTurno -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CriarTurno -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ CriarTurno -> FenixFramework: getDomainObject(String):T
+ CriarTurno -> InfoShiftEditor: getInfoDisciplinaExecucao():InfoExecutionCourse
+ CriarTurno -> InfoExecutionCourse: getExternalId():String
+ InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ CriarTurno -> Shift: Shift\n(ExecutionCourse,Collection<Shift\nType>,Integer)
+ Shift -> Shift: Shift_Base()
+ Shift -> Shift: AbstractDomainObject()
+ Shift -> Shift: setRootDomainObject(Bennu):void
+ Shift -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ Shift -> Shift: shiftTypeManagement\n(Collection<ShiftType>,ExecutionCourse):void
+ OPT executionCourse != null
+ 	Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ 	LOOP for: types
+ 		Shift -> ExecutionCourse: getCourseLoadByShiftType(ShiftType):CourseLoad
+ 		OPT courseLoad != null
+ 			Shift -> Shift: addCourseLoads(CourseLoad):void
+ 		END
+ 	END
+ END
+ Shift -> Shift: setLotacao(Integer):void
+ Shift -> ExecutionCourse: setShiftNames():void
+ CriarTurno -> InfoShiftEditor: getTipos():List<ShiftType>
+ CriarTurno -> InfoShiftEditor: getLotacao():Integer
+ CriarTurno -> InfoShift: newInfoFromDomain(Shift):InfoShift
+ ALT shift == null
+ ELSE else
+ 	InfoShift -> InfoShift: InfoShift(Shift)
+ 	InfoShift -> InfoShift: getShift():Shift
+ 	InfoShift -> Shift: getShiftGroupingProperties():ShiftGroupingProperties
+ 	ALT groupingProperties != null
+ 		InfoShift -> ShiftGroupingProperties_Base: getCapacity():Integer
+ 	END
+ END
+ @enduml

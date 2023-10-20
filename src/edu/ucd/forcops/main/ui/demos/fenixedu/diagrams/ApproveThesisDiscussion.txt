@@ -1,0 +1,35 @@
+@startuml
+participant "JSP\nJSPApproveThesisDiscussion" as JSPApproveThesisDiscussion order 0
+participant "services.scientificCouncil.thesis\nApproveThesisDiscussion" as ApproveThesisDiscussion order 1
+participant "service.filter\nScientificCouncilAuthorizationFilter" as ScientificCouncilAuthorizationFilter order 9
+participant "core.security\nAuthenticate" as Authenticate order 12
+participant "core.domain\nAuthenticationContext" as AuthenticationContext order 15
+participant "services.scientificCouncil.thesis\nThesisServiceWithMailNotification" as ThesisServiceWithMailNotification order 16
+participant "core.domain\nMessage" as Message order 41
+participant "predicate\nAccessControl" as AccessControl order 42
+participant "domain\nPerson" as Person order 43
+participant "core.domain.Message\nMessageBuilder" as MessageBuilder order 44
+JSPApproveThesisDiscussion -> ApproveThesisDiscussion: getConnection()
+JSPApproveThesisDiscussion <- ApproveThesisDiscussion: returnConnection()
+JSPApproveThesisDiscussion -> ApproveThesisDiscussion: executeAction()
+ApproveThesisDiscussion -> ApproveThesisDiscussion: runApproveThesisDiscussion(Thesis):void
+ApproveThesisDiscussion -> ScientificCouncilAuthorizationFilter: execute():void
+ScientificCouncilAuthorizationFilter -> Authenticate: getUser():User
+alt ?
+else else
+Authenticate -> AuthenticationContext: getUser():User
+end
+ApproveThesisDiscussion -> ThesisServiceWithMailNotification: run(Thesis):void
+ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: process(Thesis):void
+ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: sendEmail(Thesis):void
+ThesisServiceWithMailNotification -> Message: from(Sender):MessageBuilder
+ThesisServiceWithMailNotification -> AccessControl: getPerson():Person
+ThesisServiceWithMailNotification -> Person: getSender():Sender
+ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: getReceiversEmails(Thesis):Collection<String>
+ThesisServiceWithMailNotification -> MessageBuilder: singleBcc(Collection<String>):MessageBuilder
+ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: getSubject(Thesis):String
+ThesisServiceWithMailNotification -> MessageBuilder: subject(String):MessageBuilder
+ThesisServiceWithMailNotification -> ThesisServiceWithMailNotification: getMessage(Thesis):String
+ThesisServiceWithMailNotification -> MessageBuilder: textBody(String):MessageBuilder
+ThesisServiceWithMailNotification -> MessageBuilder: send():Message
+@enduml

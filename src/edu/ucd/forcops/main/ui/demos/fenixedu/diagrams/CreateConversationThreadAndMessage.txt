@@ -1,0 +1,47 @@
+@startuml
+ participant "JSP\nJSPCreateConversationThreadAndMessage" as JSPCreateConversationThreadAndMessage order 0
+ participant "services.messaging\nCreateConversationThreadAndMessage" as CreateConversationThreadAndMessage order 1
+ participant "dto.messaging\nCreateConversationThreadAndMessageBean" as CreateConversationThreadAndMessageBean order 25
+ participant "domain.messaging\nForum" as Forum order 26
+ participant "domain.messaging\nConversationThread" as ConversationThread order 33
+ participant "org.joda.time\nDateTime" as DateTime order 46
+ participant "domain.messaging\nConversationThread" as ConversationThread order 47
+ participant "domain.messaging\nForum" as Forum order 56
+ participant "domain.messaging\nConversationMessage" as ConversationMessage order 57
+ participant "org.joda.time\nDateTime" as DateTime order 74
+ JSPCreateConversationThreadAndMessage -> CreateConversationThreadAndMessage: getConnection()
+ JSPCreateConversationThreadAndMessage <- CreateConversationThreadAndMessage: returnConnection()
+ JSPCreateConversationThreadAndMessage -> CreateConversationThreadAndMessage: executeAction()
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessage: runCreateConversationThreadAndMessage\n(CreateConversationThreadAndMessageBean):void
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessage: run\n(CreateConversationThreadAndMessageBean):void
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessageBean: getCreator():Person
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessageBean: getForum():Forum
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessageBean: getSubject():LocalizedString
+ CreateConversationThreadAndMessage -> Forum: createConversationThread\n(Person,LocalizedString):ConversationThread
+ Forum -> Forum: checkIfPersonCanWrite(Person):void
+ Forum -> Forum: checkIfCanAddConversationThreadWithSubject\n(LocalizedString):void
+ Forum -> ConversationThread: ConversationThread(Forum,Person,LocalizedString)
+ ConversationThread -> ConversationThread: setCreationDate(DateTime):void
+ ConversationThread -> DateTime: DateTime()
+ ConversationThread -> ConversationThread: init(Forum,Person,LocalizedString):void
+ ConversationThread -> ConversationThread: setForum(Forum):void
+ ConversationThread -> ConversationThread: setTitle(LocalizedString):void
+ ConversationThread -> ConversationThread: setCreator(Person):void
+ CreateConversationThreadAndMessage -> ConversationThread: createConversationMessage\n(Person,LocalizedString):ConversationMessage
+ ConversationThread -> ConversationThread: checkIfPersonCanWrite(Person):void
+ ConversationThread -> ConversationThread: getForum():Forum
+ ConversationThread -> Forum: checkIfPersonCanWrite(Person):void
+ ConversationThread -> ConversationMessage: ConversationMessage\n(ConversationThread,Person,LocalizedString)
+ ConversationMessage -> ConversationMessage: ConversationMessage_Base()
+ ConversationMessage -> ConversationMessage: AbstractDomainObject()
+ ConversationMessage -> ConversationMessage: setCreationDate(DateTime):void
+ ConversationMessage -> DateTime: DateTime()
+ ConversationMessage -> ConversationMessage: init\n(ConversationThread,Person,LocalizedString):void
+ ConversationMessage -> ConversationMessage: setConversationThread(ConversationThread):void
+ ConversationMessage -> ConversationMessage: setBody(LocalizedString):void
+ ConversationMessage -> ConversationMessage: setCreator(Person):void
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessageBean: getBody():LocalizedString
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessage: sendNotifications(ConversationMessage):void
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessage: notifyEmailSubscribers(ConversationMessage):void
+ CreateConversationThreadAndMessage -> CreateConversationThreadAndMessage: notifyLastReplier(ConversationMessage):void
+ @enduml

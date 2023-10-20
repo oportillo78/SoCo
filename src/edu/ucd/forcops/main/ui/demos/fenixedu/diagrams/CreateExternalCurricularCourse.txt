@@ -1,0 +1,35 @@
+@startuml
+ participant "JSP\nJSPCreateExternalCurricularCourse" as JSPCreateExternalCurricularCourse order 0
+ participant "services.administrativeOffice.externalUnits\nCreateExternalCurricularCourse" as CreateExternalCurricularCourse order 1
+ participant "domain\nExternalCurricularCourse" as ExternalCurricularCourse order 13
+ participant "core.domain\nBennu" as Bennu order 28
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 41
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 42
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 43
+ participant "dto.administrativeOffice.externalUnits\nCreateExternalCurricularCourseBean" as CreateExternalCurricularCourseBean order 44
+ JSPCreateExternalCurricularCourse -> CreateExternalCurricularCourse: getConnection()
+ JSPCreateExternalCurricularCourse <- CreateExternalCurricularCourse: returnConnection()
+ JSPCreateExternalCurricularCourse -> CreateExternalCurricularCourse: executeAction()
+ CreateExternalCurricularCourse -> CreateExternalCurricularCourse: run\n(CreateExternalCurricularCourseBean):ExternalCurricularCourse
+ CreateExternalCurricularCourse -> ExternalCurricularCourse: ExternalCurricularCourse(Unit,String,String)
+ ExternalCurricularCourse -> ExternalCurricularCourse: ExternalCurricularCourse_Base()
+ ExternalCurricularCourse -> ExternalCurricularCourse: checkForExternalCurricularCourseWithSameNameAndCode\n(Unit,String,String):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: setRootDomainObject(Bennu):void
+ ExternalCurricularCourse -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: Bennu()
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ExternalCurricularCourse -> ExternalCurricularCourse: setUnit(Unit):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: setName(String):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: setCode(String):void
+ CreateExternalCurricularCourse -> CreateExternalCurricularCourseBean: getParentUnit():Unit
+ CreateExternalCurricularCourse -> CreateExternalCurricularCourseBean: getName():String
+ CreateExternalCurricularCourse -> CreateExternalCurricularCourseBean: getCode():String
+ @enduml

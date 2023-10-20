@@ -1,0 +1,33 @@
+@startuml
+ participant "JSP\nJSPCreatePaymentsForEvents" as JSPCreatePaymentsForEvents order 0
+ participant "services.accounting\nCreatePaymentsForEvents" as CreatePaymentsForEvents order 1
+ participant "dto.accounting\nEntryDTO" as EntryDTO order 13
+ participant "dto.accounting\nAccountingTransactionDetailDTO" as AccountingTransactionDetailDTO order 14
+ participant "domain.accounting\nEvent" as Event order 15
+ participant "domain.accounting\nPostingRule" as PostingRule order 32
+ participant "dto.accounting\nEntryDTO" as EntryDTO order 43
+ participant "org.joda.time\nDateTime" as DateTime order 44
+ JSPCreatePaymentsForEvents -> CreatePaymentsForEvents: getConnection()
+ JSPCreatePaymentsForEvents <- CreatePaymentsForEvents: returnConnection()
+ JSPCreatePaymentsForEvents -> CreatePaymentsForEvents: executeAction()
+ CreatePaymentsForEvents -> CreatePaymentsForEvents: run\n(User,Collection<EntryDTO>,PaymentMethod,String,DateTime):void
+ CreatePaymentsForEvents -> CreatePaymentsForEvents: splitEntryDTOsByEvent\n(Collection<EntryDTO>):Map<Event,Collection<EntryDTO>>
+ LOOP for: entryDTOs
+ 	CreatePaymentsForEvents -> EntryDTO: getEvent():Event
+ END
+ CreatePaymentsForEvents -> AccountingTransactionDetailDTO: AccountingTransactionDetailDTO(DateTime,PaymentMethod,String,String)
+ CreatePaymentsForEvents -> Event: process\n(User,Collection<EntryDTO>,AccountingTransactionDetailDTO):Set<Entry>
+ Event -> Event: checkConditionsToProcessEvent(AccountingTransactionDetailDTO):void
+ Event -> Event: internalProcess\n(User,Collection<EntryDTO>,AccountingTransactionDetailDTO):Set<Entry>
+ Event -> Event: getPostingRule():PostingRule
+ Event -> Event: getFromAccount():Account
+ Event -> Event: getToAccount():Account
+ Event -> PostingRule: process\n(User,Collection<EntryDTO>,Event,Account,Account,AccountingTransactionDetailDTO):Set<Entry>
+ PostingRule -> PostingRule: internalProcess\n(User,Collection<EntryDTO>,Event,Account,Account,AccountingTransactionDetailDTO):Set<AccountingTransaction>
+ PostingRule -> PostingRule: makeAccountingTransaction\n(User,Event,Account,Account,EntryType,Money,AccountingTransactionDetailDTO):AccountingTransaction
+ PostingRule -> PostingRule: getEntryType():EntryType
+ PostingRule -> EntryDTO: getAmountToPay():Money
+ PostingRule -> PostingRule: getResultingEntries(Set<AccountingTransaction>):Set<Entry>
+ Event -> Event: recalculateState(DateTime):void
+ Event -> DateTime: DateTime()
+ @enduml

@@ -1,0 +1,109 @@
+@startuml
+ participant "JSP\nJSPCreateRectificationMarkSheet" as JSPCreateRectificationMarkSheet order 0
+ participant "services.administrativeOffice.gradeSubmission\nCreateRectificationMarkSheet" as CreateRectificationMarkSheet order 1
+ participant "services.administrativeOffice.gradeSubmission\nCreateRectificationMarkSheet" as CreateRectificationMarkSheet order 5
+ participant "domain\nMarkSheet_Base" as MarkSheet_Base order 10
+ participant "domain\nExecutionSemester" as ExecutionSemester order 104
+ participant "domain\nExecutionSemester" as ExecutionSemester order 105
+ participant "domain\nTeacher" as Teacher order 106
+ participant "org.joda.time\nDateTime" as DateTime order 107
+ participant "domain\nEvaluationSeason" as EvaluationSeason order 108
+ participant "util\nFenixDigestUtils" as FenixDigestUtils order 109
+ participant "domain\nCurricularCourse" as CurricularCourse order 110
+ participant "domain.exceptions\nEnrolmentNotPayedException" as EnrolmentNotPayedException order 111
+ participant "domain\nCurricularCourse" as CurricularCourse order 112
+ participant "dto.degreeAdministrativeOffice.gradeSubmission\nMarkSheetEnrolmentEvaluationBean" as MarkSheetEnrolmentEvaluationBean order 113
+ participant "domain\nTeacher_Base" as Teacher_Base order 114
+ participant "domain\nEnrolment" as Enrolment order 115
+ participant "domain\nCurricularCourse" as CurricularCourse order 116
+ participant "domain\nMarkSheet" as MarkSheet order 134
+ participant "domain\nEnrolmentEvaluation_Base" as EnrolmentEvaluation_Base order 137
+ participant "dto.degreeAdministrativeOffice.gradeSubmission\nMarkSheetEnrolmentEvaluationBean" as MarkSheetEnrolmentEvaluationBean order 138
+ participant "domain\nGrade" as Grade order 151
+ participant "domain\nEnrolment" as Enrolment order 152
+ participant "domain\nMarkSheet_Base" as MarkSheet_Base order 153
+ participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 154
+ JSPCreateRectificationMarkSheet -> CreateRectificationMarkSheet: getConnection()
+ JSPCreateRectificationMarkSheet <- CreateRectificationMarkSheet: returnConnection()
+ JSPCreateRectificationMarkSheet -> CreateRectificationMarkSheet: executeAction()
+ CreateRectificationMarkSheet -> CreateRectificationMarkSheet: run\n(MarkSheet,EnrolmentEvaluation,Grade,Date,String,Person):MarkSheet
+ CreateRectificationMarkSheet -> MarkSheet_Base: getCurricularCourse():CurricularCourse
+ CreateRectificationMarkSheet -> CurricularCourse: rectifyEnrolmentEvaluation\n(MarkSheet,EnrolmentEvaluation,Date,Grade,String,Person):MarkSheet
+ CurricularCourse -> EnrolmentEvaluation_Base: setEnrolmentEvaluationState(EnrolmentEvaluationState):void
+ CurricularCourse -> CurricularCourse: createRectificationMarkSheet\n(ExecutionSemester,Date,Teacher,EvaluationSeason,String,MarkSheetEnrolmentEvaluationBean,Person):MarkSheet
+ CurricularCourse -> MarkSheet: createRectification\n(CurricularCourse,ExecutionSemester,Teacher,Date,EvaluationSeason,String,MarkSheetEnrolmentEvaluationBean,Person):MarkSheet
+ MarkSheet -> MarkSheet_Base: MarkSheet\n(CurricularCourse,ExecutionSemester,Teacher,Date,EvaluationSeason,MarkSheet\nState,Boolean,Collection<MarkSheet\nEnrolmentEvaluationBean>,Person)
+ MarkSheet_Base -> MarkSheet_Base: MarkSheet()
+ MarkSheet_Base -> MarkSheet_Base: checkParameters\n(CurricularCourse,ExecutionSemester,Teacher,Date,EvaluationSeason,MarkSheetState,Collection<MarkSheetEnrolmentEvaluationBean>,Person):void
+ MarkSheet_Base -> MarkSheet_Base: init\n(CurricularCourse,ExecutionSemester,Teacher,Date,EvaluationSeason,MarkSheetState,Boolean,Person):void
+ ALT hasMarkSheetState(MarkSheetState.RECTIFICATION_NOT_CONFIRMED)
+ 	MarkSheet_Base -> MarkSheet_Base: addEnrolmentEvaluationsWithoutResctrictions\n(Teacher,Collection<MarkSheetEnrolmentEvaluationBean>,EnrolmentEvaluationState):void
+ 	MarkSheet_Base -> MarkSheet_Base: check(T,AccessControlPredicate<T>):void
+ 	LOOP for: evaluationBeans
+ 		MarkSheet_Base -> MarkSheet_Base: checkIfEvaluationDateIsInExamsPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,EvaluationSeason):void
+ 		MarkSheet_Base -> MarkSheet_Base: getCurricularCourse():CurricularCourse
+ 		MarkSheet_Base -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		MarkSheet_Base -> MarkSheet_Base: getExecutionPeriod():ExecutionSemester
+ 		MarkSheet_Base -> MarkSheetEnrolmentEvaluationBean: getEvaluationDate():Date
+ 		MarkSheet_Base -> MarkSheet_Base: getEvaluationSeason():EvaluationSeason
+ 		MarkSheet_Base -> MarkSheetEnrolmentEvaluationBean: getEnrolment():Enrolment
+ 		MarkSheet_Base -> MarkSheet_Base: getEvaluationSeason():EvaluationSeason
+ 		MarkSheet_Base -> Teacher_Base: getPerson():Person
+ 		MarkSheet_Base -> MarkSheetEnrolmentEvaluationBean: getGradeValue():String
+ 		MarkSheet_Base -> MarkSheet_Base: getCreationDate():Date
+ 		MarkSheet_Base -> MarkSheetEnrolmentEvaluationBean: getEvaluationDate():Date
+ 		MarkSheet_Base -> MarkSheet_Base: getExecutionPeriod():ExecutionSemester
+ 		MarkSheet_Base -> Enrolment: addNewEnrolmentEvaluation\n(EnrolmentEvaluationState,EvaluationSeason,Person,String,Date,Date,ExecutionSemester,GradeScale):EnrolmentEvaluation
+ 		MarkSheet_Base -> MarkSheet_Base: addEnrolmentEvaluations(EnrolmentEvaluation):void
+ 	END
+ ELSE else
+ 	MarkSheet_Base -> MarkSheet_Base: addEnrolmentEvaluationsWithResctrictions\n(Teacher,Collection<MarkSheetEnrolmentEvaluationBean>,EnrolmentEvaluationState):void
+ 	MarkSheet_Base -> MarkSheet_Base: check(T,AccessControlPredicate<T>):void
+ 	MarkSheet_Base -> MarkSheet_Base: getCurricularCourse():CurricularCourse
+ 	MarkSheet_Base -> MarkSheet_Base: getEvaluationSeason():EvaluationSeason
+ 	MarkSheet_Base -> MarkSheet_Base: getExecutionPeriod():ExecutionSemester
+ 	MarkSheet_Base -> CurricularCourse: getEnrolmentsNotInAnyMarkSheet\n(EvaluationSeason,ExecutionSemester):Set<Enrolment>
+ 	LOOP for: evaluationBeans
+ 		ALT enrolmentsNotInAnyMarkSheet.contains(evaluationBean.getEnrolment())
+ 			MarkSheet_Base -> MarkSheet_Base: addEnrolmentEvaluationToMarkSheet\n(Teacher,EnrolmentEvaluationState,MarkSheetEnrolmentEvaluationBean):void
+ 			OPT EnrolmentNotPayedException e
+ 				MarkSheet_Base -> EnrolmentNotPayedException: getEnrolment():Enrolment
+ 			END
+ 		END
+ 	END
+ END
+ MarkSheet_Base -> MarkSheet_Base: generateCheckSum():void
+ OPT isNotConfirmed()
+ 	MarkSheet_Base -> MarkSheet_Base: getExecutionPeriod():ExecutionSemester
+ 	MarkSheet_Base -> ExecutionSemester: getExecutionYear():ExecutionYear
+ 	MarkSheet_Base -> ExecutionSemester: getYear():String
+ 	MarkSheet_Base -> MarkSheet_Base: getExecutionPeriod():ExecutionSemester
+ 	MarkSheet_Base -> ExecutionSemester: getSemester():Integer
+ 	MarkSheet_Base -> MarkSheet_Base: getResponsibleTeacher():Teacher
+ 	MarkSheet_Base -> Teacher: getPerson():Person
+ 	MarkSheet_Base -> Teacher: getUsername():String
+ 	MarkSheet_Base -> MarkSheet_Base: getEvaluationDateDateTime():DateTime
+ 	MarkSheet_Base -> DateTime: toString(String):String
+ 	MarkSheet_Base -> MarkSheet_Base: getEvaluationSeason():EvaluationSeason
+ 	MarkSheet_Base -> EvaluationSeason: getExternalId():String
+ 	LOOP for: getEnrolmentEvaluationsSortedByStudentNumber()
+ 		MarkSheet_Base -> EnrolmentEvaluation_Base: getCheckSum():String
+ 	END
+ 	MarkSheet_Base -> MarkSheet_Base: setCheckSum(String):void
+ 	MarkSheet_Base -> FenixDigestUtils: createDigest(String):String
+ END
+ MarkSheet -> MarkSheet_Base: setReason(String):void
+ CurricularCourse -> MarkSheet_Base: getExecutionPeriod():ExecutionSemester
+ CurricularCourse -> MarkSheet_Base: getResponsibleTeacher():Teacher
+ CurricularCourse -> MarkSheet_Base: getEvaluationSeason():EvaluationSeason
+ CurricularCourse -> EnrolmentEvaluation_Base: getEnrolment():Enrolment
+ CurricularCourse -> MarkSheetEnrolmentEvaluationBean: MarkSheetEnrolmentEvaluationBean(Enrolment,Date,Grade)
+ MarkSheetEnrolmentEvaluationBean -> MarkSheetEnrolmentEvaluationBean: setEnrolment(Enrolment):void
+ MarkSheetEnrolmentEvaluationBean -> MarkSheetEnrolmentEvaluationBean: setEvaluationDate(Date):void
+ MarkSheetEnrolmentEvaluationBean -> MarkSheetEnrolmentEvaluationBean: setGradeValue(String):void
+ MarkSheetEnrolmentEvaluationBean -> Grade: getValue():String
+ MarkSheetEnrolmentEvaluationBean -> MarkSheetEnrolmentEvaluationBean: setWeight(Double):void
+ MarkSheetEnrolmentEvaluationBean -> Enrolment: getWeigth():Double
+ CurricularCourse -> MarkSheet_Base: getEnrolmentEvaluationsSet():Set<EnrolmentEvaluation>
+ CurricularCourse -> EnrolmentEvaluation: setRectified(EnrolmentEvaluation):void
+ @enduml

@@ -1,0 +1,58 @@
+@startuml
+participant "JSP\nJSPCreateMarkSheetByTeacher" as JSPCreateMarkSheetByTeacher order 0
+participant "services.administrativeOffice.gradeSubmission\nCreateMarkSheetByTeacher" as CreateMarkSheetByTeacher order 1
+participant "java.util\nDate" as Date order 57
+participant "dto.teacher.\ngradeSubmission\nMSTeacherMarkBean" as MarkSheetTeacherMarkBean order 58
+participant "domain\nAttends" as Attends order 59
+participant "domain.\nstudentCurriculum\nCurriculumLine" as CurriculumLine order 60
+participant "dto.\ndegreeAdminOffice.\ngradeSubmission\nMSEnrolment\nEvalBean" as MarkSheetEnrolmentEvaluationBean order 61
+participant "java.util\nArrayList" as ArrayList order 62
+participant "java.util.Map\nEntry" as Entry order 63
+participant "java.util.Map\nEntry" as Entry order 64
+participant "domain\nCurricularCourse" as CurricularCourse order 65
+participant "domain\nMarkSheet" as MarkSheet order 68
+participant "domain\nExecCourse\n_Base" as ExecutionCourse_Base order 69
+participant "domain\nTeacher\n_Base" as Teacher_Base order 70
+participant "domain\nMarkSheet\n_Base" as MarkSheet_Base order 71
+participant "dto.teacher.gradeSubmission\nMSTeacherGradeSubmissionBean" as MarkSheetTeacherGradeSubmissionBean order 72
+participant "java.util\nHashMap" as HashMap order 73
+JSPCreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: getConnection()
+JSPCreateMarkSheetByTeacher <- CreateMarkSheetByTeacher: returnConnection()
+JSPCreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: executeAction()
+CreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: run\n(MarkSheetTeacherGradeSubmissionBean)\n:List<EnrolmentEvaluation>
+CreateMarkSheetByTeacher -> MarkSheetTeacherGradeSubmissionBean: getExecutionCourse():ExecutionCourse
+CreateMarkSheetByTeacher -> MarkSheetTeacherGradeSubmissionBean: getResponsibleTeacher():Teacher
+CreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: checkIfTeacherLecturesExecutionCourse\n(Teacher,ExecutionCourse):void
+CreateMarkSheetByTeacher -> HashMap: newHashMap()
+CreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: createMarkSheetEnrolmentEvaluationBeans\n(MarkSheetTeacherGradeSubmissionBean,\nExecutionCourse,Map<CurricularCourse,\nMap<EvaluationSeason,Collection\n<MarkSheetEnrolmentEvaluationBean>>>):void
+CreateMarkSheetByTeacher -> Date: newDate()
+loop for: submissionBean.getSelectedMarksToSubmit()
+	CreateMarkSheetByTeacher -> MarkSheetTeacherMarkBean: getAttends():Attends
+	CreateMarkSheetByTeacher -> Attends: getEnrolment():Enrolment
+	CreateMarkSheetByTeacher -> CurriculumLine: getCurricularCourse():CurricularCourse
+	CreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: getGrade\n(Attends,MarkSheetTeacherMarkBean,\nDate,Date):Grade
+	CreateMarkSheetByTeacher -> MarkSheetTeacherMarkBean: getAttends():Attends
+	CreateMarkSheetByTeacher -> MarkSheetTeacherMarkBean: getEvaluationDate():Date
+	CreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: addMarkSheetEvaluationBeanToMap\n(Map<CurricularCourse,\nMap<EvaluationSeason,\nCollection<MarkSheetEnrolmentEvaluationBean>>>,\nCurricularCourse,\nExecutionCourse,\nMarkSheetEnrolmentEvaluationBean)\n:void
+	CreateMarkSheetByTeacher -> MarkSheetTeacherMarkBean: getEvaluationDate():Date
+	CreateMarkSheetByTeacher -> MarkSheetEnrolmentEvaluationBean: MarkSheetEnrolmentEvaluationBean\n(Enrolment,Date,Grade)
+end
+CreateMarkSheetByTeacher -> CreateMarkSheetByTeacher: createMarkSheets\n(Map<CurricularCourse,\nMap<EvaluationSeason,Collection\n<MarkSheetEnrolmentEvaluationBean>>>,\nExecutionCourse,Teacher,Date)\n:List<EnrolmentEvaluation>
+CreateMarkSheetByTeacher -> ArrayList: newArrayList()
+loop for: markSheetsInformation.entrySet()
+	CreateMarkSheetByTeacher -> Entry: getKey():K
+	loop for: curricularCourseEntry.getValue().entrySet()
+		CreateMarkSheetByTeacher -> Entry: getKey():K
+		CreateMarkSheetByTeacher -> Entry: getValue():V
+		opt markSheetEnrolmentEvaluationBeans != null
+			CreateMarkSheetByTeacher -> CurricularCourse: createNormalMarkSheet\n(ExecutionSemester,\nTeacher,Date,\nEvaluationSeason,\nBoolean,Collection\n<MarkSheetEnrolmentEvaluationBean>,\nPerson):MarkSheet
+			CurricularCourse -> MarkSheet: createNormal\n(CurricularCourse,\nExecutionSemester,\nTeacher,Date,\nEvaluationSeason,\nBoolean,Collection\n<MarkSheetEnrolmentEvaluationBean>,\nPerson):MarkSheet
+			CreateMarkSheetByTeacher -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+			CreateMarkSheetByTeacher -> Teacher_Base: getPerson():Person
+			CreateMarkSheetByTeacher -> ArrayList: addAll(Collection<? extends E>):boolean
+			CreateMarkSheetByTeacher -> MarkSheet_Base: getEnrolmentEvaluationsSet\n():Set<EnrolmentEvaluation>
+		end
+	end
+	CreateMarkSheetByTeacher -> MarkSheetTeacherGradeSubmissionBean: getEvaluationDate():Date
+end
+@enduml

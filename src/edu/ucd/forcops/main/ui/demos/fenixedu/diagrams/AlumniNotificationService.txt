@@ -1,0 +1,29 @@
+@startuml
+ participant "JSP\nJSPAlumniNotificationService" as JSPAlumniNotificationService order 0
+ participant "services.commons.alumni\nAlumniNotificationService" as AlumniNotificationService order 1
+ participant "core.util\nCoreConfiguration" as CoreConfiguration order 17
+ participant "configuration\nConfigurationInvocationHandler" as ConfigurationInvocationHandler order 20
+ participant "com.google.common.reflect\nReflection" as Reflection order 25
+ participant "core.util.CoreConfiguration\nConfigurationProperties" as ConfigurationProperties order 26
+ participant "java.text\nMessageFormat" as MessageFormat order 27
+ participant "core.i18n\nBundleUtil" as BundleUtil order 28
+ participant "i18n\nI18N" as I18N order 33
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 34
+ JSPAlumniNotificationService -> AlumniNotificationService: getConnection()
+ JSPAlumniNotificationService <- AlumniNotificationService: returnConnection()
+ JSPAlumniNotificationService -> AlumniNotificationService: executeAction()
+ AlumniNotificationService -> AlumniNotificationService: getRegisterConclusionURL(Alumni):String
+ AlumniNotificationService -> CoreConfiguration: getConfiguration():ConfigurationProperties
+ CoreConfiguration -> ConfigurationInvocationHandler: getConfiguration(Class<T>):T
+ OPT ?
+ 	ConfigurationInvocationHandler -> Reflection: newProxy(Class<T>,InvocationHandler):T
+ 	ConfigurationInvocationHandler -> ConfigurationInvocationHandler: ConfigurationInvocationHandler()
+ END
+ AlumniNotificationService -> ConfigurationProperties: applicationUrl():String
+ AlumniNotificationService -> MessageFormat: format(String,Object[]):String
+ AlumniNotificationService -> BundleUtil: getString(String,String,String[]):String
+ BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ BundleUtil -> I18N: getLocale():Locale
+ AlumniNotificationService -> AbstractDomainObject: getExternalId():String
+ AlumniNotificationService -> AbstractDomainObject: getUrlRequestToken():UUID
+ @enduml

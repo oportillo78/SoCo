@@ -1,0 +1,178 @@
+@startuml
+ participant "JSP\nJSPCreateNewEquivalenceDismissal" as JSPCreateNewEquivalenceDismissal order 0
+ participant "services.administrativeOffice.dismissal\nCreateNewEquivalenceDismissal" as CreateNewEquivalenceDismissal order 1
+ participant "dto.administrativeOffice.dismissal\nDismissalBean" as DismissalBean order 23
+ participant "dto.administrativeOffice.dismissal.DismissalBean\nSelectedEnrolment" as SelectedEnrolment order 32
+ participant "dto.administrativeOffice.dismissal.DismissalBean\nSelectedExternalEnrolment" as SelectedExternalEnrolment order 33
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 34
+ participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 57
+ participant "domain.studentCurriculum\nCurriculumGroup" as CurriculumGroup order 60
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 63
+ participant "predicate\nAccessControl" as AccessControl order 64
+ participant "domain.accessControl.academicAdministration\nAcademicAccessRule" as AcademicAccessRule order 65
+ participant "domain\nPerson_Base" as Person_Base order 68
+ participant "domain.studentCurriculum\nCreditsManager" as CreditsManager order 69
+ participant "dto.administrativeOffice.dismissal.DismissalBean\nSelectedCurricularCourse" as SelectedCurricularCourse order 80
+ participant "domain.studentCurriculum\nEquivalence" as Equivalence order 83
+ participant "domain.studentCurriculum\nDismissal" as Dismissal order 104
+ participant "domain.log\nDismissalLog" as DismissalLog order 134
+ participant "java.math\nBigDecimal" as BigDecimal order 149
+ participant "domain.studentCurriculum\nCredits" as Credits order 151
+ participant "domain.studentCurriculum\nOptionalDismissal" as OptionalDismissal order 152
+ participant "domain.log\nOptionalDismissalLog" as OptionalDismissalLog order 171
+ participant "domain.studentCurriculum\nCreditsDismissal" as CreditsDismissal order 183
+ participant "domain.studentCurriculum\nCreditsDismissal" as CreditsDismissal order 184
+ participant "domain.studentCurriculum\nEquivalence" as Equivalence order 195
+ participant "domain.studentCurriculum\nEquivalence" as Equivalence order 213
+ participant "dto.administrativeOffice.dismissal.DismissalBean\nSelectedCurricularCourse" as SelectedCurricularCourse order 238
+ JSPCreateNewEquivalenceDismissal -> CreateNewEquivalenceDismissal: getConnection()
+ JSPCreateNewEquivalenceDismissal <- CreateNewEquivalenceDismissal: returnConnection()
+ JSPCreateNewEquivalenceDismissal -> CreateNewEquivalenceDismissal: executeAction()
+ CreateNewEquivalenceDismissal -> CreateNewEquivalenceDismissal: run(DismissalBean):void
+ CreateNewEquivalenceDismissal -> DismissalBean: getStudentCurricularPlan():StudentCurricularPlan
+ CreateNewEquivalenceDismissal -> DismissalBean: getCourseGroup():CourseGroup
+ CreateNewEquivalenceDismissal -> DismissalBean: getCurriculumGroup():CurriculumGroup
+ CreateNewEquivalenceDismissal -> DismissalBean: getAllDismissals():Collection<SelectedCurricularCourse>
+ OPT getDismissals() != null
+ 	DismissalBean -> DismissalBean: getDismissals():Collection<SelectedCurricularCourse>
+ END
+ OPT getOptionalDismissals() != null
+ 	DismissalBean -> DismissalBean: getOptionalDismissals\n():Collection<SelectedOptionalCurricularCourse>
+ END
+ CreateNewEquivalenceDismissal -> DismissalBean: getSelectedEnrolments():Collection<IEnrolment>
+ OPT getEnrolments() != null
+ 	LOOP for: getEnrolments()
+ 		OPT selectedEnrolment.getSelected()
+ 			DismissalBean -> SelectedEnrolment: getEnrolment():Enrolment
+ 		END
+ 	END
+ END
+ OPT getExternalEnrolments() != null
+ 	LOOP for: getExternalEnrolments()
+ 		OPT selectedEnrolment.getSelected()
+ 			DismissalBean -> SelectedExternalEnrolment: getExternalEnrolment():ExternalEnrolment
+ 		END
+ 	END
+ END
+ CreateNewEquivalenceDismissal -> DismissalBean: getCredits():Double
+ CreateNewEquivalenceDismissal -> DismissalBean: getGrade():Grade
+ CreateNewEquivalenceDismissal -> DismissalBean: getExecutionPeriod():ExecutionSemester
+ CreateNewEquivalenceDismissal -> StudentCurricularPlan: createNewEquivalenceDismissal\n(CourseGroup,CurriculumGroup,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,Double,Grade,ExecutionSemester):Equivalence
+ StudentCurricularPlan -> StudentCurricularPlan: checkPermission\n(CourseGroup,CurriculumGroup,Collection<SelectedCurricularCourse>):void
+ StudentCurricularPlan -> AccessControl: getPerson():Person
+ StudentCurricularPlan -> AcademicAccessRule: isProgramAccessibleToFunction\n(AcademicOperationType,AcademicProgram,User):boolean
+ AcademicAccessRule -> AcademicAccessRule: filter\n(AcademicOperationType):Stream<AcademicAccessRule>
+ StudentCurricularPlan -> StudentCurricularPlan: getDegree():Degree
+ StudentCurricularPlan -> StudentCurricularPlan: getDegreeCurricularPlan():DegreeCurricularPlan
+ StudentCurricularPlan -> DegreeCurricularPlan: getDegree():Degree
+ StudentCurricularPlan -> Person_Base: getUser():User
+ ALT courseGroup != null
+ 	StudentCurricularPlan -> StudentCurricularPlan: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 	StudentCurricularPlan -> StudentCurricularPlan: getRoot():RootCurriculumGroup
+ 	StudentCurricularPlan -> RootCurriculumGroup: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 	LOOP for: getCurriculumModulesSet()
+ 		OPT !curriculumModule.isLeaf()
+ 			RootCurriculumGroup -> CurriculumGroup: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 			LOOP for: getCurriculumModulesSet()
+ 				OPT !curriculumModule.isLeaf()
+ 					CurriculumGroup -> CurriculumGroup: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ StudentCurricularPlan -> CreditsManager: createEquivalence\n(StudentCurricularPlan,CourseGroup,CurriculumGroup,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,Double,Grade,ExecutionSemester):Equivalence
+ ALT courseGroup != null
+ 	CreditsManager -> CreditsManager: buildNoEnrolCurricularCourses\n(Collection<SelectedCurricularCourse>):Collection<CurricularCourse>
+ 	LOOP for: dismissals
+ 		CreditsManager -> SelectedCurricularCourse: getCurricularCourse():CurricularCourse
+ 	END
+ 	CreditsManager -> Equivalence: Equivalence\n(StudentCurricularPlan,CourseGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,Grade,ExecutionSemester)
+ 	Equivalence -> Equivalence: Equivalence()
+ 	Equivalence -> Equivalence: init\n(StudentCurricularPlan,CourseGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,Grade,ExecutionSemester):void
+ 	Equivalence -> Equivalence: initGrade(Collection<IEnrolment>,Grade):void
+ 	Equivalence -> Equivalence: init\n(StudentCurricularPlan,CourseGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,ExecutionSemester):void
+ 	Equivalence -> Equivalence: checkGivenCredits\n(StudentCurricularPlan,CourseGroup,Double,ExecutionSemester):void
+ 	Equivalence -> Equivalence: initExecutionPeriod(ExecutionSemester):void
+ 	Equivalence -> Equivalence: setStudentCurricularPlan(StudentCurricularPlan):void
+ 	Equivalence -> Equivalence: setGivenCredits(Double):void
+ 	Equivalence -> Equivalence: addEnrolments(Collection<IEnrolment>):void
+ 	Equivalence -> Dismissal: createNewDismissal\n(Credits,StudentCurricularPlan,CourseGroup,Collection<CurricularCourse>):Dismissal
+ 	Dismissal -> Dismissal: findCurriculumGroupForCourseGroup\n(StudentCurricularPlan,CourseGroup):CurriculumGroup
+ 	Dismissal -> CreditsDismissal: CreditsDismissal\n(Credits,CurriculumGroup,Collection<CurricularCourse>)
+ 	CreditsDismissal -> CreditsDismissal: checkIfCanCreate\n(Credits,Collection<CurricularCourse>,CurriculumGroup):void
+ 	CreditsDismissal -> CreditsDismissal: init(Credits,CurriculumGroup):void
+ 	CreditsDismissal -> CreditsDismissal: checkParameters(Credits):void
+ 	OPT noEnrolCurricularCourses != null
+ 		CreditsDismissal -> CreditsDismissal: getNoEnrolCurricularCoursesSet():Set<CurricularCourse>
+ 	END
+ 	CreditsDismissal -> CreditsDismissal: createCurriculumLineLog(EnrolmentAction):void
+ ELSE else
+ 	ALT curriculumGroup != null
+ 		CreditsManager -> Equivalence: Equivalence\n(StudentCurricularPlan,CurriculumGroup,Collection<IEnrolment>,Double,Grade,ExecutionSemester)
+ 		Equivalence -> Equivalence: Equivalence()
+ 		Equivalence -> Equivalence: init\n(StudentCurricularPlan,CurriculumGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,Grade,ExecutionSemester):void
+ 		Equivalence -> Equivalence: initGrade(Collection<IEnrolment>,Grade):void
+ 		Equivalence -> Equivalence: init\n(StudentCurricularPlan,CurriculumGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,ExecutionSemester):void
+ 		Equivalence -> Equivalence: initExecutionPeriod(ExecutionSemester):void
+ 		Equivalence -> Equivalence: setStudentCurricularPlan(StudentCurricularPlan):void
+ 		Equivalence -> Equivalence: setGivenCredits(Double):void
+ 		Equivalence -> Equivalence: addEnrolments(Collection<IEnrolment>):void
+ 		Equivalence -> Dismissal: createNewDismissal\n(Credits,StudentCurricularPlan,CurriculumGroup,Collection<CurricularCourse>):Dismissal
+ 		Dismissal -> CreditsDismissal: CreditsDismissal\n(Credits,CurriculumGroup,Collection<CurricularCourse>)
+ 	ELSE else
+ 		CreditsManager -> Equivalence: Equivalence\n(StudentCurricularPlan,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,Grade,ExecutionSemester)
+ 		Equivalence -> Equivalence: Equivalence()
+ 		Equivalence -> Equivalence: init\n(StudentCurricularPlan,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,Grade,ExecutionSemester):void
+ 		Equivalence -> Equivalence: initGrade(Collection<IEnrolment>,Grade):void
+ 		Equivalence -> Equivalence: init\n(StudentCurricularPlan,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,ExecutionSemester):void
+ 		Equivalence -> Equivalence: initExecutionPeriod(ExecutionSemester):void
+ 		Equivalence -> Equivalence: setStudentCurricularPlan(StudentCurricularPlan):void
+ 		Equivalence -> Equivalence: addEnrolments(Collection<IEnrolment>):void
+ 		LOOP for: dismissals
+ 			ALT selectedCurricularCourse.isOptional()
+ 				Equivalence -> Dismissal: createNewOptionalDismissal\n(Credits,StudentCurricularPlan,CurriculumGroup,OptionalCurricularCourse,Double):Dismissal
+ 				Dismissal -> OptionalDismissal: OptionalDismissal\n(Credits,CurriculumGroup,OptionalCurricularCourse,Double)
+ 				OptionalDismissal -> OptionalDismissal: init\n(Credits,CurriculumGroup,OptionalCurricularCourse,Double):void
+ 				OptionalDismissal -> OptionalDismissal: createCurriculumLineLog(EnrolmentAction):void
+ 				OptionalDismissal -> OptionalDismissal: getRegistration():Registration
+ 				OptionalDismissal -> OptionalDismissal: getCurricularCourse():OptionalCurricularCourse
+ 				OptionalDismissal -> OptionalDismissal: getCredits():Credits
+ 				OptionalDismissal -> OptionalDismissal: getEctsCredits():Double
+ 				OptionalDismissal -> OptionalDismissal: getExecutionPeriod():ExecutionSemester
+ 				OptionalDismissal -> OptionalDismissal: getCurrentUser():String
+ 				OptionalDismissal -> OptionalDismissalLog: OptionalDismissalLog\n(EnrolmentAction,Registration,OptionalCurricularCourse,Credits,Double,ExecutionSemester,String)
+ 				OptionalDismissalLog -> OptionalDismissalLog: OptionalDismissalLog()
+ 				OptionalDismissalLog -> OptionalDismissalLog: init\n(EnrolmentAction,Registration,DegreeModule,ExecutionSemester,String):void
+ 				OptionalDismissalLog -> OptionalDismissalLog: setCredits(BigDecimal):void
+ 				OptionalDismissalLog -> BigDecimal: valueOf(double):BigDecimal
+ 				OptionalDismissalLog -> OptionalDismissalLog: setSourceDescription(String):void
+ 				OptionalDismissalLog -> OptionalDismissalLog: buildSourceDescription(Credits):String
+ 				Equivalence -> SelectedCurricularCourse: getCurriculumGroup():CurriculumGroup
+ 				Equivalence -> SelectedCurricularCourse: getCurricularCourse():OptionalCurricularCourse
+ 				Equivalence -> SelectedCurricularCourse: getCredits():Double
+ 			ELSE else
+ 				Equivalence -> Dismissal: createNewDismissal\n(Credits,StudentCurricularPlan,CurriculumGroup,CurricularCourse):Dismissal
+ 				Dismissal -> Dismissal: Dismissal\n(Credits,CurriculumGroup,CurricularCourse)
+ 				Dismissal -> Dismissal: init\n(Credits,CurriculumGroup,CurricularCourse):void
+ 				Dismissal -> Dismissal: createCurriculumLineLog(EnrolmentAction):void
+ 				Dismissal -> Dismissal: getRegistration():Registration
+ 				Dismissal -> Dismissal: getCurricularCourse():CurricularCourse
+ 				Dismissal -> Dismissal: getCredits():Credits
+ 				Dismissal -> Dismissal: getExecutionPeriod():ExecutionSemester
+ 				Dismissal -> Dismissal: getCurrentUser():String
+ 				Dismissal -> DismissalLog: DismissalLog\n(EnrolmentAction,Registration,CurricularCourse,Credits,ExecutionSemester,String)
+ 				DismissalLog -> DismissalLog: DismissalLog()
+ 				DismissalLog -> DismissalLog: init\n(EnrolmentAction,Registration,DegreeModule,ExecutionSemester,String):void
+ 				DismissalLog -> DismissalLog: setCredits(BigDecimal):void
+ 				DismissalLog -> BigDecimal: valueOf(double):BigDecimal
+ 				DismissalLog -> Credits: getGivenCredits():Double
+ 				DismissalLog -> DismissalLog: setSourceDescription(String):void
+ 				DismissalLog -> DismissalLog: buildSourceDescription(Credits):String
+ 				Equivalence -> SelectedCurricularCourse: getCurriculumGroup():CurriculumGroup
+ 				Equivalence -> SelectedCurricularCourse: getCurricularCourse():CurricularCourse
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

@@ -1,0 +1,65 @@
+@startuml
+participant "JSP\nJSPChangeThesisPerson" as JSPChangeThesisPerson order 0
+participant "services.thesis\nChangeThesisPerson" as ChangeThesisPerson order 1
+participant "services.thesis.ChangeThesisPerson\nPersonTarget" as PersonTarget order 13
+participant "domain.thesis\nThesis" as Thesis order 14
+participant "domain.thesis\nThesisEvaluationParticipant" as ThesisEvaluationParticipant order 25
+participant "domain.thesis\nThesisEvaluationParticipant" as ThesisEvaluationParticipant order 26
+participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 47
+participant "domain.thesis\nThesisEvaluationParticipant" as ThesisEvaluationParticipant order 48
+participant "java.util\nObjects" as Objects order 69
+participant "core.domain\nBennu" as Bennu order 70
+participant "core.signals\nSignal" as Signal order 71
+participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 72
+participant "domain.thesis\nThesisEvaluationParticipant" as ThesisEvaluationParticipant order 73
+JSPChangeThesisPerson -> ChangeThesisPerson: getConnection()
+JSPChangeThesisPerson <- ChangeThesisPerson: returnConnection()
+JSPChangeThesisPerson -> ChangeThesisPerson: executeAction()
+ChangeThesisPerson -> ChangeThesisPerson: run\n(DegreeCurricularPlan,Thesis,PersonChange):void
+ChangeThesisPerson -> PersonTarget: getType():ThesisParticipationType
+alt type.isSingle()
+	ChangeThesisPerson -> Thesis: setParticipation(Person,ThesisParticipationType):void
+	alt person == null
+		Thesis -> Thesis: removeParticipation(ThesisEvaluationParticipant):void
+		opt participant != null
+			Thesis -> ThesisEvaluationParticipant: delete():void
+		end
+		Thesis -> Thesis: getParticipant\n(ThesisParticipationType):ThesisEvaluationParticipant
+	else else
+		Thesis -> ThesisEvaluationParticipant: newThesisEvaluationParticipant(Thesis,Person,ThesisParticipationType)
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: newThesisEvaluationParticipant_Base()
+		ThesisEvaluationParticipant -> Objects: requireNonNull(T):T
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setRootDomainObject(Bennu):void
+		ThesisEvaluationParticipant -> Bennu: getInstance():Bennu
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setType(ThesisParticipationType):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setThesis(Thesis):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setPerson(Person):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setPercentageDistribution(Integer):void
+		ThesisEvaluationParticipant -> Signal: emit(String,Object):void
+		ThesisEvaluationParticipant -> DomainObjectEvent: newDomainObjectEvent(T)
+	end
+else else
+	opt change.target != null
+		ChangeThesisPerson -> ThesisEvaluationParticipant: delete():void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setRootDomainObject(Bennu):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setPerson(Person):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setThesis(Thesis):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setExternalPerson\n(ThesisEvaluationExternalParticipant):void		
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: deleteDomainObject():void
+	end
+	opt change.person != null
+		ChangeThesisPerson -> Thesis: addParticipant(Person,ThesisParticipationType):void
+		Thesis -> ThesisEvaluationParticipant: newThesisEvaluationParticipant(Thesis,Person,ThesisParticipationType)
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: newThesisEvaluationParticipant_Base()
+		ThesisEvaluationParticipant -> Objects: requireNonNull(T):T
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setRootDomainObject(Bennu):void
+		ThesisEvaluationParticipant -> Bennu: getInstance():Bennu
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setType(ThesisParticipationType):void		
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setThesis(Thesis):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setPerson(Person):void
+		ThesisEvaluationParticipant -> ThesisEvaluationParticipant: setPercentageDistribution(Integer):void		
+		ThesisEvaluationParticipant -> Signal: emit(String,Object):void
+		ThesisEvaluationParticipant -> DomainObjectEvent: newDomainObjectEvent(T)
+	end
+end
+@enduml

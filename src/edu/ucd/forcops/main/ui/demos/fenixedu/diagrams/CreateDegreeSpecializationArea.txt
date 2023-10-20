@@ -1,0 +1,65 @@
+@startuml
+ participant "JSP\nJSPCreateDegreeSpecializationArea" as JSPCreateDegreeSpecializationArea order 0
+ participant "services.scientificCouncil.curricularPlans\nCreateDegreeSpecializationArea" as CreateDegreeSpecializationArea order 1
+ participant "predicate\nAccessControl" as AccessControl order 27
+ participant "core.security\nAuthenticate" as Authenticate order 32
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 35
+ participant "core.domain\nUser_Base" as User_Base order 36
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 37
+ participant "domain\nPerson" as Person order 38
+ participant "core.domain\nUser" as User order 43
+ participant "domain\nDegreeSpecializationArea" as DegreeSpecializationArea order 44
+ participant "i18n\nI18N" as I18N order 57
+ participant "i18n\nLocalizedString" as LocalizedString order 58
+ participant "i18n.LocalizedString\nBuilder" as Builder order 63
+ participant "i18n.LocalizedString\nInternalMap" as InternalMap order 66
+ participant "i18n\nLocalizedString" as LocalizedString order 68
+ participant "i18n.LocalizedString\nBuilder" as Builder order 73
+ participant "domain\nDegreeOfficialPublication_Base" as DegreeOfficialPublication_Base order 75
+ JSPCreateDegreeSpecializationArea -> CreateDegreeSpecializationArea: getConnection()
+ JSPCreateDegreeSpecializationArea <- CreateDegreeSpecializationArea: returnConnection()
+ JSPCreateDegreeSpecializationArea -> CreateDegreeSpecializationArea: executeAction()
+ CreateDegreeSpecializationArea -> CreateDegreeSpecializationArea: run\n(DegreeOfficialPublication,String,String):void
+ CreateDegreeSpecializationArea -> CreateDegreeSpecializationArea: check(AccessControlPredicate<?>):void
+ CreateDegreeSpecializationArea -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ CreateDegreeSpecializationArea -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		CreateDegreeSpecializationArea -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ CreateDegreeSpecializationArea -> DegreeSpecializationArea: DegreeSpecializationArea\n(DegreeOfficialPublication,LocalizedString)
+ DegreeSpecializationArea -> DegreeSpecializationArea: DegreeSpecializationArea_Base()
+ DegreeSpecializationArea -> DegreeSpecializationArea: AbstractDomainObject()
+ DegreeSpecializationArea -> DegreeSpecializationArea: init\n(DegreeOfficialPublication,LocalizedString):void
+ DegreeSpecializationArea -> DegreeSpecializationArea: checkParameters\n(DegreeOfficialPublication,LocalizedString):void
+ DegreeSpecializationArea -> DegreeSpecializationArea: setOfficialPublication(DegreeOfficialPublication):void
+ DegreeSpecializationArea -> DegreeSpecializationArea: setName(LocalizedString):void
+ CreateDegreeSpecializationArea -> I18N: getLocale():Locale
+ CreateDegreeSpecializationArea -> LocalizedString: LocalizedString(Locale,String)
+ LocalizedString -> Builder: Builder()
+ Builder -> InternalMap: InternalMap()
+ LocalizedString -> Builder: with(Locale,String):Builder
+ CreateDegreeSpecializationArea -> DegreeSpecializationArea: setName(LocalizedString):void
+ CreateDegreeSpecializationArea -> I18N: getLocale():Locale
+ CreateDegreeSpecializationArea -> LocalizedString: LocalizedString(Locale,String)
+ LocalizedString -> Builder: Builder()
+ Builder -> InternalMap: InternalMap()
+ LocalizedString -> Builder: with(Locale,String):Builder
+ CreateDegreeSpecializationArea -> DegreeOfficialPublication_Base: addSpecializationArea(DegreeSpecializationArea):void
+ @enduml

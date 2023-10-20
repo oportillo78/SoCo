@@ -1,0 +1,91 @@
+@startuml
+ participant "JSP\nJSPCreateProject" as JSPCreateProject order 0
+ participant "services.teacher\nCreateProject" as CreateProject order 1
+ participant "domain\nProject_Base" as Project_Base order 29
+ participant "domain\nProject" as Project order 30
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 43
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 58
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 59
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 60
+ participant "core.security\nAuthenticate" as Authenticate order 61
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 65
+ participant "service.filter\nExecutionCourseCoordinatorAuthorizationFilter" as ExecutionCourseCoordinatorAuthorizationFilter order 66
+ participant "core.domain\nUser" as User order 86
+ participant "service.filter.coordinator.CoordinatorAuthorizationFilter\nCoordinatorByExecutionDegreeComparator" as CoordinatorByExecutionDegreeComparator order 87
+ participant "domain\nPerson_Base" as Person_Base order 88
+ participant "domain\nCoordinator_Base" as Coordinator_Base order 89
+ participant "domain\nExecutionDegree" as ExecutionDegree order 90
+ JSPCreateProject -> CreateProject: getConnection()
+ JSPCreateProject <- CreateProject: returnConnection()
+ JSPCreateProject -> CreateProject: executeAction()
+ CreateProject -> CreateProject: runCreateProject\n(String,String,Date,Date,String,Boolean,Integer,String,GradeScale,List<Department>):void
+ CreateProject -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ CreateProject -> CreateProject: run\n(String,String,Date,Date,String,Boolean,Integer,String,GradeScale,List<Department>):void
+ CreateProject -> FenixFramework: getDomainObject(String):T
+ ALT (groupingID != null)
+ 	CreateProject -> FenixFramework: getDomainObject(String):T
+ END
+ CreateProject -> Project: Project\n(String,Date,Date,String,Boolean,Integer,Grouping,ExecutionCourse,GradeScale)
+ Project -> Project: Project\n(String,Date,Date,String,Boolean,Integer,Grouping,ExecutionCourse)
+ OPT gradeScale != null
+ 	Project -> Project: setGradeScale(GradeScale):void
+ END
+ Project -> Project: logCreate():void
+ CreateProject -> Project: getDeparmentsSet():Set<Department>
+ OPT NotAuthorizedException ex1
+ 	CreateProject -> ExecutionCourseCoordinatorAuthorizationFilter: execute(String):void
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> User: getPerson():Person
+ 	OPT !RoleType.COORDINATOR.isMember(person.getUser())
+ 		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+ 	END
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> CoordinatorByExecutionDegreeComparator: CoordinatorByExecutionDegreeComparator()
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> Person_Base: getCoordinatorsSet():Set<Coordinator>
+ 	OPT coordinators.isEmpty()
+ 		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+ 	END
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: getSpecificExecutionYear(String):ExecutionYear
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> Coordinator_Base: getExecutionDegree():ExecutionDegree
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionDegree: getExecutionYear():ExecutionYear
+ 	OPT executionYear == null || coordinatorExecutionYear.compareTo(executionYear) < 0
+ 		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+ 	END
+ 	CreateProject -> CreateProject: run\n(String,String,Date,Date,String,Boolean,Integer,String,GradeScale,List<Department>):void
+ 	CreateProject -> FenixFramework: getDomainObject(String):T
+ 	ALT (groupingID != null)
+ 		CreateProject -> FenixFramework: getDomainObject(String):T
+ 	END
+ 	CreateProject -> Project: Project\n(String,Date,Date,String,Boolean,Integer,Grouping,ExecutionCourse,GradeScale)
+ 	Project -> Project: Project\n(String,Date,Date,String,Boolean,Integer,Grouping,ExecutionCourse)
+ 	OPT gradeScale != null
+ 		Project -> Project: setGradeScale(GradeScale):void
+ 	END
+ 	Project -> Project: logCreate():void
+ 	CreateProject -> Project_Base: getDeparmentsSet():Set<Department>
+ END
+ @enduml

@@ -1,0 +1,74 @@
+@startuml
+ participant "JSP\nJSPCreateBibliographicReference" as JSPCreateBibliographicReference order 0
+ participant "services.teacher\nCreateBibliographicReference" as CreateBibliographicReference order 1
+ participant "domain\nExecutionCourse" as ExecutionCourse order 13
+ participant "domain\nBibliographicReference" as BibliographicReference order 38
+ participant "core.i18n\nBundleUtil" as BundleUtil order 39
+ participant "domain\nCurricularManagementLog" as CurricularManagementLog order 41
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 55
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 70
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 71
+ participant "domain\nExecutionCourse" as ExecutionCourse order 76
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 77
+ participant "core.security\nAuthenticate" as Authenticate order 78
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 81
+ JSPCreateBibliographicReference -> CreateBibliographicReference: getConnection()
+ JSPCreateBibliographicReference <- CreateBibliographicReference: returnConnection()
+ JSPCreateBibliographicReference -> CreateBibliographicReference: executeAction()
+ CreateBibliographicReference -> CreateBibliographicReference: runCreateBibliographicReference\n(String,String,String,String,String,Boolean):Boolean
+ CreateBibliographicReference -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ CreateBibliographicReference -> CreateBibliographicReference: run\n(String,String,String,String,String,Boolean):Boolean
+ CreateBibliographicReference -> FenixFramework: getDomainObject(String):T
+ CreateBibliographicReference -> ExecutionCourse: createBibliographicReference\n(String,String,String,String,Boolean):void
+ ExecutionCourse -> BibliographicReference: BibliographicReference()
+ ExecutionCourse -> BibliographicReference: setTitle(String):void
+ ExecutionCourse -> BibliographicReference: setAuthors(String):void
+ ExecutionCourse -> BibliographicReference: setReference(String):void
+ ExecutionCourse -> BibliographicReference: setYear(String):void
+ ExecutionCourse -> BibliographicReference: setOptional(Boolean):void
+ ExecutionCourse -> BibliographicReference: setExecutionCourse(ExecutionCourse):void
+ ALT optional
+ 	ExecutionCourse -> BundleUtil: getString(String,String,String[]):String
+ ELSE else
+ 	ExecutionCourse -> BundleUtil: getString(String,String,String[]):String
+ END
+ ExecutionCourse -> CurricularManagementLog: createLog\n(ExecutionCourse,String,String,String[]):CurricularManagementLog
+ CurricularManagementLog -> CurricularManagementLog: generateLabelDescription(String,String,String[]):String
+ CurricularManagementLog -> BundleUtil: getString(String,String,String[]):String
+ CurricularManagementLog -> CurricularManagementLog: createCurricularManagementLog\n(ExecutionCourse,String):CurricularManagementLog
+ CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog(ExecutionCourse,String)
+ CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog_Base()
+ OPT getExecutionCourse() == null
+ 	CurricularManagementLog -> CurricularManagementLog: setExecutionCourse(ExecutionCourse):void
+ END
+ CurricularManagementLog -> CurricularManagementLog: setDescription(String):void
+ ExecutionCourse -> ExecutionCourse: getName():String
+ ExecutionCourse -> ExecutionCourse: getDegreePresentationString():String
+ @enduml

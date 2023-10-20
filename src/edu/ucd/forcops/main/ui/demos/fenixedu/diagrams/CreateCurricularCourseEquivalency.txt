@@ -1,0 +1,33 @@
+@startuml
+ participant "JSP\nJSPCreateCurricularCourseEquivalency" as JSPCreateCurricularCourseEquivalency order 0
+ participant "services.manager\nCreateCurricularCourseEquivalency" as CreateCurricularCourseEquivalency order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nCurricularCourseEquivalence" as CurricularCourseEquivalence order 15
+ participant "domain\nCurricularCourseEquivalence_Base" as CurricularCourseEquivalence_Base order 34
+ participant "core.domain\nBennu" as Bennu order 35
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 41
+ JSPCreateCurricularCourseEquivalency -> CreateCurricularCourseEquivalency: getConnection()
+ JSPCreateCurricularCourseEquivalency <- CreateCurricularCourseEquivalency: returnConnection()
+ JSPCreateCurricularCourseEquivalency -> CreateCurricularCourseEquivalency: executeAction()
+ CreateCurricularCourseEquivalency -> CreateCurricularCourseEquivalency: run(String,String,String):void
+ CreateCurricularCourseEquivalency -> FenixFramework: getDomainObject(String):T
+ CreateCurricularCourseEquivalency -> FenixFramework: getDomainObject(String):T
+ CreateCurricularCourseEquivalency -> FenixFramework: getDomainObject(String):T
+ CreateCurricularCourseEquivalency -> CurricularCourseEquivalence: CurricularCourseEquivalence\n(DegreeCurricularPlan,CurricularCourse,Collection<CurricularCourse>)
+ CurricularCourseEquivalence -> CurricularCourseEquivalence: CurricularCourseEquivalence()
+ CurricularCourseEquivalence -> CurricularCourseEquivalence: CurricularCourseEquivalence_Base()
+ CurricularCourseEquivalence -> CurricularCourseEquivalence: setRootDomainObject(Bennu):void
+ CurricularCourseEquivalence -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ CurricularCourseEquivalence -> CurricularCourseEquivalence: checkIfEquivalenceAlreadyExists\n(CurricularCourse,Collection<CurricularCourse>):void
+ LOOP for: curricularCourse                .getCurricularCourseEquivalencesSet()
+ 	CurricularCourseEquivalence -> CurricularCourseEquivalence_Base: getOldCurricularCoursesSet():Set<CurricularCourse>
+ END
+ CurricularCourseEquivalence -> CurricularCourseEquivalence: setDegreeCurricularPlan(DegreeCurricularPlan):void
+ CurricularCourseEquivalence -> CurricularCourseEquivalence: setEquivalentCurricularCourse(CurricularCourse):void
+ CurricularCourseEquivalence -> CurricularCourseEquivalence: getOldCurricularCoursesSet():Set<CurricularCourse>
+ @enduml

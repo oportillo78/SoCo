@@ -1,0 +1,196 @@
+@startuml
+ participant "JSP\nJSPCreateSummary" as JSPCreateSummary order 0
+ participant "services.teacher\nCreateSummary" as CreateSummary order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 85
+ participant "core.domain\nUser" as User order 90
+ participant "domain\nSummary" as Summary order 91
+ participant "org.joda.time\nDateTime" as DateTime order 184
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 185
+ participant "org.joda.time.base\nAbstractPartial" as AbstractPartial order 186
+ participant "org.joda.time\nDateTimeFieldType" as DateTimeFieldType order 187
+ participant "domain\nLesson" as Lesson order 188
+ participant "core.domain\nBennu" as Bennu order 189
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 196
+ participant "domain\nContentManagementLog" as ContentManagementLog order 197
+ participant "domain\nShift" as Shift order 199
+ participant "i18n\nLocalizedString" as LocalizedString order 204
+ participant "domain\nExecutionCourse" as ExecutionCourse order 206
+ participant "domain\nExecutionCourse" as ExecutionCourse order 207
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 208
+ participant "core.signals\nSignal" as Signal order 209
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 227
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 228
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 229
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 230
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 231
+ participant "domain\nSummary" as Summary order 232
+ participant "domain\nExecutionCourse" as ExecutionCourse order 248
+ participant "domain\nExecutionCourse" as ExecutionCourse order 249
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 250
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 251
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 252
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 267
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 268
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 269
+ participant "core.security\nAuthenticate" as Authenticate order 270
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 275
+ JSPCreateSummary -> CreateSummary: getConnection()
+ JSPCreateSummary <- CreateSummary: returnConnection()
+ JSPCreateSummary -> CreateSummary: executeAction()
+ CreateSummary -> CreateSummary: runCreateSummary(SummariesManagementBean):void
+ CreateSummary -> CreateSummary: atomicCreateSummary(SummariesManagementBean):void
+ CreateSummary -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(SummariesManagementBean):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ CreateSummary -> CreateSummary: run(SummariesManagementBean):void
+ CreateSummary -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ ALT bean.isNewSummary()
+ 	CreateSummary -> Summary: Summary\n(LocalizedString,LocalizedString,Integer,Boolean,Professorship,String,Teacher,Shift,Lesson,YearMonthDay,Space,Partial,ShiftType,Boolean)
+ 	Summary -> Summary: Summary_Base()
+ 	Summary -> Summary: setRootDomainObject(Bennu):void
+ 	Summary -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	Summary -> Summary: fillSummaryWithInfo\n(LocalizedString,LocalizedString,Integer,Boolean,Professorship,String,Teacher,Shift,Lesson,YearMonthDay,Space,Partial,ShiftType,Boolean):void
+ 	Summary -> Summary: setShift(Shift):void
+ 	Summary -> Summary: setSummaryDateYearMonthDay(YearMonthDay):void
+ 	Summary -> Summary: setExecutionCourse(ExecutionCourse):void
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> Summary: setTitle(LocalizedString):void
+ 	Summary -> Summary: setSummaryText(LocalizedString):void
+ 	Summary -> Summary: setIsExtraLesson(Boolean):void
+ 	Summary -> Summary: checkSpecialParameters\n(Boolean,Professorship,String,Teacher,Lesson,Partial,ShiftType):void
+ 	Summary -> Summary: checkIfInternalTeacherHasProfessorhipInExecutionCourse\n(Teacher,ExecutionCourse):void
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> Summary: checkIfSummaryDateIsValid\n(YearMonthDay,ExecutionSemester,Lesson,Boolean):void
+ 	Summary -> Shift: getExecutionPeriod():ExecutionSemester
+ 	Summary -> Summary: setStudentsNumber(Integer):void
+ 	Summary -> Summary: setProfessorship(Professorship):void
+ 	Summary -> Summary: setTeacherName(String):void
+ 	Summary -> Summary: setTeacher(Teacher):void
+ 	Summary -> Summary: setLastModifiedDateDateTime(DateTime):void
+ 	Summary -> DateTime: DateTime()
+ 	Summary -> Summary: setSummaryType(ShiftType):void
+ 	Summary -> Summary: setTaught(Boolean):void
+ 	ALT isExtraLesson
+ 		Summary -> Summary: setLessonInstance(LessonInstance):void
+ 		Summary -> Summary: setRoom(Space):void
+ 		Summary -> HourMinuteSecond: HourMinuteSecond(int,int,int)
+ 		Summary -> AbstractPartial: get(DateTimeFieldType):int
+ 		Summary -> DateTimeFieldType: hourOfDay():DateTimeFieldType
+ 		Summary -> AbstractPartial: get(DateTimeFieldType):int
+ 		Summary -> DateTimeFieldType: minuteOfHour():DateTimeFieldType
+ 		Summary -> Summary: setSummaryHourHourMinuteSecond(HourMinuteSecond):void
+ 	ELSE else
+ 		Summary -> Summary: setRoom(Space):void
+ 		Summary -> Lesson: getSala():Space
+ 		Summary -> Summary: setSummaryHourHourMinuteSecond(HourMinuteSecond):void
+ 		Summary -> Lesson: getBeginHourMinuteSecond():HourMinuteSecond
+ 		Summary -> Summary: lessonInstanceManagement(Lesson,YearMonthDay,Space):void
+ 		Summary -> Lesson: getSala():Space
+ 	END
+ 	Summary -> ContentManagementLog: createLog\n(ExecutionCourse,String,String,String[]):ContentManagementLog
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> LocalizedString: getContent():String
+ 	Summary -> Shift: getPresentationName():String
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> ExecutionCourse: getNome():String
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> ExecutionCourse: getDegreePresentationString():String
+ 	CreateSummary -> SummariesManagementBean: getTitle():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getSummaryText():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getStudentsNumber():Integer
+ 	CreateSummary -> SummariesManagementBean: getSummaryType():SummaryType
+ 	CreateSummary -> SummariesManagementBean: getProfessorship():Professorship
+ 	CreateSummary -> SummariesManagementBean: getTeacherName():String
+ 	CreateSummary -> SummariesManagementBean: getTeacher():Teacher
+ 	CreateSummary -> SummariesManagementBean: getShift():Shift
+ 	CreateSummary -> SummariesManagementBean: getLesson():Lesson
+ 	CreateSummary -> SummariesManagementBean: getSummaryDate():YearMonthDay
+ 	CreateSummary -> SummariesManagementBean: getSummaryRoom():Space
+ 	CreateSummary -> SummariesManagementBean: getSummaryTime():Partial
+ 	CreateSummary -> SummariesManagementBean: getLessonType():ShiftType
+ 	CreateSummary -> SummariesManagementBean: getTaught():Boolean
+ 	CreateSummary -> Signal: emit(String,Object):void
+ 	CreateSummary -> DomainObjectEvent: DomainObjectEvent(T)
+ ELSE else
+ 	CreateSummary -> SummariesManagementBean: getSummary():Summary
+ 	CreateSummary -> SummariesManagementBean: getTitle():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getSummaryText():LocalizedString
+ 	CreateSummary -> SummariesManagementBean: getStudentsNumber():Integer
+ 	CreateSummary -> SummariesManagementBean: getSummaryType():SummaryType
+ 	CreateSummary -> SummariesManagementBean: getProfessorship():Professorship
+ 	CreateSummary -> SummariesManagementBean: getTeacherName():String
+ 	CreateSummary -> SummariesManagementBean: getTeacher():Teacher
+ 	CreateSummary -> SummariesManagementBean: getShift():Shift
+ 	CreateSummary -> SummariesManagementBean: getLesson():Lesson
+ 	CreateSummary -> SummariesManagementBean: getSummaryDate():YearMonthDay
+ 	CreateSummary -> SummariesManagementBean: getSummaryRoom():Space
+ 	CreateSummary -> SummariesManagementBean: getSummaryTime():Partial
+ 	CreateSummary -> SummariesManagementBean: getLessonType():ShiftType
+ 	CreateSummary -> SummariesManagementBean: getTaught():Boolean
+ 	CreateSummary -> Summary: edit\n(LocalizedString,LocalizedString,Integer,Boolean,Professorship,String,Teacher,Shift,Lesson,YearMonthDay,Space,Partial,ShiftType,Boolean):void
+ 	Summary -> Summary: fillSummaryWithInfo\n(LocalizedString,LocalizedString,Integer,Boolean,Professorship,String,Teacher,Shift,Lesson,YearMonthDay,Space,Partial,ShiftType,Boolean):void
+ 	Summary -> ContentManagementLog: createLog\n(ExecutionCourse,String,String,String[]):ContentManagementLog
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> LocalizedString: getContent():String
+ 	Summary -> Shift: getPresentationName():String
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> ExecutionCourse: getNome():String
+ 	Summary -> Shift: getExecutionCourse():ExecutionCourse
+ 	Summary -> ExecutionCourse: getDegreePresentationString():String
+ 	Summary -> Signal: emit(String,Object):void
+ 	Summary -> DomainObjectEvent: DomainObjectEvent(T)
+ 	CreateSummary -> Signal: emit(String,Object):void
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: getFromContext(String):T
+ 		OPT ?
+ 			Signal -> FenixFramework: getTransaction():Transaction
+ 			Signal -> Transaction: putInContext(String,Object):void
+ 		END
+ 	END
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: getFromContext(String):T
+ 		OPT ?
+ 			Signal -> FenixFramework: getTransaction():Transaction
+ 			Signal -> Transaction: putInContext(String,Object):void
+ 		END
+ 	END
+ 	CreateSummary -> SummariesManagementBean: getSummary():Summary
+ 	CreateSummary -> DomainObjectEvent: DomainObjectEvent(T)
+ END
+ @enduml

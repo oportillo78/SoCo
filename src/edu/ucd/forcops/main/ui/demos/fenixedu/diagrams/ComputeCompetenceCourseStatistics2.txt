@@ -1,0 +1,121 @@
+@startuml
+ participant "JSP\nJSPComputeCompetenceCourseStatistics" as JSPComputeCompetenceCourseStatistics order 0
+ participant "services.department\nComputeCompetenceCourseStatistics" as ComputeCompetenceCourseStatistics order 1
+ participant "domain.curriculum\nIGrade" as IGrade order 65
+ participant "domain.curriculum\nIGrade" as IGrade order 66
+ participant "domain.curriculum\nIGrade" as IGrade order 67
+ participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 68
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 81
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 82
+ participant "domain.curriculum\nGradeFactory" as GradeFactory order 83
+ participant "dto.department\nCourseStatisticsDTO" as CourseStatisticsDTO order 84
+ participant "domain\nDepartment" as Department order 85
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 86
+ participant "domain\nExecutionSemester" as ExecutionSemester order 113
+ participant "core.domain\nBennu" as Bennu order 118
+ participant "core.domain\nBennu" as Bennu order 119
+ participant "domain.degreeStructure\nCompetenceCourseInformation_Base" as CompetenceCourseInformation_Base order 120
+ participant "i18n\nLocalizedString" as LocalizedString order 121
+ participant "i18n.LocalizedString\nBuilder" as Builder order 134
+ participant "i18n.LocalizedString\nBuilder" as Builder order 135
+ participant "domain\nCurricularCourse" as CurricularCourse order 136
+ participant "dto.department\nCompetenceCourseStatisticsDTO" as CompetenceCourseStatisticsDTO order 137
+ participant "core.i18n\nBundleUtil" as BundleUtil order 142
+ participant "i18n\nI18N" as I18N order 147
+ participant "i18n\nLocalizedString" as LocalizedString order 149
+ JSPComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: getConnection()
+ JSPComputeCompetenceCourseStatistics <- ComputeCompetenceCourseStatistics: returnConnection()
+ JSPComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: executeAction()
+ ComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: run\n(Department,ExecutionSemester):List<CompetenceCourseStatisticsDTO>
+ ComputeCompetenceCourseStatistics -> Department: addAllBolonhaCompetenceCourses\n(Collection<CompetenceCourse>,ExecutionSemester):void
+ LOOP for: competenceCourses
+ 	ComputeCompetenceCourseStatistics -> CompetenceCourse: getActiveEnrollments(ExecutionSemester):List<Enrolment>
+ 	LOOP for: getAssociatedCurricularCoursesSet()
+ 		CompetenceCourse -> CurricularCourse: addActiveEnrollments\n(Collection<Enrolment>,ExecutionSemester):void
+ 	END
+ 	OPT enrollments.size() > 0
+ 		ComputeCompetenceCourseStatistics -> CompetenceCourseStatisticsDTO: CompetenceCourseStatisticsDTO()
+ 		CompetenceCourseStatisticsDTO -> CompetenceCourseStatisticsDTO: CourseStatisticsDTO()
+ 		CompetenceCourseStatisticsDTO -> BundleUtil: getString(String,String,String[]):String
+ 		BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 		BundleUtil -> I18N: getLocale():Locale
+ 		ComputeCompetenceCourseStatistics -> CompetenceCourseStatisticsDTO: setExternalId(String):void
+ 		ComputeCompetenceCourseStatistics -> CompetenceCourse: getExternalId():String
+ 		ComputeCompetenceCourseStatistics -> CompetenceCourseStatisticsDTO: setName(String):void
+ 		ComputeCompetenceCourseStatistics -> CompetenceCourse: getNameI18N(ExecutionSemester):LocalizedString
+ 		CompetenceCourse -> LocalizedString: LocalizedString()
+ 		CompetenceCourse -> CompetenceCourse: getName(ExecutionSemester):String
+ 		CompetenceCourse -> CompetenceCourse: findCompetenceCourseInformationForExecutionPeriod\n(ExecutionSemester):CompetenceCourseInformation
+ 		OPT executionSemester == null
+ 			CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ 			CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformationUntil\n(ExecutionSemester):CompetenceCourseInformation
+ 			CompetenceCourse -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 			ExecutionSemester -> Bennu: getInstance():Bennu
+ 			ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ 		END
+ 		ALT information != null
+ 			CompetenceCourse -> CompetenceCourseInformation_Base: getName():String
+ 		END
+ 		OPT name != null && name.length() > 0
+ 			CompetenceCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 			LocalizedString -> LocalizedString: builder():Builder
+ 			LocalizedString -> Builder: with(Locale,String):Builder
+ 			LocalizedString -> Builder: build():LocalizedString
+ 		END
+ 		CompetenceCourse -> CompetenceCourse: getNameEn(ExecutionSemester):String
+ 		CompetenceCourse -> CompetenceCourse: findCompetenceCourseInformationForExecutionPeriod\n(ExecutionSemester):CompetenceCourseInformation
+ 		ALT information != null
+ 			CompetenceCourse -> CompetenceCourseInformation_Base: getNameEn():String
+ 		END
+ 		OPT nameEn != null && nameEn.length() > 0
+ 			CompetenceCourse -> LocalizedString: with(Locale,String):LocalizedString
+ 			LocalizedString -> LocalizedString: builder():Builder
+ 			LocalizedString -> Builder: with(Locale,String):Builder
+ 			LocalizedString -> Builder: build():LocalizedString
+ 		END
+ 		ComputeCompetenceCourseStatistics -> LocalizedString: getContent():String
+ 		LocalizedString -> LocalizedString: getContent(Locale):String
+ 		LocalizedString -> I18N: getLocale():Locale
+ 		OPT ?
+ 			LocalizedString -> LocalizedString: getContent(Locale):String
+ 		END
+ 		ComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: createCourseStatistics\n(CourseStatisticsDTO,List<Enrolment>):void
+ 		LOOP for: enrolments
+ 			ComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: getBestEnrollmentEvaluation(Enrolment):EnrolmentEvaluation
+ 			ALT enrolment.isFirstTime()
+ 				OPT evaluation != null && evaluation.getEnrollmentStateByGrade() == EnrollmentState.APROVED
+ 					ComputeCompetenceCourseStatistics -> EnrolmentEvaluation: getGradeWrapper():IGrade
+ 					EnrolmentEvaluation -> GradeFactory: getInstance():GradeFactory
+ 					EnrolmentEvaluation -> EnrolmentEvaluation: getGradeValue():String
+ 					EnrolmentEvaluation -> GradeFactory: getGrade(String):IGrade
+ 				END
+ 			ELSE else
+ 				OPT evaluation != null && evaluation.getEnrollmentStateByGrade() == EnrollmentState.APROVED
+ 					ComputeCompetenceCourseStatistics -> EnrolmentEvaluation: getGradeWrapper():IGrade
+ 					EnrolmentEvaluation -> GradeFactory: getInstance():GradeFactory
+ 					EnrolmentEvaluation -> EnrolmentEvaluation: getGradeValue():String
+ 					EnrolmentEvaluation -> GradeFactory: getGrade(String):IGrade
+ 				END
+ 			END
+ 		END
+ 		ComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 		ComputeCompetenceCourseStatistics -> IGrade: getGradeType():GradeType
+ 		ComputeCompetenceCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 		ComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 		ComputeCompetenceCourseStatistics -> IGrade: getGradeType():GradeType
+ 		ComputeCompetenceCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 		ComputeCompetenceCourseStatistics -> ComputeCompetenceCourseStatistics: calculateApprovedAverage(List<IGrade>):IGrade
+ 		ComputeCompetenceCourseStatistics -> IGrade: getGradeType():GradeType
+ 		ComputeCompetenceCourseStatistics -> IGrade: average(List<IGrade>):IGrade
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setFirstEnrolledCount(int):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setFirstApprovedCount(int):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setFirstApprovedAverage(IGrade):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setRestEnrolledCount(int):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setRestApprovedCount(int):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setRestApprovedAverage(IGrade):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setTotalEnrolledCount(int):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setTotalApprovedCount(int):void
+ 		ComputeCompetenceCourseStatistics -> CourseStatisticsDTO: setTotalApprovedAverage(IGrade):void
+ 	END
+ END
+ @enduml

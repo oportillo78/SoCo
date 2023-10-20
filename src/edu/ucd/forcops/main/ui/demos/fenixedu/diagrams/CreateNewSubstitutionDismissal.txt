@@ -1,0 +1,131 @@
+@startuml
+ participant "JSP\nJSPCreateNewSubstitutionDismissal" as JSPCreateNewSubstitutionDismissal order 0
+ participant "services.administrativeOffice.dismissal\nCreateNewSubstitutionDismissal" as CreateNewSubstitutionDismissal order 1
+ participant "dto.administrativeOffice.dismissal\nDismissalBean" as DismissalBean order 21
+ participant "dto.administrativeOffice.dismissal.DismissalBean\nSelectedEnrolment" as SelectedEnrolment order 30
+ participant "dto.administrativeOffice.dismissal.DismissalBean\nSelectedExternalEnrolment" as SelectedExternalEnrolment order 31
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 32
+ participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 55
+ participant "domain.studentCurriculum\nCurriculumGroup" as CurriculumGroup order 58
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 61
+ participant "predicate\nAccessControl" as AccessControl order 62
+ participant "domain.accessControl.academicAdministration\nAcademicAccessRule" as AcademicAccessRule order 63
+ participant "domain.accessControl.rules\nAccessRuleSystem" as AccessRuleSystem order 70
+ participant "core.domain\nBennu" as Bennu order 87
+ participant "core.domain\nBennu" as Bennu order 88
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 101
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 102
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 103
+ participant "core.domain\nBennu" as Bennu order 104
+ participant "domain\nPerson_Base" as Person_Base order 105
+ participant "domain.studentCurriculum\nCreditsManager" as CreditsManager order 106
+ participant "dto.administrativeOffice.dismissal.DismissalBean\nSelectedCurricularCourse" as SelectedCurricularCourse order 117
+ participant "domain.studentCurriculum\nSubstitution" as Substitution order 118
+ participant "domain.studentCurriculum\nSubstitution" as Substitution order 127
+ participant "domain.studentCurriculum\nSubstitution" as Substitution order 136
+ JSPCreateNewSubstitutionDismissal -> CreateNewSubstitutionDismissal: getConnection()
+ JSPCreateNewSubstitutionDismissal <- CreateNewSubstitutionDismissal: returnConnection()
+ JSPCreateNewSubstitutionDismissal -> CreateNewSubstitutionDismissal: executeAction()
+ CreateNewSubstitutionDismissal -> CreateNewSubstitutionDismissal: run(DismissalBean):void
+ CreateNewSubstitutionDismissal -> DismissalBean: getStudentCurricularPlan():StudentCurricularPlan
+ CreateNewSubstitutionDismissal -> DismissalBean: getCourseGroup():CourseGroup
+ CreateNewSubstitutionDismissal -> DismissalBean: getCurriculumGroup():CurriculumGroup
+ CreateNewSubstitutionDismissal -> DismissalBean: getAllDismissals():Collection<SelectedCurricularCourse>
+ OPT getDismissals() != null
+ 	DismissalBean -> DismissalBean: getDismissals():Collection<SelectedCurricularCourse>
+ END
+ OPT getOptionalDismissals() != null
+ 	DismissalBean -> DismissalBean: getOptionalDismissals\n():Collection<SelectedOptionalCurricularCourse>
+ END
+ CreateNewSubstitutionDismissal -> DismissalBean: getSelectedEnrolments():Collection<IEnrolment>
+ OPT getEnrolments() != null
+ 	LOOP for: getEnrolments()
+ 		OPT selectedEnrolment.getSelected()
+ 			DismissalBean -> SelectedEnrolment: getEnrolment():Enrolment
+ 		END
+ 	END
+ END
+ OPT getExternalEnrolments() != null
+ 	LOOP for: getExternalEnrolments()
+ 		OPT selectedEnrolment.getSelected()
+ 			DismissalBean -> SelectedExternalEnrolment: getExternalEnrolment():ExternalEnrolment
+ 		END
+ 	END
+ END
+ CreateNewSubstitutionDismissal -> DismissalBean: getCredits():Double
+ CreateNewSubstitutionDismissal -> DismissalBean: getExecutionPeriod():ExecutionSemester
+ CreateNewSubstitutionDismissal -> StudentCurricularPlan: createNewSubstitutionDismissal\n(CourseGroup,CurriculumGroup,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,Double,ExecutionSemester):Substitution
+ StudentCurricularPlan -> StudentCurricularPlan: checkPermission\n(CourseGroup,CurriculumGroup,Collection<SelectedCurricularCourse>):void
+ StudentCurricularPlan -> AccessControl: getPerson():Person
+ StudentCurricularPlan -> AcademicAccessRule: isProgramAccessibleToFunction\n(AcademicOperationType,AcademicProgram,User):boolean
+ AcademicAccessRule -> AcademicAccessRule: filter\n(AcademicOperationType):Stream<AcademicAccessRule>
+ AcademicAccessRule -> AcademicAccessRule: accessRules():Stream<AcademicAccessRule>
+ AcademicAccessRule -> AccessRuleSystem: accessRules():Stream<AccessRule>
+ AccessRuleSystem -> AccessRuleSystem: getInstance():AccessRuleSystem
+ OPT Bennu.getInstance().getAccessRuleSystem() == null
+ 	AccessRuleSystem -> AccessRuleSystem: initialize():AccessRuleSystem
+ 	OPT Bennu.getInstance().getAccessRuleSystem() == null
+ 		AccessRuleSystem -> AccessRuleSystem: AccessRuleSystem()
+ 	END
+ 	AccessRuleSystem -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	AccessRuleSystem -> Bennu: getAccessRuleSystem():AccessRuleSystem
+ END
+ AccessRuleSystem -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ AccessRuleSystem -> Bennu: getAccessRuleSystem():AccessRuleSystem
+ AccessRuleSystem -> AccessRuleSystem: getAccessRuleSet():Set<AccessRule>
+ StudentCurricularPlan -> StudentCurricularPlan: getDegree():Degree
+ StudentCurricularPlan -> StudentCurricularPlan: getDegreeCurricularPlan():DegreeCurricularPlan
+ StudentCurricularPlan -> DegreeCurricularPlan: getDegree():Degree
+ StudentCurricularPlan -> Person_Base: getUser():User
+ ALT courseGroup != null
+ 	StudentCurricularPlan -> StudentCurricularPlan: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 	StudentCurricularPlan -> StudentCurricularPlan: getRoot():RootCurriculumGroup
+ 	StudentCurricularPlan -> RootCurriculumGroup: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 	LOOP for: getCurriculumModulesSet()
+ 		OPT !curriculumModule.isLeaf()
+ 			RootCurriculumGroup -> CurriculumGroup: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 			LOOP for: getCurriculumModulesSet()
+ 				OPT !curriculumModule.isLeaf()
+ 					CurriculumGroup -> CurriculumGroup: findCurriculumGroupFor(CourseGroup):CurriculumGroup
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ StudentCurricularPlan -> CreditsManager: createSubstitution\n(StudentCurricularPlan,CourseGroup,CurriculumGroup,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,Double,ExecutionSemester):Substitution
+ ALT courseGroup != null
+ 	CreditsManager -> CreditsManager: buildNoEnrolCurricularCourses\n(Collection<SelectedCurricularCourse>):Collection<CurricularCourse>
+ 	LOOP for: dismissals
+ 		CreditsManager -> SelectedCurricularCourse: getCurricularCourse():CurricularCourse
+ 	END
+ 	CreditsManager -> Substitution: Substitution\n(StudentCurricularPlan,CourseGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,ExecutionSemester)
+ 	Substitution -> Substitution: Substitution()
+ 	Substitution -> Substitution: init\n(StudentCurricularPlan,CourseGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,ExecutionSemester):void
+ 	Substitution -> Substitution: checkEnrolments(Collection<IEnrolment>):void
+ 	Substitution -> Substitution: init\n(StudentCurricularPlan,CourseGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,ExecutionSemester):void
+ ELSE else
+ 	ALT curriculumGroup != null
+ 		CreditsManager -> Substitution: Substitution\n(StudentCurricularPlan,CurriculumGroup,Collection<IEnrolment>,Double,ExecutionSemester)
+ 		Substitution -> Substitution: Substitution()
+ 		Substitution -> Substitution: init\n(StudentCurricularPlan,CurriculumGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,ExecutionSemester):void
+ 		Substitution -> Substitution: checkEnrolments(Collection<IEnrolment>):void
+ 		Substitution -> Substitution: init\n(StudentCurricularPlan,CurriculumGroup,Collection<IEnrolment>,Collection<CurricularCourse>,Double,ExecutionSemester):void
+ 	ELSE else
+ 		CreditsManager -> Substitution: Substitution\n(StudentCurricularPlan,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,ExecutionSemester)
+ 		Substitution -> Substitution: Substitution()
+ 		Substitution -> Substitution: init\n(StudentCurricularPlan,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,ExecutionSemester):void
+ 		Substitution -> Substitution: checkEnrolments(Collection<IEnrolment>):void
+ 		Substitution -> Substitution: init\n(StudentCurricularPlan,Collection<SelectedCurricularCourse>,Collection<IEnrolment>,ExecutionSemester):void
+ 	END
+ END
+ @enduml

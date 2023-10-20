@@ -1,0 +1,91 @@
+@startuml
+ participant "JSP\nJSPCreatePastDiplomaRequest" as JSPCreatePastDiplomaRequest order 0
+ participant "services.serviceRequests.documentRequests\nCreatePastDiplomaRequest" as CreatePastDiplomaRequest order 1
+ participant "org.joda.time\nLocalDate" as LocalDate order 85
+ participant "org.joda.time\nDateTime" as DateTime order 86
+ participant "domain.accounting.events.serviceRequests\nPastDegreeDiplomaRequestEvent" as PastDegreeDiplomaRequestEvent order 87
+ participant "domain.serviceRequests\nAcademicServiceRequest_Base" as AcademicServiceRequest_Base order 88
+ participant "core.security\nAuthenticate" as Authenticate order 89
+ participant "dto.serviceRequests\nAcademicServiceRequestCreateBean" as AcademicServiceRequestCreateBean order 90
+ participant "org.joda.time\nLocalDate" as LocalDate order 91
+ participant "org.joda.time\nDateTimeUtils" as DateTimeUtils order 110
+ participant "org.joda.time\nChronology" as Chronology order 111
+ participant "org.joda.time\nDateTimeZone" as DateTimeZone order 112
+ participant "org.joda.time\nChronology" as Chronology order 113
+ participant "org.joda.time\nDateTimeField" as DateTimeField order 114
+ participant "org.joda.time\nDateTime" as DateTime order 115
+ participant "domain.serviceRequests\nAcademicServiceRequest" as AcademicServiceRequest order 116
+ participant "org.joda.time\nLocalDate" as LocalDate order 121
+ participant "domain.serviceRequests\nAcademicServiceRequestSituation" as AcademicServiceRequestSituation order 122
+ JSPCreatePastDiplomaRequest -> CreatePastDiplomaRequest: getConnection()
+ JSPCreatePastDiplomaRequest <- CreatePastDiplomaRequest: returnConnection()
+ JSPCreatePastDiplomaRequest -> CreatePastDiplomaRequest: executeAction()
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: create\n(DocumentRequestCreator):PastDiplomaRequest
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: setRequestDate(DateTime):void
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastRequestDate():LocalDate
+ CreatePastDiplomaRequest -> LocalDate: toDateTimeAtStartOfDay():DateTime
+ LocalDate -> LocalDate: toDateTimeAtStartOfDay(DateTimeZone):DateTime
+ LocalDate -> DateTimeUtils: getZone(DateTimeZone):DateTimeZone
+ LocalDate -> LocalDate: getChronology():Chronology
+ LocalDate -> Chronology: withZone(DateTimeZone):Chronology
+ LocalDate -> LocalDate: getLocalMillis():long
+ LocalDate -> DateTimeZone: convertLocalToUTC(long,boolean):long
+ LocalDate -> Chronology: dayOfMonth():DateTimeField
+ LocalDate -> DateTimeField: roundFloor(long):long
+ LocalDate -> DateTime: DateTime(long,Chronology)
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: createPastDiplomaRequest\n(DocumentRequestCreator):PastDiplomaRequest
+ CreatePastDiplomaRequest -> AcademicServiceRequest: PastDiplomaRequest()
+ CreatePastDiplomaRequest -> AcademicServiceRequest: init\n(RegistrationAcademicServiceRequestCreateBean):void
+ CreatePastDiplomaRequest -> AcademicServiceRequest: getActiveSituation():AcademicServiceRequestSituation
+ ALT !getAcademicServiceRequestSituationsSet().isEmpty()
+ 	AcademicServiceRequest -> AcademicServiceRequest: getAcademicServiceRequestSituationsSet():Set<AcademicServiceRequestSituation>
+ 	AcademicServiceRequest -> AcademicServiceRequest: getAcademicServiceRequestSituationsSet():Set<AcademicServiceRequestSituation>
+ END
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastRequestDate():LocalDate
+ CreatePastDiplomaRequest -> LocalDate: toDateTimeAtStartOfDay():DateTime
+ CreatePastDiplomaRequest -> AcademicServiceRequestSituation: setSituationDate(DateTime):void
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: createSituations\n(PastDiplomaRequest,DocumentRequestCreateBean):void
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastRequestDate():LocalDate
+ ALT bean.getPastPaymentDate() == null
+ 	CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: setPastPaymentDate(LocalDate):void
+ ELSE else
+ 	ALT (latestDate.compareTo(bean.getPastPaymentDate()) < 0)
+ 		CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastPaymentDate():LocalDate
+ 	END
+ END
+ ALT bean.getPastEmissionDate() == null
+ 	CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: setPastEmissionDate(LocalDate):void
+ ELSE else
+ 	ALT (latestDate.compareTo(bean.getPastEmissionDate()) < 0)
+ 		CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastEmissionDate():LocalDate
+ 	END
+ END
+ OPT bean.getPastDispatchDate() == null
+ 	CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: setPastDispatchDate(LocalDate):void
+ END
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: createPaymentSituation\n(PastDiplomaRequest,DocumentRequestCreateBean):void
+ OPT isPayed(bean)
+ 	CreatePastDiplomaRequest -> PastDegreeDiplomaRequestEvent: PastDegreeDiplomaRequestEvent\n(AdministrativeOffice,Person,PastDiplomaRequest,Money)
+ 	CreatePastDiplomaRequest -> AcademicServiceRequest_Base: getAdministrativeOffice():AdministrativeOffice
+ 	CreatePastDiplomaRequest -> AcademicServiceRequest_Base: getPerson():Person
+ 	CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastPaymentAmount():Money
+ 	CreatePastDiplomaRequest -> PastDegreeDiplomaRequestEvent: depositAmount\n(User,Money,AccountingTransactionDetailDTO):AccountingTransaction
+ 	CreatePastDiplomaRequest -> Authenticate: getUser():User
+ 	CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastPaymentAmount():Money
+ 	CreatePastDiplomaRequest -> CreatePastDiplomaRequest: createTransactionDetailDTO\n(DocumentRequestCreateBean):AccountingTransactionDetailDTO
+ END
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: process(PastDiplomaRequest,LocalDate):void
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: editSituation\n(PastDiplomaRequest,AcademicServiceRequestSituationType,DateTime):void
+ CreatePastDiplomaRequest -> LocalDate: toDateTimeAtStartOfDay():DateTime
+ CreatePastDiplomaRequest -> DateTime: plusMinutes(int):DateTime
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastRequestDate():LocalDate
+ CreatePastDiplomaRequest -> AcademicServiceRequest: setNumberOfPages(Integer):void
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: send(PastDiplomaRequest,LocalDate):void
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastRequestDate():LocalDate
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: receive(PastDiplomaRequest,LocalDate):void
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastRequestDate():LocalDate
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: conclude(PastDiplomaRequest,LocalDate):void
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastEmissionDate():LocalDate
+ CreatePastDiplomaRequest -> CreatePastDiplomaRequest: deliver(PastDiplomaRequest,LocalDate):void
+ CreatePastDiplomaRequest -> AcademicServiceRequestCreateBean: getPastDispatchDate():LocalDate
+ @enduml

@@ -1,0 +1,49 @@
+@startuml
+ participant "JSP\nJSPCreateBranchCourseGroup" as JSPCreateBranchCourseGroup order 0
+ participant "services.bolonhaManager\nCreateBranchCourseGroup" as CreateBranchCourseGroup order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 17
+ participant "domain\nExecutionSemester" as ExecutionSemester order 18
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 19
+ participant "domain.degreeStructure\nBranchCourseGroup" as BranchCourseGroup order 22
+ participant "domain.degreeStructure\nCourseGroup" as CourseGroup order 37
+ participant "util\nStringFormatter" as StringFormatter order 42
+ participant "domain.degreeStructure\nContext" as Context order 43
+ participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 66
+ JSPCreateBranchCourseGroup -> CreateBranchCourseGroup: getConnection()
+ JSPCreateBranchCourseGroup <- CreateBranchCourseGroup: returnConnection()
+ JSPCreateBranchCourseGroup -> CreateBranchCourseGroup: executeAction()
+ CreateBranchCourseGroup -> CreateBranchCourseGroup: run\n(String,String,String,String,BranchType,String,String):void
+ CreateBranchCourseGroup -> FenixFramework: getDomainObject(String):T
+ CreateBranchCourseGroup -> FenixFramework: getDomainObject(String):T
+ ALT beginExecutionPeriodID == null
+ 	CreateBranchCourseGroup -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ ELSE else
+ 	CreateBranchCourseGroup -> FenixFramework: getDomainObject(String):T
+ END
+ ALT (endExecutionPeriodID == null)
+ ELSE else
+ 	CreateBranchCourseGroup -> FenixFramework: getDomainObject(String):T
+ END
+ CreateBranchCourseGroup -> DegreeCurricularPlan: createBranchCourseGroup\n(CourseGroup,String,String,BranchType,ExecutionSemester,ExecutionSemester):BranchCourseGroup
+ DegreeCurricularPlan -> BranchCourseGroup: BranchCourseGroup\n(CourseGroup,String,String,BranchType,ExecutionSemester,ExecutionSemester)
+ BranchCourseGroup -> BranchCourseGroup: init\n(CourseGroup,String,String,ExecutionSemester,ExecutionSemester):void
+ BranchCourseGroup -> BranchCourseGroup: init\n(CourseGroup,String,String,ExecutionSemester,ExecutionSemester,ProgramConclusion):void
+ BranchCourseGroup -> BranchCourseGroup: init(String,String):void
+ BranchCourseGroup -> CourseGroup: checkDuplicateChildNames(String,String):void
+ CourseGroup -> StringFormatter: normalize(String):String
+ CourseGroup -> StringFormatter: normalize(String):String
+ BranchCourseGroup -> Context: Context\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionSemester,ExecutionSemester)
+ Context -> Context: Context()
+ Context -> Context: checkParameters\n(CourseGroup,DegreeModule,ExecutionSemester):void
+ Context -> Context: checkExecutionPeriods\n(ExecutionSemester,ExecutionSemester):void
+ Context -> Context: checkIfCanAddDegreeModuleToCourseGroup\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionYear):void
+ Context -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+ Context -> Context: checkExistingCourseGroupContexts\n(CourseGroup,DegreeModule,CurricularPeriod,ExecutionSemester,ExecutionSemester):void
+ Context -> Context: setParentCourseGroup(CourseGroup):void
+ Context -> Context: setChildDegreeModule(DegreeModule):void
+ Context -> Context: setCurricularPeriod(CurricularPeriod):void
+ Context -> Context: setBeginExecutionPeriod(ExecutionSemester):void
+ Context -> Context: setEndExecutionPeriod(ExecutionSemester):void
+ BranchCourseGroup -> BranchCourseGroup: setProgramConclusion(ProgramConclusion):void
+ BranchCourseGroup -> BranchCourseGroup: setBranchType(BranchType):void
+ @enduml

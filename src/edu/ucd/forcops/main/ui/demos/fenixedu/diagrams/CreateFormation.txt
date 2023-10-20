@@ -1,0 +1,47 @@
+@startuml
+ participant "JSP\nJSPCreateFormation" as JSPCreateFormation order 0
+ participant "services.alumni\nCreateFormation" as CreateFormation order 1
+ participant "domain\nAlumni_Base" as Alumni_Base order 37
+ participant "domain.student\nStudent" as Student order 38
+ participant "dto.alumni.formation\nAlumniFormation" as AlumniFormation order 39
+ participant "domain\nFormation" as Formation order 40
+ participant "domain\nQualificationType" as QualificationType order 73
+ JSPCreateFormation -> CreateFormation: getConnection()
+ JSPCreateFormation <- CreateFormation: returnConnection()
+ JSPCreateFormation -> CreateFormation: executeAction()
+ CreateFormation -> CreateFormation: runCreateFormation(Alumni,AlumniFormation):void
+ CreateFormation -> CreateFormation: run(Alumni,AlumniFormation):void
+ CreateFormation -> CreateFormation: createAlumniFormation(Alumni,AlumniFormation):void
+ CreateFormation -> Alumni_Base: getStudent():Student
+ CreateFormation -> Student: getPerson():Person
+ CreateFormation -> AlumniFormation: getFormationType():FormationType
+ CreateFormation -> AlumniFormation: getFormationDegree():QualificationType
+ CreateFormation -> AlumniFormation: getEducationArea():EducationArea
+ CreateFormation -> AlumniFormation: getFormationBeginYear():String
+ CreateFormation -> AlumniFormation: getFormationEndYear():String
+ CreateFormation -> AlumniFormation: getFormationCredits():BigDecimal
+ CreateFormation -> AlumniFormation: getFormationHours():Integer
+ CreateFormation -> CreateFormation: getFormationInstitution\n(AlumniFormation):AcademicalInstitutionUnit
+ CreateFormation -> AlumniFormation: getParentInstitution():AcademicalInstitutionUnit
+ CreateFormation -> AlumniFormation: getInstitutionType():AcademicalInstitutionType
+ CreateFormation -> AlumniFormation: getCountryUnit():CountryUnit
+ CreateFormation -> Formation: Formation\n(Person,Formation\nType,QualificationType,EducationArea,String,String,BigDecimal,Integer,AcademicalInstitutionUnit,AcademicalInstitutionUnit,AcademicalInstitutionType,CountryUnit)
+ Formation -> Formation: Formation()
+ Formation -> Formation: checkParameters\n(Person,FormationType,QualificationType,EducationArea,String,String,BigDecimal,Integer,AcademicalInstitutionUnit,AcademicalInstitutionType):void
+ Formation -> Formation: setPerson(Person):void
+ Formation -> Formation: setFormationType(FormationType):void
+ OPT degree != null
+ 	Formation -> Formation: setDegree(String):void
+ 	Formation -> QualificationType: getName():String
+ END
+ Formation -> Formation: setType(QualificationType):void
+ Formation -> Formation: setEducationArea(EducationArea):void
+ Formation -> Formation: setBeginYear(String):void
+ Formation -> Formation: setYear(String):void
+ Formation -> Formation: setInstitution(Unit):void
+ Formation -> Formation: setBaseInstitution(Unit):void
+ Formation -> Formation: setInstitutionType(AcademicalInstitutionType):void
+ Formation -> Formation: setEctsCredits(BigDecimal):void
+ Formation -> Formation: setFormationHours(Integer):void
+ Formation -> Formation: setCountryUnit(CountryUnit):void
+ @enduml
