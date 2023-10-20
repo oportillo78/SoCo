@@ -1,0 +1,43 @@
+@startuml
+ participant "JSP\nJSPDeleteExemption" as JSPDeleteExemption order 0
+ participant "services.accounting\nDeleteExemption" as DeleteExemption order 1
+ participant "predicate\nAccessControl" as AccessControl order 15
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 16
+ participant "domain\nPerson" as Person order 17
+ participant "domain.accounting\nExemption" as Exemption order 18
+ participant "domain.exceptions\nDomainException" as DomainException order 43
+ participant "domain.accounting.events\nExemptionJustification" as ExemptionJustification order 44
+ participant "domain.accounting\nEvent" as Event order 51
+ participant "org.joda.time\nDateTime" as DateTime order 52
+ JSPDeleteExemption -> DeleteExemption: getConnection()
+ JSPDeleteExemption <- DeleteExemption: returnConnection()
+ JSPDeleteExemption -> DeleteExemption: executeAction()
+ DeleteExemption -> DeleteExemption: run(Exemption):void
+ DeleteExemption -> DeleteExemption: check(AccessControlPredicate<?>):void
+ DeleteExemption -> AccessControl: getPerson():Person
+ DeleteExemption -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteExemption -> Person: getUsername():String
+ 	END
+ END
+ DeleteExemption -> Exemption: delete():void
+ Exemption -> Exemption: delete(boolean):void
+ Exemption -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ Exemption -> Exemption: getDeletionBlockers():Collection<String>
+ Exemption -> Exemption: setRootDomainObject(Bennu):void
+ Exemption -> Exemption: setResponsible(Person):void
+ Exemption -> Exemption: getExemptionJustification():ExemptionJustification
+ Exemption -> ExemptionJustification: delete():void
+ ExemptionJustification -> ExemptionJustification: setRootDomainObject(Bennu):void
+ ExemptionJustification -> ExemptionJustification: setExemption(Exemption):void
+ ExemptionJustification -> ExemptionJustification: deleteDomainObject():void
+ Exemption -> Exemption: getEvent():Event
+ Exemption -> Exemption: setEvent(Event):void
+ OPT recalculateEventState
+ 	Exemption -> Event: recalculateState(DateTime):void
+ 	Exemption -> DateTime: DateTime()
+ END
+ Exemption -> Exemption: deleteDomainObject():void
+ @enduml

@@ -1,0 +1,21 @@
+@startuml
+ participant "JSP\nJSPDeleteExternalCurricularCourse" as JSPDeleteExternalCurricularCourse order 0
+ participant "services.administrativeOffice.externalUnits\nDeleteExternalCurricularCourse" as DeleteExternalCurricularCourse order 1
+ participant "domain\nExternalCurricularCourse" as ExternalCurricularCourse order 7
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 22
+ participant "domain.exceptions\nDomainException" as DomainException order 23
+ JSPDeleteExternalCurricularCourse -> DeleteExternalCurricularCourse: getConnection()
+ JSPDeleteExternalCurricularCourse <- DeleteExternalCurricularCourse: returnConnection()
+ JSPDeleteExternalCurricularCourse -> DeleteExternalCurricularCourse: executeAction()
+ DeleteExternalCurricularCourse -> DeleteExternalCurricularCourse: run(ExternalCurricularCourse):void
+ DeleteExternalCurricularCourse -> ExternalCurricularCourse: delete():void
+ ExternalCurricularCourse -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: getDeletionBlockers():Collection<String>
+ ExternalCurricularCourse -> ExternalCurricularCourse: checkForDeletionBlockers(Collection<String>):void
+ LOOP for: ?
+ 	ExternalCurricularCourse -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ END
+ ExternalCurricularCourse -> ExternalCurricularCourse: setRootDomainObject(Bennu):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: setUnit(Unit):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: deleteDomainObject():void
+ @enduml

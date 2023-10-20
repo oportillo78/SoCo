@@ -1,0 +1,57 @@
+@startuml
+ participant "JSP\nJSPEditCompetenceCourse" as JSPEditCompetenceCourse order 0
+ participant "services.bolonhaManager\nEditCompetenceCourse" as EditCompetenceCourse order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 25
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 27
+ participant "domain.degreeStructure\nCompetenceCourseInformation" as CompetenceCourseInformation order 44
+ participant "domain\nExecutionSemester" as ExecutionSemester order 45
+ participant "core.domain\nBennu" as Bennu order 50
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 56
+ participant "core.domain\nBennu" as Bennu order 57
+ participant "domain.degreeStructure\nCompetenceCourseInformation" as CompetenceCourseInformation order 58
+ participant "service.filter\nBolonhaManagerAuthorizationFilter" as BolonhaManagerAuthorizationFilter order 59
+ participant "core.security\nAuthenticate" as Authenticate order 62
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 68
+ participant "service.filter\nScientificCouncilAuthorizationFilter" as ScientificCouncilAuthorizationFilter order 69
+ JSPEditCompetenceCourse -> EditCompetenceCourse: getConnection()
+ JSPEditCompetenceCourse <- EditCompetenceCourse: returnConnection()
+ JSPEditCompetenceCourse -> EditCompetenceCourse: executeAction()
+ EditCompetenceCourse -> EditCompetenceCourse: runEditCompetenceCourse(String,String):void
+ EditCompetenceCourse -> BolonhaManagerAuthorizationFilter: execute():void
+ BolonhaManagerAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ EditCompetenceCourse -> EditCompetenceCourse: run(String,String):void
+ EditCompetenceCourse -> EditCompetenceCourse: readCompetenceCourse(String):CompetenceCourse
+ EditCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ EditCompetenceCourse -> CompetenceCourse: editAcronym(String):void
+ CompetenceCourse -> CompetenceCourse: readBolonhaCompetenceCourses():Collection<CompetenceCourse>
+ CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformationUntil\n(ExecutionSemester):CompetenceCourseInformation
+ CompetenceCourse -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ ExecutionSemester -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ CompetenceCourse -> CompetenceCourseInformation: setAcronym(String):void
+ OPT NotAuthorizedException ex1
+ 	EditCompetenceCourse -> ScientificCouncilAuthorizationFilter: execute():void
+ 	ScientificCouncilAuthorizationFilter -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	EditCompetenceCourse -> EditCompetenceCourse: run(String,String):void
+ 	EditCompetenceCourse -> EditCompetenceCourse: readCompetenceCourse(String):CompetenceCourse
+ 	EditCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ 	EditCompetenceCourse -> CompetenceCourse: editAcronym(String):void
+ 	CompetenceCourse -> CompetenceCourse: readBolonhaCompetenceCourses():Collection<CompetenceCourse>
+ 	CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ 	CompetenceCourse -> CompetenceCourseInformation: setAcronym(String):void
+ END
+ @enduml

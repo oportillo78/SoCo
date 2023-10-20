@@ -1,0 +1,47 @@
+@startuml
+participant "JSP\nJSPEditReceipt" as JSPEditReceipt order 0
+participant "services.accounting\nEditReceipt" as EditReceipt order 1
+participant "predicate\nAccessControl" as AccessControl order 15
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 17
+participant "domain\nPerson" as Person order 19
+participant "core.domain\nUser" as User order 25
+participant "domain.accounting\nReceipt" as Receipt order 26
+participant "org.joda.time\nDateTime" as DateTime order 48
+participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 49
+JSPEditReceipt -> EditReceipt: getConnection()
+JSPEditReceipt <- EditReceipt: returnConnection()
+JSPEditReceipt -> EditReceipt: executeAction()
+EditReceipt -> EditReceipt: run\n(Receipt,Person,String,String,String):void
+EditReceipt -> EditReceipt: check(AccessControlPredicate<?>):void
+EditReceipt -> AccessControl: getPerson():Person
+EditReceipt -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt requester == null
+	else else
+		alt user == null
+		else else
+			Person -> User: getUsername():String
+		end
+		Person -> Person: getUser():User
+		EditReceipt -> Person: getUsername():String
+	end
+end
+EditReceipt -> Receipt: edit(Person,String,String,String):void
+Receipt -> Receipt: check(T,AccessControlPredicate<T>):void
+Receipt -> AccessControl: getPerson():Person
+Receipt -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt requester == null
+	else else
+		Receipt -> Person: getUsername():String
+	end
+	Receipt -> DomainObject: getExternalId():String
+end
+Receipt -> Receipt: markChange(Person):void
+Receipt -> Receipt: setWhenUpdated(DateTime):void
+Receipt -> DateTime: newDateTime()
+Receipt -> Receipt: setResponsible(Person):void
+Receipt -> Receipt: setContributorName(String):void
+Receipt -> Receipt: setContributorNumber(String):void
+Receipt -> Receipt: setContributorAddress(String):void
+@enduml

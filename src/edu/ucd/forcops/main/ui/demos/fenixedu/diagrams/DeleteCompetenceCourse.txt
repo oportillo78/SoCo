@@ -1,0 +1,29 @@
+@startuml
+ participant "JSP\nJSPDeleteCompetenceCourse" as JSPDeleteCompetenceCourse order 0
+ participant "services.bolonhaManager\nDeleteCompetenceCourse" as DeleteCompetenceCourse order 1
+ participant "predicate\nAccessControl" as AccessControl order 17
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 18
+ participant "domain\nPerson" as Person order 19
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 20
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 21
+ JSPDeleteCompetenceCourse -> DeleteCompetenceCourse: getConnection()
+ JSPDeleteCompetenceCourse <- DeleteCompetenceCourse: returnConnection()
+ JSPDeleteCompetenceCourse -> DeleteCompetenceCourse: executeAction()
+ DeleteCompetenceCourse -> DeleteCompetenceCourse: run(String):void
+ DeleteCompetenceCourse -> DeleteCompetenceCourse: check(AccessControlPredicate<?>):void
+ DeleteCompetenceCourse -> AccessControl: getPerson():Person
+ DeleteCompetenceCourse -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteCompetenceCourse -> Person: getUsername():String
+ 	END
+ END
+ DeleteCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ OPT competenceCourse != null
+ 	DeleteCompetenceCourse -> CompetenceCourse: delete():void
+ 	CompetenceCourse -> CompetenceCourse: getDepartmentsSet():Set<Department>
+ 	CompetenceCourse -> CompetenceCourse: setRootDomainObject(Bennu):void
+ 	CompetenceCourse -> CompetenceCourse: deleteDomainObject():void
+ END
+ @enduml

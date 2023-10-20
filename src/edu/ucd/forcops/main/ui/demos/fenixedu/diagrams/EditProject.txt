@@ -1,0 +1,105 @@
+@startuml
+ participant "JSP\nJSPEditProject" as JSPEditProject order 0
+ participant "services.teacher\nEditProject" as EditProject order 1
+ participant "domain\nProject" as Project order 25
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 62
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 77
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 79
+ participant "domain\nExecutionCourse" as ExecutionCourse order 84
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 85
+ participant "core.security\nAuthenticate" as Authenticate order 86
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 90
+ participant "service.filter\nExecutionCourseCoordinatorAuthorizationFilter" as ExecutionCourseCoordinatorAuthorizationFilter order 91
+ participant "domain\nExecutionCourse" as ExecutionCourse order 114
+ participant "core.domain\nUser" as User order 115
+ participant "service.filter.coordinator.CoordinatorAuthorizationFilter\nCoordinatorByExecutionDegreeComparator" as CoordinatorByExecutionDegreeComparator order 116
+ participant "domain\nPerson_Base" as Person_Base order 117
+ participant "domain\nCoordinator_Base" as Coordinator_Base order 118
+ participant "domain\nExecutionDegree" as ExecutionDegree order 119
+ JSPEditProject -> EditProject: getConnection()
+ JSPEditProject <- EditProject: returnConnection()
+ JSPEditProject -> EditProject: executeAction()
+ EditProject -> EditProject: runEditProject\n(String,String,String,Date,Date,String,Boolean,Integer,String,GradeScale,List<Department>):void
+ EditProject -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ EditProject -> EditProject: run\n(String,String,String,Date,Date,String,Boolean,Integer,String,GradeScale,List<Department>):void
+ EditProject -> FenixFramework: getDomainObject(String):T
+ ALT (groupingID != null)
+ 	EditProject -> FenixFramework: getDomainObject(String):T
+ END
+ EditProject -> Project: edit\n(String,Date,Date,String,Boolean,Integer,Grouping,GradeScale,List<Department>):void
+ Project -> Project: setName(String):void
+ Project -> Project: setBegin(Date):void
+ Project -> Project: setEnd(Date):void
+ Project -> Project: setGradeScale(GradeScale):void
+ Project -> Project: setDescription(String):void
+ Project -> Project: setOnlineSubmissionProperties(Boolean,Integer,Grouping):void
+ Project -> Project: getDeparmentsSet():Set<Department>
+ Project -> Project: logEdit():void
+ Project -> Project: logAuxBasic(String):void
+ OPT NotAuthorizedException ex1
+ 	EditProject -> ExecutionCourseCoordinatorAuthorizationFilter: execute(String):void
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> User: getPerson():Person
+ 	OPT !RoleType.COORDINATOR.isMember(person.getUser())
+ 		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+ 	END
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> CoordinatorByExecutionDegreeComparator: CoordinatorByExecutionDegreeComparator()
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> Person_Base: getCoordinatorsSet():Set<Coordinator>
+ 	OPT coordinators.isEmpty()
+ 		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+ 	END
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: getSpecificExecutionYear(String):ExecutionYear
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 	ALT (executionCourse == null)
+ 	ELSE else
+ 		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourse: getExecutionYear():ExecutionYear
+ 	END
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> Coordinator_Base: getExecutionDegree():ExecutionDegree
+ 	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionDegree: getExecutionYear():ExecutionYear
+ 	OPT executionYear == null || coordinatorExecutionYear.compareTo(executionYear) < 0
+ 		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+ 	END
+ 	EditProject -> EditProject: run\n(String,String,String,Date,Date,String,Boolean,Integer,String,GradeScale,List<Department>):void
+ 	EditProject -> FenixFramework: getDomainObject(String):T
+ 	ALT (groupingID != null)
+ 		EditProject -> FenixFramework: getDomainObject(String):T
+ 	END
+ 	EditProject -> Project: edit\n(String,Date,Date,String,Boolean,Integer,Grouping,GradeScale,List<Department>):void
+ 	Project -> Project: setName(String):void
+ 	Project -> Project: setBegin(Date):void
+ 	Project -> Project: setEnd(Date):void
+ 	Project -> Project: setGradeScale(GradeScale):void
+ 	Project -> Project: setDescription(String):void
+ 	Project -> Project: setOnlineSubmissionProperties(Boolean,Integer,Grouping):void
+ 	Project -> Project: getDeparmentsSet():Set<Department>
+ 	Project -> Project: logEdit():void
+ 	Project -> Project: logAuxBasic(String):void
+ END
+ @enduml

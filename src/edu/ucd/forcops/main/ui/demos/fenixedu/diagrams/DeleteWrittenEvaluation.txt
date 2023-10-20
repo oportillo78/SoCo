@@ -1,0 +1,64 @@
+@startuml
+scale .8
+participant "JSP\nJSPDeleteWrittenEvaluation" as JSPDeleteWrittenEvaluation order 0
+participant "services.resourceAllocationManager.exams\nDeleteWrittenEvaluation" as DeleteWrittenEvaluation order 1
+participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 59
+participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 60
+participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 61
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 62
+participant "core.signals\nSignal" as Signal order 63
+participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 64
+participant "domain\nWrittenEvaluation" as WrittenEvaluation order 65
+participant "service.filter\nEditWrittenEvaluationAuthorization" as EditWrittenEvaluationAuthorization order 66
+participant "core.security\nAuthenticate" as Authenticate order 71
+participant "service.filter\nResourceAllocationManager\nAuthorizationFilter" as ResourceAllocationManagerAuthorizationFilter order 72
+participant "service.filter\nExecutionCourseLecturingTeacher\nAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 73
+participant "service.filter\nExecutionCourseCoordinator\nAuthorizationFilter" as ExecutionCourseCoordinatorAuthorizationFilter order 74
+JSPDeleteWrittenEvaluation -> DeleteWrittenEvaluation: getConnection()
+JSPDeleteWrittenEvaluation <- DeleteWrittenEvaluation: returnConnection()
+JSPDeleteWrittenEvaluation -> DeleteWrittenEvaluation: executeAction()
+DeleteWrittenEvaluation -> DeleteWrittenEvaluation: runDeleteWrittenEvaluation\n(String,String):void
+DeleteWrittenEvaluation -> EditWrittenEvaluationAuthorization: execute(String):void
+EditWrittenEvaluationAuthorization -> Authenticate: getUser():User
+opt !RoleType.RESOURCE_ALLOCATION_MANAGER\n.isMember(userView.getPerson().getUser())
+	EditWrittenEvaluationAuthorization -> EditWrittenEvaluationAuthorization: readWrittenEvaluation\n(String):WrittenEvaluation
+end
+DeleteWrittenEvaluation -> ResourceAllocationManagerAuthorizationFilter: execute():void
+DeleteWrittenEvaluation -> DeleteWrittenEvaluation: run(String,String):void
+DeleteWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+opt writtenEvaluationToDelete instanceof Exam
+	DeleteWrittenEvaluation -> DeleteWrittenEvaluation: disconnectExamCertificateRequests\n(WrittenEvaluation):void
+end
+DeleteWrittenEvaluation -> Signal: emit(String,Object):void
+DeleteWrittenEvaluation -> DomainObjectEvent: newDomainObjectEvent(T)
+DeleteWrittenEvaluation -> WrittenEvaluation: delete():void
+DeleteWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+opt writtenEvaluationToDelete instanceof Exam
+	DeleteWrittenEvaluation -> DeleteWrittenEvaluation: disconnectExamCertificateRequests\n(WrittenEvaluation):void
+end
+DeleteWrittenEvaluation -> Signal: emit(String,Object):void
+DeleteWrittenEvaluation -> DomainObjectEvent: newDomainObjectEvent(T)
+DeleteWrittenEvaluation -> WrittenEvaluation: delete():void
+opt NotAuthorizedException ex1
+	DeleteWrittenEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+	DeleteWrittenEvaluation -> DeleteWrittenEvaluation: run(String,String):void
+	DeleteWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+	opt writtenEvaluationToDelete instanceof Exam
+		DeleteWrittenEvaluation -> DeleteWrittenEvaluation: disconnectExamCertificateRequests\n(WrittenEvaluation):void
+	end
+	DeleteWrittenEvaluation -> Signal: emit(String,Object):void
+	DeleteWrittenEvaluation -> DomainObjectEvent: newDomainObjectEvent(T)
+	DeleteWrittenEvaluation -> WrittenEvaluation: delete():void
+	opt NotAuthorizedException ex2
+		DeleteWrittenEvaluation -> ExecutionCourseCoordinatorAuthorizationFilter: execute(String):void
+		DeleteWrittenEvaluation -> DeleteWrittenEvaluation: run(String,String):void
+		DeleteWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+		opt writtenEvaluationToDelete instanceof Exam
+			DeleteWrittenEvaluation -> DeleteWrittenEvaluation: disconnectExamCertificateRequests\n(WrittenEvaluation):void
+		end
+		DeleteWrittenEvaluation -> Signal: emit(String,Object):void
+		DeleteWrittenEvaluation -> DomainObjectEvent: newDomainObjectEvent(T)
+		DeleteWrittenEvaluation -> WrittenEvaluation: delete():void
+	end
+end
+@enduml

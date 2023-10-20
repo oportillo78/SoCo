@@ -1,0 +1,138 @@
+@startuml
+ participant "JSP\nJSPDeleteLessons" as JSPDeleteLessons order 0
+ participant "services.resourceAllocationManager\nDeleteLessons" as DeleteLessons order 1
+ participant "predicate\nAccessControl" as AccessControl order 17
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 33
+ participant "core.security\nAuthenticate" as Authenticate order 36
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 39
+ participant "core.domain\nUser_Base" as User_Base order 40
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 41
+ participant "domain\nPerson" as Person order 44
+ participant "core.domain\nUser" as User order 51
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 52
+ participant "domain\nLesson" as Lesson order 53
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 81
+ participant "domain\nOccupationPeriod_Base" as OccupationPeriod_Base order 100
+ participant "domain.space\nLessonSpaceOccupation" as LessonSpaceOccupation order 101
+ participant "domain\nLessonInstance" as LessonInstance order 118
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 147
+ participant "domain.exceptions\nDomainException" as DomainException order 148
+ participant "domain.space\nLessonInstanceSpaceOccupation_Base" as LessonInstanceSpaceOccupation_Base order 149
+ JSPDeleteLessons -> DeleteLessons: getConnection()
+ JSPDeleteLessons <- DeleteLessons: returnConnection()
+ JSPDeleteLessons -> DeleteLessons: executeAction()
+ DeleteLessons -> DeleteLessons: run(List<String>):void
+ DeleteLessons -> DeleteLessons: check(AccessControlPredicate<?>):void
+ DeleteLessons -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ DeleteLessons -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteLessons -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ LOOP for: lessonOIDs
+ 	DeleteLessons -> FenixFramework: getDomainObject(String):T
+ 	OPT lesson != null
+ 		DeleteLessons -> Lesson: delete():void
+ 		Lesson -> AccessControl: check(T,AccessControlPredicate<T>):void
+ 		AccessControl -> AccessControl: getPerson():Person
+ 		AccessControl -> AccessControlPredicate: evaluate(E):boolean
+ 		OPT !result
+ 			ALT requester == null
+ 			ELSE else
+ 				AccessControl -> Person: getUsername():String
+ 			END
+ 			AccessControl -> DomainObject: getExternalId():String
+ 		END
+ 		Lesson -> Lesson: getShift():Shift
+ 		Lesson -> Lesson: isLastLesson(Shift):boolean
+ 		Lesson -> Lesson: getPeriod():OccupationPeriod
+ 		Lesson -> Lesson: setPeriod(OccupationPeriod):void
+ 		Lesson -> Lesson: setPeriod(OccupationPeriod):void
+ 		OPT period != null
+ 			Lesson -> OccupationPeriod: delete():void
+ 			OPT allNestedPeriodsAreEmpty()
+ 				OccupationPeriod -> OccupationPeriod: getFirstOccupationPeriodOfNestedPeriods():OccupationPeriod
+ 				LOOP while: occupationPeriod.getPreviousPeriod() != null
+ 					OccupationPeriod -> OccupationPeriod_Base: getPreviousPeriod():OccupationPeriod
+ 				END
+ 				OccupationPeriod -> OccupationPeriod: deleteAllNestedPeriods():void
+ 				OccupationPeriod -> OccupationPeriod: getNextPeriod():OccupationPeriod
+ 				OccupationPeriod -> OccupationPeriod: setNextPeriod(OccupationPeriod):void
+ 				OccupationPeriod -> OccupationPeriod: setPreviousPeriod(OccupationPeriod):void
+ 				OccupationPeriod -> OccupationPeriod: setRootDomainObject(Bennu):void
+ 				OccupationPeriod -> OccupationPeriod: deleteDomainObject():void
+ 				OPT nextPeriod != null
+ 					OccupationPeriod -> OccupationPeriod: delete():void
+ 				END
+ 			END
+ 		END
+ 		OPT getLessonSpaceOccupation() != null
+ 			Lesson -> Lesson: getLessonSpaceOccupation():LessonSpaceOccupation
+ 			Lesson -> LessonSpaceOccupation: delete():void
+ 			LessonSpaceOccupation -> LessonSpaceOccupation: check(T,AccessControlPredicate<T>):void
+ 			LessonSpaceOccupation -> AccessControl: getPerson():Person
+ 			LessonSpaceOccupation -> AccessControlPredicate: evaluate(E):boolean
+ 			OPT !result
+ 				ALT requester == null
+ 				ELSE else
+ 					LessonSpaceOccupation -> Person: getUsername():String
+ 				END
+ 				LessonSpaceOccupation -> DomainObject: getExternalId():String
+ 			END
+ 			LessonSpaceOccupation -> LessonSpaceOccupation: setLesson(Lesson):void
+ 			LessonSpaceOccupation -> LessonSpaceOccupation: delete():void
+ 			LessonSpaceOccupation -> LessonSpaceOccupation: check(T,AccessControlPredicate<T>):void
+ 			LessonSpaceOccupation -> LessonSpaceOccupation: setLesson(Lesson):void
+ 			LessonSpaceOccupation -> LessonSpaceOccupation: delete():void
+ 		END
+ 		LOOP while: hasAnyLessonInstances()
+ 			Lesson -> Lesson: getLessonInstancesSet():Set<LessonInstance>
+ 			Lesson -> LessonInstance: delete():void
+ 			LessonInstance -> LessonInstance: check(T,AccessControlPredicate<T>):void
+ 			LessonInstance -> AccessControl: getPerson():Person
+ 			LessonInstance -> AccessControlPredicate: evaluate(E):boolean
+ 			OPT !result
+ 				ALT requester == null
+ 				ELSE else
+ 					LessonInstance -> Person: getUsername():String
+ 				END
+ 				LessonInstance -> DomainObject: getExternalId():String
+ 			END
+ 			LessonInstance -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			LessonInstance -> LessonInstance: getDeletionBlockers():Collection<String>
+ 			LessonInstance -> LessonInstance: checkForDeletionBlockers(Collection<String>):void
+ 			LOOP for: ?
+ 				LessonInstance -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ 			END
+ 			LessonInstance -> LessonInstance: getLessonInstanceSpaceOccupation():LessonInstanceSpaceOccupation
+ 			OPT occupation != null
+ 				LessonInstance -> LessonInstanceSpaceOccupation_Base: removeLessonInstances(LessonInstance):void
+ 				LessonInstance -> LessonInstanceSpaceOccupation_Base: delete():void
+ 			END
+ 			LessonInstance -> LessonInstance: setCourseLoad(CourseLoad):void
+ 			LessonInstance -> LessonInstance: setLesson(Lesson):void
+ 			LessonInstance -> LessonInstance: setRootDomainObject(Bennu):void
+ 			LessonInstance -> LessonInstance: deleteDomainObject():void
+ 		END
+ 		Lesson -> Lesson: setShift(Shift):void
+ 		Lesson -> Lesson: setRootDomainObject(Bennu):void
+ 		Lesson -> Lesson: deleteDomainObject():void
+ 	END
+ END
+ @enduml

@@ -1,0 +1,58 @@
+@startuml
+ participant "JSP\nJSPDeleteScientificCommission" as JSPDeleteScientificCommission order 0
+ participant "services.coordinator\nDeleteScientificCommission" as DeleteScientificCommission order 1
+ participant "services.coordinator\nDeleteScientificCommission" as DeleteScientificCommission order 5
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 14
+ participant "domain\nScientificCommission" as ScientificCommission order 15
+ participant "domain\nScientificCommissionLog" as ScientificCommissionLog order 48
+ participant "core.i18n\nBundleUtil" as BundleUtil order 65
+ participant "domain\nExecutionDegree" as ExecutionDegree order 66
+ participant "domain\nExecutionDegree" as ExecutionDegree order 67
+ participant "domain\nPerson" as Person order 68
+ participant "domain\nPerson" as Person order 69
+ participant "domain\nExecutionDegree" as ExecutionDegree order 70
+ participant "service.filter\nResponsibleDegreeCoordinatorAuthorizationFilter" as ResponsibleDegreeCoordinatorAuthorizationFilter order 71
+ participant "core.security\nAuthenticate" as Authenticate order 74
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 77
+ JSPDeleteScientificCommission -> DeleteScientificCommission: getConnection()
+ JSPDeleteScientificCommission <- DeleteScientificCommission: returnConnection()
+ JSPDeleteScientificCommission -> DeleteScientificCommission: executeAction()
+ DeleteScientificCommission -> DeleteScientificCommission: runDeleteScientificCommission(String,ScientificCommission):void
+ DeleteScientificCommission -> ResponsibleDegreeCoordinatorAuthorizationFilter: execute(String):void
+ ResponsibleDegreeCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ DeleteScientificCommission -> DeleteScientificCommission: run(String,ScientificCommission):void
+ DeleteScientificCommission -> FenixFramework: getDomainObject(String):T
+ DeleteScientificCommission -> ScientificCommission: delete():void
+ ScientificCommission -> ScientificCommissionLog: createLog\n(Degree,ExecutionYear,String,String,String[]):ScientificCommissionLog
+ ScientificCommissionLog -> ScientificCommissionLog: generateLabelDescription(String,String,String[]):String
+ ScientificCommissionLog -> BundleUtil: getString(String,String,String[]):String
+ ScientificCommissionLog -> ScientificCommissionLog: createScientificCommissionLog\n(Degree,ExecutionYear,String):ScientificCommissionLog
+ ScientificCommissionLog -> ScientificCommissionLog: ScientificCommissionLog(Degree,ExecutionYear,String)
+ ScientificCommissionLog -> ScientificCommissionLog: ScientificCommissionLog_Base()
+ OPT getDegree() == null
+ 	ScientificCommissionLog -> ScientificCommissionLog: setDegree(Degree):void
+ END
+ OPT getExecutionYear() == null
+ 	ScientificCommissionLog -> ScientificCommissionLog: setExecutionYear(ExecutionYear):void
+ END
+ ScientificCommissionLog -> ScientificCommissionLog: setDescription(String):void
+ ScientificCommission -> ScientificCommission: getExecutionDegree():ExecutionDegree
+ ScientificCommission -> ExecutionDegree: getDegree():Degree
+ ScientificCommission -> ScientificCommission: getExecutionDegree():ExecutionDegree
+ ScientificCommission -> ExecutionDegree: getExecutionYear():ExecutionYear
+ ScientificCommission -> ScientificCommission: getPerson():Person
+ ScientificCommission -> Person: getName():String
+ ScientificCommission -> ScientificCommission: getPerson():Person
+ ScientificCommission -> Person: getUsername():String
+ ScientificCommission -> ScientificCommission: getExecutionDegree():ExecutionDegree
+ ScientificCommission -> ExecutionDegree: getDegree():Degree
+ ScientificCommission -> ExecutionDegree: getPresentationName():String
+ ScientificCommission -> ScientificCommission: setPerson(Person):void
+ ScientificCommission -> ScientificCommission: setExecutionDegree(ExecutionDegree):void
+ ScientificCommission -> ScientificCommission: setRootDomainObject(Bennu):void
+ ScientificCommission -> ScientificCommission: deleteDomainObject():void
+ @enduml

@@ -1,0 +1,216 @@
+@startuml
+ participant "JSP\nJSPGratuityPaymentPlanManager" as JSPGratuityPaymentPlanManager order 0
+ participant "services.accounting.gratuity.paymentPlan\nGratuityPaymentPlanManager" as GratuityPaymentPlanManager order 1
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 141
+ participant "domain.accounting.paymentPlans\nFullGratuityPaymentPlanForAliens" as FullGratuityPaymentPlanForAliens order 142
+ participant "domain.accounting.paymentPlans\nGratuityForStudentsInSecondCurricularYearForPartialRegime" as GratuityForStudentsInSecondCurricularYearForPartialRegime order 153
+ participant "domain.accounting.paymentPlans\nGratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester" as GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester order 164
+ participant "domain.accounting.paymentPlans\nFullGratuityPaymentPlanForPartialRegime" as FullGratuityPaymentPlanForPartialRegime order 175
+ participant "domain.accounting.paymentPlans\nGratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester" as GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester order 186
+ participant "domain.accounting.paymentPlans\nFullGratuityPaymentPlanForFirstTimeInstitutionStudents" as FullGratuityPaymentPlanForFirstTimeInstitutionStudents order 197
+ participant "domain.accounting.paymentPlans\nGratuityForStudentsInSecondCurricularYear" as GratuityForStudentsInSecondCurricularYear order 208
+ participant "domain.accounting.paymentPlans\nFullGratuityPaymentPlan" as FullGratuityPaymentPlan order 219
+ participant "dto.accounting.paymentPlan\nInstallmentBean" as InstallmentBean order 230
+ participant "domain.accounting.installments\nPartialRegimeInstallment" as PartialRegimeInstallment order 231
+ participant "domain.accounting.installments\nPartialRegimeInstallment" as PartialRegimeInstallment order 248
+ participant "domain.accounting.installments\nInstallmentForFirstTimeStudents" as InstallmentForFirstTimeStudents order 265
+ participant "domain.accounting.installments\nInstallmentWithMonthlyPenalty" as InstallmentWithMonthlyPenalty order 278
+ participant "domain.accounting\nInstallment" as Installment order 291
+ participant "domain.accounting\nPaymentPlan" as PaymentPlan order 310
+ participant "dto.accounting.paymentPlan\nPaymentPlanBean" as PaymentPlanBean order 311
+ JSPGratuityPaymentPlanManager -> GratuityPaymentPlanManager: getConnection()
+ JSPGratuityPaymentPlanManager <- GratuityPaymentPlanManager: returnConnection()
+ JSPGratuityPaymentPlanManager -> GratuityPaymentPlanManager: executeAction()
+ GratuityPaymentPlanManager -> GratuityPaymentPlanManager: create(PaymentPlanBean):void
+ LOOP for: paymentPlanBean.getDegreeCurricularPlans()
+ 	GratuityPaymentPlanManager -> GratuityPaymentPlanManager: createInstallments(PaymentPlan,List<InstallmentBean>):void
+ 	LOOP for: installmentsToCreate
+ 		ALT paymentPlan.isForPartialRegime()
+ 			ALT each.isPenaltyAppliable()
+ 				GratuityPaymentPlanManager -> InstallmentBean: getAmount():Money
+ 				GratuityPaymentPlanManager -> InstallmentBean: getStartDate():YearMonthDay
+ 				GratuityPaymentPlanManager -> InstallmentBean: getEndDate():YearMonthDay
+ 				GratuityPaymentPlanManager -> InstallmentBean: getMontlyPenaltyPercentage():BigDecimal
+ 				GratuityPaymentPlanManager -> InstallmentBean: getWhenToStartApplyPenalty():YearMonthDay
+ 				GratuityPaymentPlanManager -> InstallmentBean: getMaxMonthsToApplyPenalty():Integer
+ 				GratuityPaymentPlanManager -> InstallmentBean: getEctsForAmount():BigDecimal
+ 				GratuityPaymentPlanManager -> InstallmentBean: getExecutionSemesters():Collection<ExecutionSemester>
+ 				GratuityPaymentPlanManager -> PartialRegimeInstallment: PartialRegimeInstallment\n(FullGratuityPaymentPlanForPartialRegime,Money,YearMonthDay,YearMonthDay,BigDecimal,YearMonthDay,Integer,BigDecimal,List<ExecutionSemester>)
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: PartialRegimeInstallment()
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: init\n(FullGratuityPaymentPlanForPartialRegime,Money,YearMonthDay,YearMonthDay,boolean,BigDecimal,YearMonthDay,Integer,BigDecimal,List<ExecutionSemester>):void
+ 				ALT penaltyAppliable
+ 					PartialRegimeInstallment -> PartialRegimeInstallment: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal,YearMonthDay,Integer):void
+ 				ELSE else
+ 					PartialRegimeInstallment -> PartialRegimeInstallment: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay):void
+ 				END
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: checkParameters\n(BigDecimal,Collection<ExecutionSemester>):void
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: setPenaltyAppliable(Boolean):void
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: setEctsForAmount(BigDecimal):void
+ 				LOOP for: executionSemesters
+ 					PartialRegimeInstallment -> PartialRegimeInstallment: addExecutionSemesters(ExecutionSemester):void
+ 				END
+ 			ELSE else
+ 				GratuityPaymentPlanManager -> InstallmentBean: getAmount():Money
+ 				GratuityPaymentPlanManager -> InstallmentBean: getStartDate():YearMonthDay
+ 				GratuityPaymentPlanManager -> InstallmentBean: getEndDate():YearMonthDay
+ 				GratuityPaymentPlanManager -> InstallmentBean: getEctsForAmount():BigDecimal
+ 				GratuityPaymentPlanManager -> InstallmentBean: getExecutionSemesters():Collection<ExecutionSemester>
+ 				GratuityPaymentPlanManager -> PartialRegimeInstallment: PartialRegimeInstallment\n(FullGratuityPaymentPlanForPartialRegime,Money,YearMonthDay,YearMonthDay,BigDecimal,List<ExecutionSemester>)
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: PartialRegimeInstallment()
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: init\n(FullGratuityPaymentPlanForPartialRegime,Money,YearMonthDay,YearMonthDay,boolean,BigDecimal,YearMonthDay,Integer,BigDecimal,List<ExecutionSemester>):void
+ 				ALT penaltyAppliable
+ 					PartialRegimeInstallment -> PartialRegimeInstallment: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal,YearMonthDay,Integer):void
+ 				ELSE else
+ 					PartialRegimeInstallment -> PartialRegimeInstallment: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay):void
+ 				END
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: checkParameters\n(BigDecimal,Collection<ExecutionSemester>):void
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: setPenaltyAppliable(Boolean):void
+ 				PartialRegimeInstallment -> PartialRegimeInstallment: setEctsForAmount(BigDecimal):void
+ 				LOOP for: executionSemesters
+ 					PartialRegimeInstallment -> PartialRegimeInstallment: addExecutionSemesters(ExecutionSemester):void
+ 				END
+ 			END
+ 		ELSE else
+ 			ALT paymentPlan.isForFirstTimeInstitutionStudents() && each.isForFirstTimeInstitutionStudents()
+ 				GratuityPaymentPlanManager -> InstallmentBean: getAmount():Money
+ 				GratuityPaymentPlanManager -> InstallmentBean: getStartDate():YearMonthDay
+ 				GratuityPaymentPlanManager -> InstallmentBean: getEndDate():YearMonthDay
+ 				GratuityPaymentPlanManager -> InstallmentBean: getMontlyPenaltyPercentage():BigDecimal
+ 				GratuityPaymentPlanManager -> InstallmentBean: getMaxMonthsToApplyPenalty():Integer
+ 				GratuityPaymentPlanManager -> InstallmentBean: getNumberOfDaysToStartApplyingPenalty():Integer
+ 				GratuityPaymentPlanManager -> InstallmentForFirstTimeStudents: InstallmentForFirstTimeStudents\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal,Integer,Integer)
+ 				InstallmentForFirstTimeStudents -> InstallmentForFirstTimeStudents: InstallmentForFirstTimeStudents()
+ 				InstallmentForFirstTimeStudents -> InstallmentForFirstTimeStudents: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal,Integer,Integer):void
+ 				InstallmentForFirstTimeStudents -> InstallmentForFirstTimeStudents: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal):void
+ 				InstallmentForFirstTimeStudents -> InstallmentForFirstTimeStudents: checkParameters(Integer,Integer):void
+ 				InstallmentForFirstTimeStudents -> InstallmentForFirstTimeStudents: setMaxMonthsToApplyPenalty(Integer):void
+ 				InstallmentForFirstTimeStudents -> InstallmentForFirstTimeStudents: setNumberOfDaysToStartApplyingPenalty(Integer):void
+ 			ELSE else
+ 				ALT each.isPenaltyAppliable()
+ 					GratuityPaymentPlanManager -> InstallmentBean: getAmount():Money
+ 					GratuityPaymentPlanManager -> InstallmentBean: getStartDate():YearMonthDay
+ 					GratuityPaymentPlanManager -> InstallmentBean: getEndDate():YearMonthDay
+ 					GratuityPaymentPlanManager -> InstallmentBean: getMontlyPenaltyPercentage():BigDecimal
+ 					GratuityPaymentPlanManager -> InstallmentBean: getWhenToStartApplyPenalty():YearMonthDay
+ 					GratuityPaymentPlanManager -> InstallmentBean: getMaxMonthsToApplyPenalty():Integer
+ 					GratuityPaymentPlanManager -> InstallmentWithMonthlyPenalty: InstallmentWithMonthlyPenalty\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal,YearMonthDay,Integer)
+ 					InstallmentWithMonthlyPenalty -> InstallmentWithMonthlyPenalty: InstallmentWithMonthlyPenalty()
+ 					InstallmentWithMonthlyPenalty -> InstallmentWithMonthlyPenalty: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal,YearMonthDay,Integer):void
+ 					InstallmentWithMonthlyPenalty -> InstallmentWithMonthlyPenalty: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay,BigDecimal):void
+ 					InstallmentWithMonthlyPenalty -> InstallmentWithMonthlyPenalty: checkParameters(YearMonthDay,Integer):void
+ 					InstallmentWithMonthlyPenalty -> InstallmentWithMonthlyPenalty: setWhenStartToApplyPenalty(YearMonthDay):void
+ 					InstallmentWithMonthlyPenalty -> InstallmentWithMonthlyPenalty: setMaxMonthsToApplyPenalty(Integer):void
+ 				ELSE else
+ 					GratuityPaymentPlanManager -> InstallmentBean: getAmount():Money
+ 					GratuityPaymentPlanManager -> InstallmentBean: getStartDate():YearMonthDay
+ 					GratuityPaymentPlanManager -> InstallmentBean: getEndDate():YearMonthDay
+ 					GratuityPaymentPlanManager -> Installment: Installment\n(PaymentPlan,Money,YearMonthDay,YearMonthDay)
+ 					Installment -> Installment: Installment()
+ 					Installment -> Installment: init\n(PaymentPlan,Money,YearMonthDay,YearMonthDay):void
+ 					Installment -> Installment: checkParameters\n(PaymentPlan,Money,YearMonthDay,YearMonthDay):void
+ 					Installment -> Installment: setInstallmentOrder(Integer):void
+ 					Installment -> PaymentPlan: getLastInstallmentOrder():int
+ 					Installment -> Installment: setPaymentPlan(PaymentPlan):void
+ 					Installment -> Installment: setAmount(Money):void
+ 					Installment -> Installment: setStartDate(YearMonthDay):void
+ 					Installment -> Installment: setEndDate(YearMonthDay):void
+ 				END
+ 			END
+ 		END
+ 	END
+ 	GratuityPaymentPlanManager -> GratuityPaymentPlanManager: makePaymentPlan\n(PaymentPlanBean,DegreeCurricularPlan):PaymentPlan
+ 	OPT paymentPlanBean.isForAlien()
+ 		GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 		GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 		GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 		GratuityPaymentPlanManager -> FullGratuityPaymentPlanForAliens: FullGratuityPaymentPlanForAliens\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 		FullGratuityPaymentPlanForAliens -> FullGratuityPaymentPlanForAliens: FullGratuityPaymentPlanForAliens()
+ 		FullGratuityPaymentPlanForAliens -> FullGratuityPaymentPlanForAliens: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 		FullGratuityPaymentPlanForAliens -> FullGratuityPaymentPlanForAliens: init(ExecutionYear,Boolean):void
+ 		FullGratuityPaymentPlanForAliens -> FullGratuityPaymentPlanForAliens: checkParameters(ServiceAgreementTemplate):void
+ 		FullGratuityPaymentPlanForAliens -> FullGratuityPaymentPlanForAliens: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 	END
+ 	ALT paymentPlanBean.isForPartialRegime()
+ 		ALT paymentPlanBean.isForSecondCurricularYear()
+ 			GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 			GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 			GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 			GratuityPaymentPlanManager -> GratuityForStudentsInSecondCurricularYearForPartialRegime: GratuityForStudentsInSecondCurricularYearForPartialRegime\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 			GratuityForStudentsInSecondCurricularYearForPartialRegime -> GratuityForStudentsInSecondCurricularYearForPartialRegime: GratuityForStudentsInSecondCurricularYearForPartialRegime\n()
+ 			GratuityForStudentsInSecondCurricularYearForPartialRegime -> GratuityForStudentsInSecondCurricularYearForPartialRegime: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 			GratuityForStudentsInSecondCurricularYearForPartialRegime -> GratuityForStudentsInSecondCurricularYearForPartialRegime: init(ExecutionYear,Boolean):void
+ 			GratuityForStudentsInSecondCurricularYearForPartialRegime -> GratuityForStudentsInSecondCurricularYearForPartialRegime: checkParameters(ServiceAgreementTemplate):void
+ 			GratuityForStudentsInSecondCurricularYearForPartialRegime -> GratuityForStudentsInSecondCurricularYearForPartialRegime: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 		ELSE else
+ 			ALT paymentPlanBean.isForStudentEnroledOnSecondSemesterOnly()
+ 				GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 				GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 				GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 				GratuityPaymentPlanManager -> GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester: GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 				GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester -> GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester: GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester\n()
+ 				GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester -> GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 				GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester -> GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester: init(ExecutionYear,Boolean):void
+ 				GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester -> GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester: checkParameters(ServiceAgreementTemplate):void
+ 				GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester -> GratuityPaymentPlanForPartialRegimeEnroledOnlyInSecondSemester: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 			ELSE else
+ 				GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 				GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 				GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 				GratuityPaymentPlanManager -> FullGratuityPaymentPlanForPartialRegime: FullGratuityPaymentPlanForPartialRegime\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 				FullGratuityPaymentPlanForPartialRegime -> FullGratuityPaymentPlanForPartialRegime: FullGratuityPaymentPlanForPartialRegime()
+ 				FullGratuityPaymentPlanForPartialRegime -> FullGratuityPaymentPlanForPartialRegime: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 				FullGratuityPaymentPlanForPartialRegime -> FullGratuityPaymentPlanForPartialRegime: init(ExecutionYear,Boolean):void
+ 				FullGratuityPaymentPlanForPartialRegime -> FullGratuityPaymentPlanForPartialRegime: checkParameters(ServiceAgreementTemplate):void
+ 				FullGratuityPaymentPlanForPartialRegime -> FullGratuityPaymentPlanForPartialRegime: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 			END
+ 		END
+ 	ELSE else
+ 		ALT paymentPlanBean.isForStudentEnroledOnSecondSemesterOnly()
+ 			GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 			GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 			GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 			GratuityPaymentPlanManager -> GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester: GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 			GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester -> GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester: GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester\n()
+ 			GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester -> GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 			GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester -> GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester: init(ExecutionYear,Boolean):void
+ 			GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester -> GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester: checkParameters(ServiceAgreementTemplate):void
+ 			GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester -> GratuityPaymentPlanForStudentsEnroledOnlyInSecondSemester: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 		ELSE else
+ 			ALT paymentPlanBean.isForFirstTimeInstitutionStudents()
+ 				GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 				GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 				GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 				GratuityPaymentPlanManager -> FullGratuityPaymentPlanForFirstTimeInstitutionStudents: FullGratuityPaymentPlanForFirstTimeInstitutionStudents\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 				FullGratuityPaymentPlanForFirstTimeInstitutionStudents -> FullGratuityPaymentPlanForFirstTimeInstitutionStudents: FullGratuityPaymentPlanForFirstTimeInstitutionStudents\n()
+ 				FullGratuityPaymentPlanForFirstTimeInstitutionStudents -> FullGratuityPaymentPlanForFirstTimeInstitutionStudents: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 				FullGratuityPaymentPlanForFirstTimeInstitutionStudents -> FullGratuityPaymentPlanForFirstTimeInstitutionStudents: init(ExecutionYear,Boolean):void
+ 				FullGratuityPaymentPlanForFirstTimeInstitutionStudents -> FullGratuityPaymentPlanForFirstTimeInstitutionStudents: checkParameters(ServiceAgreementTemplate):void
+ 				FullGratuityPaymentPlanForFirstTimeInstitutionStudents -> FullGratuityPaymentPlanForFirstTimeInstitutionStudents: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 			ELSE else
+ 				ALT paymentPlanBean.isForSecondCurricularYear()
+ 					GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 					GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 					GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 					GratuityPaymentPlanManager -> GratuityForStudentsInSecondCurricularYear: GratuityForStudentsInSecondCurricularYear\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 					GratuityForStudentsInSecondCurricularYear -> GratuityForStudentsInSecondCurricularYear: GratuityForStudentsInSecondCurricularYear\n()
+ 					GratuityForStudentsInSecondCurricularYear -> GratuityForStudentsInSecondCurricularYear: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 					GratuityForStudentsInSecondCurricularYear -> GratuityForStudentsInSecondCurricularYear: init(ExecutionYear,Boolean):void
+ 					GratuityForStudentsInSecondCurricularYear -> GratuityForStudentsInSecondCurricularYear: checkParameters(ServiceAgreementTemplate):void
+ 					GratuityForStudentsInSecondCurricularYear -> GratuityForStudentsInSecondCurricularYear: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 				ELSE else
+ 					GratuityPaymentPlanManager -> PaymentPlanBean: getExecutionYear():ExecutionYear
+ 					GratuityPaymentPlanManager -> DegreeCurricularPlan_Base: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 					GratuityPaymentPlanManager -> PaymentPlanBean: isMain():boolean
+ 					GratuityPaymentPlanManager -> FullGratuityPaymentPlan: FullGratuityPaymentPlan\n(ExecutionYear,DegreeCurricularPlanServiceAgreementTemplate,Boolean)
+ 					FullGratuityPaymentPlan -> FullGratuityPaymentPlan: FullGratuityPaymentPlan()
+ 					FullGratuityPaymentPlan -> FullGratuityPaymentPlan: init\n(ExecutionYear,ServiceAgreementTemplate,Boolean):void
+ 					FullGratuityPaymentPlan -> FullGratuityPaymentPlan: init(ExecutionYear,Boolean):void
+ 					FullGratuityPaymentPlan -> FullGratuityPaymentPlan: checkParameters(ServiceAgreementTemplate):void
+ 					FullGratuityPaymentPlan -> FullGratuityPaymentPlan: setServiceAgreementTemplate(ServiceAgreementTemplate):void
+ 				END
+ 			END
+ 		END
+ 	END
+ 	GratuityPaymentPlanManager -> PaymentPlanBean: getInstallments():List<InstallmentBean>
+ END
+ @enduml

@@ -1,0 +1,66 @@
+@startuml
+ participant "JSP\nJSPEditarTurma" as JSPEditarTurma order 0
+ participant "services.resourceAllocationManager\nEditarTurma" as EditarTurma order 1
+ participant "predicate\nAccessControl" as AccessControl order 19
+ participant "core.security\nAuthenticate" as Authenticate order 25
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 28
+ participant "core.domain\nUser_Base" as User_Base order 29
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 30
+ participant "domain\nPerson" as Person order 32
+ participant "core.domain\nUser" as User order 38
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 39
+ participant "domain\nSchoolClass" as SchoolClass order 40
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 56
+ participant "domain\nExecutionDegree" as ExecutionDegree order 57
+ participant "dto\nInfoClass" as InfoClass order 58
+ JSPEditarTurma -> EditarTurma: getConnection()
+ JSPEditarTurma <- EditarTurma: returnConnection()
+ JSPEditarTurma -> EditarTurma: executeAction()
+ EditarTurma -> EditarTurma: run(String,String):Object
+ EditarTurma -> EditarTurma: check(AccessControlPredicate<?>):void
+ EditarTurma -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ EditarTurma -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		EditarTurma -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ EditarTurma -> FenixFramework: getDomainObject(String):T
+ EditarTurma -> SchoolClass: edit(String):void
+ SchoolClass -> SchoolClass: check(T,AccessControlPredicate<T>):void
+ SchoolClass -> AccessControl: getPerson():Person
+ SchoolClass -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		SchoolClass -> Person: getUsername():String
+ 	END
+ 	SchoolClass -> DomainObject: getExternalId():String
+ END
+ OPT name != null && !StringUtils.isEmpty(name.trim())
+ 	SchoolClass -> SchoolClass: getExecutionDegree():ExecutionDegree
+ 	SchoolClass -> SchoolClass: getExecutionPeriod():ExecutionSemester
+ 	SchoolClass -> ExecutionDegree: findSchoolClassesByExecutionPeriodAndName\n(ExecutionSemester,String):SchoolClass
+ END
+ SchoolClass -> SchoolClass: setNome(String):void
+ EditarTurma -> InfoClass: newInfoFromDomain(SchoolClass):InfoClass
+ ALT schoolClass == null
+ ELSE else
+ 	InfoClass -> InfoClass: InfoClass(SchoolClass)
+ END
+ @enduml

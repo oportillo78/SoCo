@@ -1,0 +1,58 @@
+@startuml
+ participant "JSP\nJSPDeleteBibliographicReference" as JSPDeleteBibliographicReference order 0
+ participant "services.teacher\nDeleteBibliographicReference" as DeleteBibliographicReference order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nBibliographicReference" as BibliographicReference order 14
+ participant "core.i18n\nBundleUtil" as BundleUtil order 37
+ participant "i18n\nI18N" as I18N order 47
+ participant "domain\nCurricularManagementLog" as CurricularManagementLog order 48
+ participant "domain\nExecutionCourse" as ExecutionCourse order 62
+ participant "domain\nDegree_Base" as Degree_Base order 67
+ participant "service.filter\nExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter" as ExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter order 68
+ participant "core.security\nAuthenticate" as Authenticate order 71
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 74
+ JSPDeleteBibliographicReference -> DeleteBibliographicReference: getConnection()
+ JSPDeleteBibliographicReference <- DeleteBibliographicReference: returnConnection()
+ JSPDeleteBibliographicReference -> DeleteBibliographicReference: executeAction()
+ DeleteBibliographicReference -> DeleteBibliographicReference: runDeleteBibliographicReference(String):Boolean
+ DeleteBibliographicReference -> ExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ DeleteBibliographicReference -> DeleteBibliographicReference: run(String):Boolean
+ DeleteBibliographicReference -> FenixFramework: getDomainObject(String):T
+ DeleteBibliographicReference -> BibliographicReference: delete():void
+ BibliographicReference -> BibliographicReference: getExecutionCourse():ExecutionCourse
+ BibliographicReference -> BibliographicReference: getTitle():String
+ BibliographicReference -> BibliographicReference: getOptional():Boolean
+ ALT optional
+ 	BibliographicReference -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ ELSE else
+ 	BibliographicReference -> BundleUtil: getString(String,String,String[]):String
+ 	BundleUtil -> BundleUtil: getString(String,Locale,String,String[]):String
+ 	BundleUtil -> I18N: getLocale():Locale
+ END
+ BibliographicReference -> CurricularManagementLog: createLog\n(ExecutionCourse,String,String,String[]):CurricularManagementLog
+ CurricularManagementLog -> CurricularManagementLog: generateLabelDescription(String,String,String[]):String
+ CurricularManagementLog -> BundleUtil: getString(String,String,String[]):String
+ CurricularManagementLog -> CurricularManagementLog: createCurricularManagementLog\n(ExecutionCourse,String):CurricularManagementLog
+ CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog(ExecutionCourse,String)
+ CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog_Base()
+ OPT getExecutionCourse() == null
+ 	CurricularManagementLog -> CurricularManagementLog: setExecutionCourse(ExecutionCourse):void
+ END
+ CurricularManagementLog -> CurricularManagementLog: setDescription(String):void
+ BibliographicReference -> ExecutionCourse: getName():String
+ BibliographicReference -> ExecutionCourse: getDegreePresentationString():String
+ ExecutionCourse -> ExecutionCourse: getDegreesSortedByDegreeName():SortedSet<Degree>
+ LOOP for: degrees
+ 	ExecutionCourse -> Degree_Base: getSigla():String
+ END
+ BibliographicReference -> BibliographicReference: setExecutionCourse(ExecutionCourse):void
+ BibliographicReference -> BibliographicReference: setRootDomainObject(Bennu):void
+ BibliographicReference -> BibliographicReference: deleteDomainObject():void
+ @enduml

@@ -1,0 +1,29 @@
+@startuml
+ participant "JSP\nJSPDeleteCompetenceCourseInformationChangeRequest" as JSPDeleteCompetenceCourseInformationChangeRequest order 0
+ participant "services.bolonhaManager\nDeleteCompetenceCourseInformationChangeRequest" as DeleteCompetenceCourseInformationChangeRequest order 1
+ participant "predicate\nAccessControl" as AccessControl order 15
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 16
+ participant "domain\nPerson" as Person order 17
+ participant "domain.degreeStructure\nCompetenceCourseInformationChangeRequest" as CompetenceCourseInformationChangeRequest order 18
+ JSPDeleteCompetenceCourseInformationChangeRequest -> DeleteCompetenceCourseInformationChangeRequest: getConnection()
+ JSPDeleteCompetenceCourseInformationChangeRequest <- DeleteCompetenceCourseInformationChangeRequest: returnConnection()
+ JSPDeleteCompetenceCourseInformationChangeRequest -> DeleteCompetenceCourseInformationChangeRequest: executeAction()
+ DeleteCompetenceCourseInformationChangeRequest -> DeleteCompetenceCourseInformationChangeRequest: run\n(CompetenceCourseInformationChangeRequest):void
+ DeleteCompetenceCourseInformationChangeRequest -> DeleteCompetenceCourseInformationChangeRequest: check(AccessControlPredicate<?>):void
+ DeleteCompetenceCourseInformationChangeRequest -> AccessControl: getPerson():Person
+ DeleteCompetenceCourseInformationChangeRequest -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteCompetenceCourseInformationChangeRequest -> Person: getUsername():String
+ 	END
+ END
+ DeleteCompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: delete():void
+ CompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: setCompetenceCourse(CompetenceCourse):void
+ CompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: setAnalizedBy(Person):void
+ CompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: setRequester(Person):void
+ CompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: setExecutionPeriod(ExecutionSemester):void
+ CompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: setRootDomainObject(Bennu):void
+ CompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: setCompetenceCourseGroupUnit(CompetenceCourseGroupUnit):void
+ CompetenceCourseInformationChangeRequest -> CompetenceCourseInformationChangeRequest: deleteDomainObject():void
+ @enduml

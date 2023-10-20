@@ -1,0 +1,71 @@
+@startuml
+ participant "JSP\nJSPEditCompetenceCourse" as JSPEditCompetenceCourse order 0
+ participant "services.bolonhaManager\nEditCompetenceCourse" as EditCompetenceCourse order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 29
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 31
+ participant "domain.degreeStructure\nBibliographicReferences" as BibliographicReferences order 60
+ participant "domain\nExecutionSemester" as ExecutionSemester order 61
+ participant "core.domain\nBennu" as Bennu order 66
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 72
+ participant "core.domain\nBennu" as Bennu order 73
+ participant "domain.degreeStructure\nCompetenceCourseInformation_Base" as CompetenceCourseInformation_Base order 74
+ participant "domain.degreeStructure\nBibliographicReferences" as BibliographicReferences order 75
+ participant "com.google.common.collect\nImmutableList" as ImmutableList order 82
+ participant "domain.degreeStructure.BibliographicReferences\nBibliographicReference" as BibliographicReference order 83
+ participant "service.filter\nBolonhaManagerAuthorizationFilter" as BolonhaManagerAuthorizationFilter order 84
+ participant "core.security\nAuthenticate" as Authenticate order 87
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 93
+ participant "service.filter\nScientificCouncilAuthorizationFilter" as ScientificCouncilAuthorizationFilter order 94
+ JSPEditCompetenceCourse -> EditCompetenceCourse: getConnection()
+ JSPEditCompetenceCourse <- EditCompetenceCourse: returnConnection()
+ JSPEditCompetenceCourse -> EditCompetenceCourse: executeAction()
+ EditCompetenceCourse -> EditCompetenceCourse: runEditCompetenceCourse\n(String,String,String,String,String,BibliographicReferenceType,String):void
+ EditCompetenceCourse -> BolonhaManagerAuthorizationFilter: execute():void
+ BolonhaManagerAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ EditCompetenceCourse -> EditCompetenceCourse: run\n(String,String,String,String,String,BibliographicReferenceType,String):void
+ EditCompetenceCourse -> EditCompetenceCourse: readCompetenceCourse(String):CompetenceCourse
+ EditCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ EditCompetenceCourse -> CompetenceCourse: createBibliographicReference\n(String,String,String,String,String,BibliographicReferenceType):void
+ CompetenceCourse -> CompetenceCourse: checkIfCanEdit(boolean):void
+ CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformationUntil\n(ExecutionSemester):CompetenceCourseInformation
+ CompetenceCourse -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ ExecutionSemester -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ CompetenceCourse -> CompetenceCourseInformation_Base: setBibliographicReferences(BibliographicReferences):void
+ CompetenceCourse -> CompetenceCourseInformation_Base: getBibliographicReferences():BibliographicReferences
+ CompetenceCourse -> BibliographicReferences: with\n(String,String,String,String,String,BibliographicReferenceType):BibliographicReferences
+ BibliographicReferences -> BibliographicReference: BibliographicReference\n(String,String,String,String,String,BibliographicReference\nType,int)
+ BibliographicReferences -> BibliographicReferences: BibliographicReferences(List<BibliographicReference>)
+ BibliographicReferences -> ImmutableList: copyOf\n(Collection<? extends E>):ImmutableList<E>
+ EditCompetenceCourse -> EditCompetenceCourse: buildUrl(String):String
+ OPT NotAuthorizedException ex1
+ 	EditCompetenceCourse -> ScientificCouncilAuthorizationFilter: execute():void
+ 	ScientificCouncilAuthorizationFilter -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	EditCompetenceCourse -> EditCompetenceCourse: run\n(String,String,String,String,String,BibliographicReferenceType,String):void
+ 	EditCompetenceCourse -> EditCompetenceCourse: readCompetenceCourse(String):CompetenceCourse
+ 	EditCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ 	EditCompetenceCourse -> CompetenceCourse: createBibliographicReference\n(String,String,String,String,String,BibliographicReferenceType):void
+ 	CompetenceCourse -> CompetenceCourse: checkIfCanEdit(boolean):void
+ 	CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ 	CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformationUntil\n(ExecutionSemester):CompetenceCourseInformation
+ 	CompetenceCourse -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 	CompetenceCourse -> CompetenceCourseInformation_Base: setBibliographicReferences(BibliographicReferences):void
+ 	CompetenceCourse -> CompetenceCourseInformation_Base: getBibliographicReferences():BibliographicReferences
+ 	CompetenceCourse -> BibliographicReferences: with\n(String,String,String,String,String,BibliographicReferenceType):BibliographicReferences
+ 	EditCompetenceCourse -> EditCompetenceCourse: buildUrl(String):String
+ END
+ @enduml

@@ -1,0 +1,49 @@
+@startuml
+ participant "JSP\nJSPEditCompetenceCourse" as JSPEditCompetenceCourse order 0
+ participant "services.bolonhaManager\nEditCompetenceCourse" as EditCompetenceCourse order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 29
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 30
+ participant "domain.degreeStructure\nBibliographicReferences" as BibliographicReferences order 47
+ participant "domain.degreeStructure\nCompetenceCourseInformation_Base" as CompetenceCourseInformation_Base order 48
+ participant "domain.degreeStructure\nBibliographicReferences" as BibliographicReferences order 49
+ participant "service.filter\nBolonhaManagerAuthorizationFilter" as BolonhaManagerAuthorizationFilter order 50
+ participant "core.security\nAuthenticate" as Authenticate order 53
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 59
+ participant "service.filter\nScientificCouncilAuthorizationFilter" as ScientificCouncilAuthorizationFilter order 60
+ JSPEditCompetenceCourse -> EditCompetenceCourse: getConnection()
+ JSPEditCompetenceCourse <- EditCompetenceCourse: returnConnection()
+ JSPEditCompetenceCourse -> EditCompetenceCourse: executeAction()
+ EditCompetenceCourse -> EditCompetenceCourse: runEditCompetenceCourse\n(String,Integer,String,String,String,String,BibliographicReferenceType,String):void
+ EditCompetenceCourse -> BolonhaManagerAuthorizationFilter: execute():void
+ BolonhaManagerAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ EditCompetenceCourse -> EditCompetenceCourse: run\n(String,Integer,String,String,String,String,BibliographicReferenceType,String):void
+ EditCompetenceCourse -> EditCompetenceCourse: readCompetenceCourse(String):CompetenceCourse
+ EditCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ EditCompetenceCourse -> CompetenceCourse: editBibliographicReference\n(Integer,String,String,String,String,String,BibliographicReferenceType):void
+ CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ CompetenceCourse -> CompetenceCourseInformation_Base: setBibliographicReferences(BibliographicReferences):void
+ CompetenceCourse -> CompetenceCourseInformation_Base: getBibliographicReferences():BibliographicReferences
+ CompetenceCourse -> BibliographicReferences: replacing\n(int,String,String,String,String,String,BibliographicReferenceType):BibliographicReferences
+ EditCompetenceCourse -> EditCompetenceCourse: buildUrl(String):String
+ OPT NotAuthorizedException ex1
+ 	EditCompetenceCourse -> ScientificCouncilAuthorizationFilter: execute():void
+ 	ScientificCouncilAuthorizationFilter -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	EditCompetenceCourse -> EditCompetenceCourse: run\n(String,Integer,String,String,String,String,BibliographicReferenceType,String):void
+ 	EditCompetenceCourse -> EditCompetenceCourse: readCompetenceCourse(String):CompetenceCourse
+ 	EditCompetenceCourse -> FenixFramework: getDomainObject(String):T
+ 	EditCompetenceCourse -> CompetenceCourse: editBibliographicReference\n(Integer,String,String,String,String,String,BibliographicReferenceType):void
+ 	CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ 	CompetenceCourse -> CompetenceCourseInformation_Base: setBibliographicReferences(BibliographicReferences):void
+ 	CompetenceCourse -> CompetenceCourseInformation_Base: getBibliographicReferences():BibliographicReferences
+ 	CompetenceCourse -> BibliographicReferences: replacing\n(int,String,String,String,String,String,BibliographicReferenceType):BibliographicReferences
+ 	EditCompetenceCourse -> EditCompetenceCourse: buildUrl(String):String
+ END
+ @enduml

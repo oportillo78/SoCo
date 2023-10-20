@@ -1,0 +1,42 @@
+@startuml
+ participant "JSP\nJSPDeleteDegreeSpecializationArea" as JSPDeleteDegreeSpecializationArea order 0
+ participant "services.scientificCouncil.curricularPlans\nDeleteDegreeSpecializationArea" as DeleteDegreeSpecializationArea order 1
+ participant "predicate\nAccessControl" as AccessControl order 15
+ participant "core.security\nAuthenticate" as Authenticate order 20
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 23
+ participant "core.domain\nUser_Base" as User_Base order 24
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 25
+ participant "domain\nPerson" as Person order 26
+ participant "core.domain\nUser" as User order 31
+ participant "domain\nDegreeSpecializationArea" as DegreeSpecializationArea order 32
+ JSPDeleteDegreeSpecializationArea -> DeleteDegreeSpecializationArea: getConnection()
+ JSPDeleteDegreeSpecializationArea <- DeleteDegreeSpecializationArea: returnConnection()
+ JSPDeleteDegreeSpecializationArea -> DeleteDegreeSpecializationArea: executeAction()
+ DeleteDegreeSpecializationArea -> DeleteDegreeSpecializationArea: run\n(DegreeOfficialPublication,DegreeSpecializationArea):void
+ DeleteDegreeSpecializationArea -> DeleteDegreeSpecializationArea: check(AccessControlPredicate<?>):void
+ DeleteDegreeSpecializationArea -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ DeleteDegreeSpecializationArea -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteDegreeSpecializationArea -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ DeleteDegreeSpecializationArea -> DegreeSpecializationArea: delete():void
+ DegreeSpecializationArea -> DegreeSpecializationArea: setOfficialPublication(DegreeOfficialPublication):void
+ DegreeSpecializationArea -> DegreeSpecializationArea: deleteDomainObject():void
+ @enduml

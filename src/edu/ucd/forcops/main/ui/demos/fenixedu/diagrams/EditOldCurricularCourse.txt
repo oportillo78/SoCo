@@ -1,0 +1,36 @@
+@startuml
+ participant "JSP\nJSPEditOldCurricularCourse" as JSPEditOldCurricularCourse order 0
+ participant "services.manager\nEditOldCurricularCourse" as EditOldCurricularCourse order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 9
+ participant "domain\nCurricularCourse" as CurricularCourse order 10
+ participant "domain.degreeStructure\nContext" as Context order 53
+ JSPEditOldCurricularCourse -> EditOldCurricularCourse: getConnection()
+ JSPEditOldCurricularCourse <- EditOldCurricularCourse: returnConnection()
+ JSPEditOldCurricularCourse -> EditOldCurricularCourse: executeAction()
+ EditOldCurricularCourse -> EditOldCurricularCourse: run\n(String,String,String,String,String,Integer,Integer,Double,Integer,Double,Double,Double,Double,Double,Double,GradeScale):void
+ EditOldCurricularCourse -> FenixFramework: getDomainObject(String):T
+ EditOldCurricularCourse -> CurricularCourse: edit\n(String,String,String,String,Double,Double,Double,Integer,Integer,Integer,Double,Double,Double,Double,GradeScale):void
+ CurricularCourse -> CurricularCourse: checkForCurricularCourseWithSameAttributes\n(DegreeCurricularPlan,String,String,String):void
+ CurricularCourse -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ CurricularCourse -> CurricularCourse: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ ALT !getParentContextsSet().isEmpty()
+ 	CurricularCourse -> CurricularCourse: getParentContextsSet():Set<Context>
+ 	CurricularCourse -> Context: getParentCourseGroup():CourseGroup
+ 	CurricularCourse -> Context: getParentDegreeCurricularPlan():DegreeCurricularPlan
+ END
+ CurricularCourse -> CurricularCourse: setName(String):void
+ CurricularCourse -> CurricularCourse: setNameEn(String):void
+ CurricularCourse -> CurricularCourse: setCode(String):void
+ CurricularCourse -> CurricularCourse: setAcronym(String):void
+ CurricularCourse -> CurricularCourse: setWeigth(Double):void
+ CurricularCourse -> CurricularCourse: setCredits(Double):void
+ CurricularCourse -> CurricularCourse: setEctsCredits(Double):void
+ CurricularCourse -> CurricularCourse: setEnrollmentWeigth(Integer):void
+ CurricularCourse -> CurricularCourse: setMinimumValueForAcumulatedEnrollments(Integer):void
+ CurricularCourse -> CurricularCourse: setMaximumValueForAcumulatedEnrollments(Integer):void
+ CurricularCourse -> CurricularCourse: setTheoreticalHours(Double):void
+ CurricularCourse -> CurricularCourse: setLabHours(Double):void
+ CurricularCourse -> CurricularCourse: setPraticalHours(Double):void
+ CurricularCourse -> CurricularCourse: setTheoPratHours(Double):void
+ CurricularCourse -> CurricularCourse: setGradeScale(GradeScale):void
+ @enduml

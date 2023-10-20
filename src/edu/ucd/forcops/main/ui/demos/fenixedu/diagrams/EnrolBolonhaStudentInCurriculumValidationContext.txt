@@ -1,0 +1,102 @@
+@startuml
+ participant "JSP\nJSPEnrolBolonhaStudentInCurriculumValidationContext" as JSPEnrolBolonhaStudentInCurriculumValidationContext order 0
+ participant "services.student.enrolment.bolonha\nEnrolBolonhaStudentInCurriculumValidationContext" as EnrolBolonhaStudentInCurriculumValidationContext order 1
+ participant "domain\nEnrolment_Base" as Enrolment_Base order 11
+ participant "services.student.enrolment.bolonha\nEnrolBolonhaStudent" as EnrolBolonhaStudent order 12
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 15
+ participant "predicate\nAccessControl" as AccessControl order 32
+ participant "core.security\nAuthenticate" as Authenticate order 37
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 41
+ participant "core.domain\nUser_Base" as User_Base order 42
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 43
+ participant "domain\nPerson" as Person order 44
+ participant "core.domain\nUser" as User order 49
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 50
+ participant "domain.enrolment\nEnrolmentContext" as EnrolmentContext order 51
+ participant "domain.studentCurriculum\nStudentCurricularPlanEnrolment" as StudentCurricularPlanEnrolment order 58
+ participant "domain.studentCurriculum\nStudentCurricularPlanEnrolmentPreConditions" as StudentCurricularPlanEnrolmentPreConditions order 104
+ participant "domain.curricularRules.executors\nRuleResult" as RuleResult order 105
+ participant "domain.curricularRules.executors\nRuleResult" as RuleResult order 106
+ participant "domain.enrolment\nIDegreeModuleToEvaluate" as IDegreeModuleToEvaluate order 107
+ participant "domain.studentCurriculum.StudentCurricularPlanEnrolment\nCurricularCourseEnrollmentCondition" as CurricularCourseEnrollmentCondition order 108
+ participant "domain.studentCurriculum.StudentCurricularPlanEnrolment\nEnrolmentManagerFactory" as EnrolmentManagerFactory order 109
+ JSPEnrolBolonhaStudentInCurriculumValidationContext -> EnrolBolonhaStudentInCurriculumValidationContext: getConnection()
+ JSPEnrolBolonhaStudentInCurriculumValidationContext <- EnrolBolonhaStudentInCurriculumValidationContext: returnConnection()
+ JSPEnrolBolonhaStudentInCurriculumValidationContext -> EnrolBolonhaStudentInCurriculumValidationContext: executeAction()
+ EnrolBolonhaStudentInCurriculumValidationContext -> EnrolBolonhaStudentInCurriculumValidationContext: run\n(StudentCurricularPlan,ExecutionSemester,List<IDegreeModuleToEvaluate>,List<CurriculumModule>,CurricularRuleLevel):RuleResult
+ LOOP for: curriculumModulesToRemove
+ 	EnrolBolonhaStudentInCurriculumValidationContext -> Enrolment_Base: getCourseLoadRequestsSet():Set<CourseLoadRequest>
+ 	EnrolBolonhaStudentInCurriculumValidationContext -> Enrolment_Base: getProgramCertificateRequestsSet():Set<ProgramCertificateRequest>
+ END
+ EnrolBolonhaStudentInCurriculumValidationContext -> EnrolBolonhaStudent: run\n(StudentCurricularPlan,ExecutionSemester,List<IDegreeModuleToEvaluate>,List<CurriculumModule>,CurricularRuleLevel):RuleResult
+ EnrolBolonhaStudent -> StudentCurricularPlan: enrol\n(ExecutionSemester,Set<IDegreeModuleToEvaluate>,List<CurriculumModule>,CurricularRuleLevel):RuleResult
+ StudentCurricularPlan -> StudentCurricularPlan: check(T,AccessControlPredicate<T>):void
+ StudentCurricularPlan -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ StudentCurricularPlan -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		StudentCurricularPlan -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ 	StudentCurricularPlan -> DomainObject: getExternalId():String
+ END
+ StudentCurricularPlan -> EnrolmentContext: EnrolmentContext\n(StudentCurricularPlan,ExecutionSemester,Set<IDegreeModuleToEvaluate>,List<CurriculumModule>,CurricularRuleLevel)
+ EnrolmentContext -> Authenticate: getUser():User
+ LOOP for: degreeModulesToEnrol
+ 	EnrolmentContext -> EnrolmentContext: addDegreeModuleToEvaluate(IDegreeModuleToEvaluate):void
+ 	EnrolmentContext -> EnrolmentContext: getDegreeModulesToEvaluate():Set<IDegreeModuleToEvaluate>
+ END
+ StudentCurricularPlan -> StudentCurricularPlanEnrolment: createManager\n(EnrolmentContext):StudentCurricularPlanEnrolment
+ StudentCurricularPlanEnrolment -> EnrolmentManagerFactory: createManager\n(EnrolmentContext):StudentCurricularPlanEnrolment
+ StudentCurricularPlan -> StudentCurricularPlanEnrolment: manage():RuleResult
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: assertEnrolmentPreConditions():void
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: checkDebts():void
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolmentPreConditions: checkDebts\n(StudentCurricularPlan):EnrolmentPreConditionResult
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: getStudentCurricularPlan():StudentCurricularPlan
+ ALT isResponsiblePersonAllowedToEnrolStudents() || isResponsibleInternationalRelationOffice()
+ 	StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: assertAcademicAdminOfficePreConditions():void
+ ELSE else
+ 	ALT isResponsiblePersonStudent()
+ 		StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: assertStudentEnrolmentPreConditions():void
+ 	ELSE else
+ 		StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: assertOtherRolesPreConditions():void
+ 	END
+ END
+ LOOP for: conditions
+ 	StudentCurricularPlanEnrolment -> CurricularCourseEnrollmentCondition: verify(StudentCurricularPlan):void
+ 	StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: getStudentCurricularPlan():StudentCurricularPlan
+ 	StudentCurricularPlanEnrolment -> EnrolmentContext: getStudentCurricularPlan():StudentCurricularPlan
+ END
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: unEnrol():void
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: addEnroled():void
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: evaluateDegreeModules\n(Map<EnrolmentResultType,List<IDegreeModuleToEvaluate>>):RuleResult
+ StudentCurricularPlanEnrolment -> RuleResult: createInitialTrue():RuleResult
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: getRulesToEvaluate\n():Map<IDegreeModuleToEvaluate,Set<ICurricularRule>>
+ LOOP for: rulesToEvaluate.entrySet()
+ 	StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: evaluateRules\n(IDegreeModuleToEvaluate,Set<ICurricularRule>):RuleResult
+ 	StudentCurricularPlanEnrolment -> RuleResult: and(RuleResult):RuleResult
+ END
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: evaluateExtraRules(RuleResult):RuleResult
+ OPT !finalResult.isFalse()
+ 	LOOP for: rulesToEvaluate.keySet()
+ 		StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: addDegreeModuleToEvaluateToMap\n(Map<EnrolmentResultType,List<IDegreeModuleToEvaluate>>,EnrolmentResultType,IDegreeModuleToEvaluate):void
+ 		StudentCurricularPlanEnrolment -> RuleResult: getEnrolmentResultTypeFor(DegreeModule):EnrolmentResultType
+ 		StudentCurricularPlanEnrolment -> IDegreeModuleToEvaluate: getDegreeModule():DegreeModule
+ 	END
+ END
+ StudentCurricularPlanEnrolment -> StudentCurricularPlanEnrolment: performEnrolments\n(Map<EnrolmentResultType,List<IDegreeModuleToEvaluate>>):void
+ @enduml

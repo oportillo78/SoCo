@@ -1,0 +1,87 @@
+@startuml
+ participant "JSP\nJSPEditEvaluation" as JSPEditEvaluation order 0
+ participant "services.teacher\nEditEvaluation" as EditEvaluation order 1
+ participant "domain\nEvaluationMethod" as EvaluationMethod order 17
+ participant "domain\nContentManagementLog" as ContentManagementLog order 34
+ participant "domain\nExecutionCourse" as ExecutionCourse order 49
+ participant "domain\nExecutionCourse" as ExecutionCourse order 50
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 51
+ participant "domain\nEvaluationMethod" as EvaluationMethod order 58
+ participant "core.domain\nBennu" as Bennu order 65
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 72
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 73
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 88
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 89
+ participant "domain\nExecutionCourse" as ExecutionCourse order 94
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 95
+ participant "core.security\nAuthenticate" as Authenticate order 96
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 99
+ JSPEditEvaluation -> EditEvaluation: getConnection()
+ JSPEditEvaluation <- EditEvaluation: returnConnection()
+ JSPEditEvaluation -> EditEvaluation: executeAction()
+ EditEvaluation -> EditEvaluation: runEditEvaluation(ExecutionCourse,LocalizedString):Boolean
+ EditEvaluation -> AbstractDomainObject: getExternalId():String
+ EditEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ EditEvaluation -> EditEvaluation: run(ExecutionCourse,LocalizedString):Boolean
+ ALT executionCourse.getEvaluationMethod() == null
+ 	EditEvaluation -> AbstractDomainObject: createEvaluationMethod(LocalizedString):void
+ 	AbstractDomainObject -> EvaluationMethod: EvaluationMethod()
+ 	EvaluationMethod -> EvaluationMethod: EvaluationMethod_Base()
+ 	EvaluationMethod -> EvaluationMethod: setRootDomainObject(Bennu):void
+ 	EvaluationMethod -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	AbstractDomainObject -> EvaluationMethod: setExecutionCourse(ExecutionCourse):void
+ 	AbstractDomainObject -> EvaluationMethod: setEvaluationElements(LocalizedString):void
+ ELSE else
+ 	EditEvaluation -> AbstractDomainObject: getEvaluationMethod():EvaluationMethod
+ 	EditEvaluation -> EvaluationMethod: edit(LocalizedString):void
+ 	EvaluationMethod -> EvaluationMethod: setEvaluationElements(LocalizedString):void
+ 	EvaluationMethod -> ContentManagementLog: createLog\n(ExecutionCourse,String,String,String[]):ContentManagementLog
+ 	ContentManagementLog -> ContentManagementLog: generateLabelDescription(String,String,String[]):String
+ 	ContentManagementLog -> ContentManagementLog: createContentManagementLog\n(ExecutionCourse,String):ContentManagementLog
+ 	ContentManagementLog -> ContentManagementLog: ContentManagementLog(ExecutionCourse,String)
+ 	ContentManagementLog -> ContentManagementLog: ContentManagementLog_Base()
+ 	ContentManagementLog -> ContentManagementLog: ExecutionCourseLog()
+ 	OPT getExecutionCourse() == null
+ 		ContentManagementLog -> ContentManagementLog: setExecutionCourse(ExecutionCourse):void
+ 	END
+ 	ContentManagementLog -> ContentManagementLog: setDescription(String):void
+ 	EvaluationMethod -> EvaluationMethod: getExecutionCourse():ExecutionCourse
+ 	EvaluationMethod -> EvaluationMethod: getExecutionCourse():ExecutionCourse
+ 	EvaluationMethod -> ExecutionCourse: getNome():String
+ 	EvaluationMethod -> EvaluationMethod: getExecutionCourse():ExecutionCourse
+ 	EvaluationMethod -> ExecutionCourse: getDegreePresentationString():String
+ 	EvaluationMethod -> EvaluationMethod: setEvaluationElements(LocalizedString):void
+ END
+ @enduml

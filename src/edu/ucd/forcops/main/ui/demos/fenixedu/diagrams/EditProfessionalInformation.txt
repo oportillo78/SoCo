@@ -1,0 +1,51 @@
+@startuml
+participant "JSP\nJSPEditProfessionalInformation" as JSPEditProfessionalInformation order 0
+participant "services.alumni\nEditProfessionalInformation" as EditProfessionalInformation order 1
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 11
+participant "dto.alumni\nAlumniJobBean" as AlumniJobBean order 12
+participant "domain\nJob" as Job order 35
+participant "org.joda.time\nDateTime" as DateTime order 86
+JSPEditProfessionalInformation -> EditProfessionalInformation: getConnection()
+JSPEditProfessionalInformation <- EditProfessionalInformation: returnConnection()
+JSPEditProfessionalInformation -> EditProfessionalInformation: executeAction()
+EditProfessionalInformation -> EditProfessionalInformation: run(AlumniJobBean):void
+EditProfessionalInformation -> FenixFramework: getDomainObject(String):T
+EditProfessionalInformation -> AlumniJobBean: getJobId():String
+EditProfessionalInformation -> Job: edit(AlumniJobBean):void
+Job -> Job: checkParameters\n(String,String,Country,\nBusinessArea,BusinessArea,String,\nLocalDate,LocalDate,JobApplicationType,\nContractType,Double):void
+Job -> AlumniJobBean: getEmployerName():String
+Job -> AlumniJobBean: getCity():String
+Job -> AlumniJobBean: getCountry():Country
+Job -> AlumniJobBean: getChildBusinessArea():BusinessArea
+Job -> AlumniJobBean: getParentBusinessArea():BusinessArea
+Job -> AlumniJobBean: getPosition():String
+Job -> AlumniJobBean: getBeginDateAsLocalDate():LocalDate
+Job -> AlumniJobBean: getEndDateAsLocalDate():LocalDate
+Job -> AlumniJobBean: getApplicationType():JobApplicationType
+Job -> AlumniJobBean: getContractType():ContractType
+Job -> AlumniJobBean: getSalary():Double
+Job -> Job: setEmployerName(String):void
+Job -> AlumniJobBean: getEmployerName():String
+Job -> Job: setCity(String):void
+Job -> AlumniJobBean: getCity():String
+Job -> Job: setCountry(Country):void
+Job -> AlumniJobBean: getCountry():Country
+Job -> Job: setBusinessArea(BusinessArea):void
+Job -> AlumniJobBean: getChildBusinessArea():BusinessArea
+Job -> Job: setParentBusinessArea(BusinessArea):void
+Job -> AlumniJobBean: getParentBusinessArea():BusinessArea
+Job -> Job: setPosition(String):void
+Job -> AlumniJobBean: getPosition():String
+Job -> Job: setBeginDate(LocalDate):void
+Job -> AlumniJobBean: getBeginDateAsLocalDate():LocalDate
+Job -> Job: setEndDate(LocalDate):void
+Job -> AlumniJobBean: getEndDateAsLocalDate():LocalDate
+Job -> Job: setJobApplicationType(JobApplicationType):void
+Job -> AlumniJobBean: getApplicationType():JobApplicationType
+Job -> Job: setContractType(ContractType):void
+Job -> AlumniJobBean: getContractType():ContractType
+Job -> Job: setSalary(Double):void
+Job -> AlumniJobBean: getSalary():Double
+Job -> Job: setLastModifiedDate(DateTime):void
+Job -> DateTime: newDateTime()
+@enduml

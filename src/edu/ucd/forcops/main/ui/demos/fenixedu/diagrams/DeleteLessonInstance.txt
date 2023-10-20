@@ -1,0 +1,196 @@
+@startuml
+ participant "JSP\nJSPDeleteLessonInstance" as JSPDeleteLessonInstance order 0
+ participant "services.resourceAllocationManager\nDeleteLessonInstance" as DeleteLessonInstance order 1
+ participant "predicate\nAccessControl" as AccessControl order 31
+ participant "core.security\nAuthenticate" as Authenticate order 37
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 40
+ participant "core.domain\nUser_Base" as User_Base order 41
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 42
+ participant "domain\nPerson" as Person order 44
+ participant "core.domain\nUser" as User order 50
+ participant "dto.teacher.executionCourse\nNextPossibleSummaryLessonsAndDatesBean" as NextPossibleSummaryLessonsAndDatesBean order 51
+ participant "domain\nLesson" as Lesson order 52
+ participant "domain\nLessonInstance" as LessonInstance order 119
+ participant "domain.space\nSpaceUtils" as SpaceUtils order 120
+ participant "domain\nLessonInstance" as LessonInstance order 121
+ participant "domain\nFrequencyType" as FrequencyType order 122
+ participant "domain\nFrequencyType" as FrequencyType order 123
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 124
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 125
+ participant "domain\nLessonInstance" as LessonInstance order 126
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 152
+ participant "domain.exceptions\nDomainException" as DomainException order 153
+ participant "domain.space\nLessonInstanceSpaceOccupation_Base" as LessonInstanceSpaceOccupation_Base order 154
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 161
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 162
+ participant "domain\nOccupationPeriod_Base" as OccupationPeriod_Base order 165
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 167
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 168
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 186
+ participant "org.joda.time\nDateTimeField" as DateTimeField order 215
+ participant "org.joda.time\nDateTimeField" as DateTimeField order 216
+ participant "org.joda.time\nDurationFieldType" as DurationFieldType order 217
+ participant "dto.teacher.executionCourse\nNextPossibleSummaryLessonsAndDatesBean" as NextPossibleSummaryLessonsAndDatesBean order 218
+ JSPDeleteLessonInstance -> DeleteLessonInstance: getConnection()
+ JSPDeleteLessonInstance <- DeleteLessonInstance: returnConnection()
+ JSPDeleteLessonInstance -> DeleteLessonInstance: executeAction()
+ DeleteLessonInstance -> DeleteLessonInstance: run\n(SortedSet<NextPossibleSummaryLessonsAndDatesBean>):void
+ DeleteLessonInstance -> NextPossibleSummaryLessonsAndDatesBean: getLesson():Lesson
+ DeleteLessonInstance -> NextPossibleSummaryLessonsAndDatesBean: getDate():YearMonthDay
+ DeleteLessonInstance -> Lesson: refreshPeriodAndInstancesInSummaryCreation\n(YearMonthDay):void
+ OPT !wasFinished() && newBeginDate != null && newBeginDate.isAfter(getPeriod().getStartYearMonthDay())
+ 	Lesson -> Lesson: getAllLessonInstancesDatesToCreate\n(YearMonthDay,YearMonthDay,Boolean):SortedSet<YearMonthDay>
+ 	OPT startDate != null && endDate != null && !startDate.isAfter(endDate) && createLessonInstances
+ 		Lesson -> Lesson: getAllValidLessonDatesWithoutInstancesDates\n(YearMonthDay,YearMonthDay):SortedSet<YearMonthDay>
+ 		ALT startDateToSearch != null
+ 			Lesson -> Lesson: getValidBeginDate(YearMonthDay):YearMonthDay
+ 		END
+ 		OPT !wasFinished() && startDateToSearch != null && endDateToSearch != null && !startDateToSearch.isAfter(endDateToSearch)
+ 			Lesson -> Lesson: getLessonCampus():Space
+ 			ALT !wasFinished()
+ 				ALT hasSala()
+ 					Lesson -> SpaceUtils: getSpaceCampus(Space):Space
+ 					Lesson -> Lesson: getSala():Space
+ 				END
+ 			ELSE else
+ 				Lesson -> Lesson: getLastLessonInstance():LessonInstance
+ 				ALT lastLessonInstance != null && lastLessonInstance.getRoom() != null
+ 					Lesson -> SpaceUtils: getSpaceCampus(Space):Space
+ 					Lesson -> LessonInstance: getRoom():Space
+ 				END
+ 			END
+ 			ALT getFrequency() == FrequencyType.BIWEEKLY
+ 				Lesson -> FrequencyType: getNumberOfDays():int
+ 			ELSE else
+ 				Lesson -> Lesson: getFrequency():FrequencyType
+ 				Lesson -> FrequencyType: getNumberOfDays():int
+ 			END
+ 			LOOP while: true
+ 				Lesson -> YearMonthDay: plusDays(int):YearMonthDay
+ 			END
+ 		END
+ 		Lesson -> Lesson: getAllLessonInstancesUntil(LocalDate):List<LessonInstance>
+ 		Lesson -> YearMonthDay: toLocalDate():LocalDate
+ 		LOOP for: allLessonInstancesUntil
+ 			Lesson -> LessonInstance: getDay():YearMonthDay
+ 		END
+ 	END
+ 	Lesson -> Lesson: getLessonStartDay():YearMonthDay
+ 	Lesson -> YearMonthDay: minusDays(int):YearMonthDay
+ 	Lesson -> Lesson: getPeriod():OccupationPeriod
+ 	Lesson -> OccupationPeriod: getLastOccupationPeriodOfNestedPeriods():OccupationPeriod
+ 	LOOP while: occupationPeriod.getNextPeriod() != null
+ 		OccupationPeriod -> OccupationPeriod_Base: getNextPeriod():OccupationPeriod
+ 	END
+ 	Lesson -> OccupationPeriod: getEndYearMonthDay():YearMonthDay
+ 	ALT !newBeginDate.isAfter(newEndDate)
+ 		Lesson -> Lesson: refreshPeriod(YearMonthDay,YearMonthDay):void
+ 		Lesson -> Lesson: getPeriod():OccupationPeriod
+ 		Lesson -> OccupationPeriod: getLastOccupationPeriodOfNestedPeriods():OccupationPeriod
+ 		Lesson -> OccupationPeriod: getEndYearMonthDay():YearMonthDay
+ 	ELSE else
+ 		Lesson -> Lesson: getPeriod():OccupationPeriod
+ 		Lesson -> Lesson: removeLessonSpaceOccupationAndPeriod():void
+ 		Lesson -> OccupationPeriod: delete():void
+ 		OPT allNestedPeriodsAreEmpty()
+ 			OccupationPeriod -> OccupationPeriod: getFirstOccupationPeriodOfNestedPeriods():OccupationPeriod
+ 			LOOP while: occupationPeriod.getPreviousPeriod() != null
+ 				OccupationPeriod -> OccupationPeriod_Base: getPreviousPeriod():OccupationPeriod
+ 			END
+ 			OccupationPeriod -> OccupationPeriod: deleteAllNestedPeriods():void
+ 			OccupationPeriod -> OccupationPeriod: getNextPeriod():OccupationPeriod
+ 			OccupationPeriod -> OccupationPeriod: setNextPeriod(OccupationPeriod):void
+ 			OccupationPeriod -> OccupationPeriod: setPreviousPeriod(OccupationPeriod):void
+ 			OccupationPeriod -> OccupationPeriod: setRootDomainObject(Bennu):void
+ 			OccupationPeriod -> OccupationPeriod: deleteDomainObject():void
+ 			OPT nextPeriod != null
+ 				OccupationPeriod -> OccupationPeriod: delete():void
+ 			END
+ 		END
+ 	END
+ 	Lesson -> Lesson: createAllLessonInstances(SortedSet<YearMonthDay>):void
+ 	LOOP for: instanceDates
+ 		Lesson -> LessonInstance: LessonInstance(Lesson,YearMonthDay)
+ 	END
+ END
+ ALT lesson.isBiWeeklyOffset()
+ 	DeleteLessonInstance -> YearMonthDay: plusDays(int):YearMonthDay
+ 	YearMonthDay -> YearMonthDay: withFieldAdded(DurationFieldType,int):YearMonthDay
+ 	YearMonthDay -> YearMonthDay: indexOfSupported(DurationFieldType):int
+ 	YearMonthDay -> YearMonthDay: getValues():int[]
+ 	YearMonthDay -> YearMonthDay: getField(int):DateTimeField
+ 	YearMonthDay -> DateTimeField: add(ReadablePartial,int,int[],int):int[]
+ 	YearMonthDay -> YearMonthDay: YearMonthDay(YearMonthDay,int[])
+ 	YearMonthDay -> DurationFieldType: days():DurationFieldType
+ ELSE else
+ 	DeleteLessonInstance -> YearMonthDay: plusDays(int):YearMonthDay
+ 	YearMonthDay -> YearMonthDay: withFieldAdded(DurationFieldType,int):YearMonthDay
+ 	YearMonthDay -> YearMonthDay: indexOfSupported(DurationFieldType):int
+ 	YearMonthDay -> YearMonthDay: getValues():int[]
+ 	YearMonthDay -> YearMonthDay: getField(int):DateTimeField
+ 	YearMonthDay -> DateTimeField: add(ReadablePartial,int,int[],int):int[]
+ 	YearMonthDay -> YearMonthDay: YearMonthDay(YearMonthDay,int[])
+ 	YearMonthDay -> DurationFieldType: days():DurationFieldType
+ END
+ LOOP for: set
+ 	DeleteLessonInstance -> DeleteLessonInstance: run(Lesson,YearMonthDay):void
+ 	DeleteLessonInstance -> DeleteLessonInstance: check(AccessControlPredicate<?>):void
+ 	DeleteLessonInstance -> AccessControl: getPerson():Person
+ 	AccessControl -> Authenticate: getUser():User
+ 	ALT ?
+ 	ELSE else
+ 		Authenticate -> AuthenticationContext: getUser():User
+ 	END
+ 	ALT userView == null
+ 	ELSE else
+ 		AccessControl -> User_Base: getPerson():Person
+ 	END
+ 	DeleteLessonInstance -> AccessControlPredicate: evaluate(E):boolean
+ 	OPT !result
+ 		ALT requester == null
+ 		ELSE else
+ 			DeleteLessonInstance -> Person: getUsername():String
+ 			Person -> Person: getUser():User
+ 			ALT user == null
+ 			ELSE else
+ 				Person -> User: getUsername():String
+ 			END
+ 		END
+ 	END
+ 	OPT lesson != null && day != null
+ 		DeleteLessonInstance -> Lesson: deleteLessonInstanceIn(YearMonthDay):void
+ 		Lesson -> Lesson: getLessonInstanceFor(YearMonthDay):LessonInstance
+ 		Lesson -> Lesson: getLessonInstancesSet():Set<LessonInstance>
+ 		ALT lessonInstance == null
+ 		ELSE else
+ 			Lesson -> LessonInstance: delete():void
+ 			LessonInstance -> LessonInstance: check(T,AccessControlPredicate<T>):void
+ 			LessonInstance -> AccessControl: getPerson():Person
+ 			LessonInstance -> AccessControlPredicate: evaluate(E):boolean
+ 			OPT !result
+ 				ALT requester == null
+ 				ELSE else
+ 					LessonInstance -> Person: getUsername():String
+ 				END
+ 				LessonInstance -> DomainObject: getExternalId():String
+ 			END
+ 			LessonInstance -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			LessonInstance -> LessonInstance: getDeletionBlockers():Collection<String>
+ 			LessonInstance -> LessonInstance: getLessonInstanceSpaceOccupation():LessonInstanceSpaceOccupation
+ 			OPT occupation != null
+ 				LessonInstance -> LessonInstanceSpaceOccupation_Base: removeLessonInstances(LessonInstance):void
+ 				LessonInstance -> LessonInstanceSpaceOccupation_Base: delete():void
+ 				LessonInstanceSpaceOccupation_Base -> LessonInstanceSpaceOccupation_Base: setBennu(Bennu):void
+ 				LessonInstanceSpaceOccupation_Base -> LessonInstanceSpaceOccupation_Base: getSpaceSet():Set<Space>
+ 				LessonInstanceSpaceOccupation_Base -> LessonInstanceSpaceOccupation_Base: deleteDomainObject():void
+ 			END
+ 			LessonInstance -> LessonInstance: setCourseLoad(CourseLoad):void
+ 			LessonInstance -> LessonInstance: setLesson(Lesson):void
+ 			LessonInstance -> LessonInstance: setRootDomainObject(Bennu):void
+ 			LessonInstance -> LessonInstance: deleteDomainObject():void
+ 		END
+ 	END
+ 	DeleteLessonInstance -> NextPossibleSummaryLessonsAndDatesBean: getLesson():Lesson
+ 	DeleteLessonInstance -> NextPossibleSummaryLessonsAndDatesBean: getDate():YearMonthDay
+ END
+ @enduml

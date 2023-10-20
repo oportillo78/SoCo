@@ -1,0 +1,89 @@
+@startuml
+ participant "JSP\nJSPInsertExecutionCourseAtExecutionPeriod" as JSPInsertExecutionCourseAtExecutionPeriod order 0
+ participant "services.manager\nInsertExecutionCourseAtExecutionPeriod" as InsertExecutionCourseAtExecutionPeriod order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 23
+ participant "dto\nInfoExecutionCourseEditor" as InfoExecutionCourseEditor order 30
+ participant "dto\nInfoExecutionPeriod" as InfoExecutionPeriod order 31
+ participant "domain\nExecutionSemester" as ExecutionSemester order 36
+ participant "domain\nExecutionSemester" as ExecutionSemester order 37
+ participant "domain\nExecutionCourse" as ExecutionCourse order 42
+ participant "domain\nExecutionCourse" as ExecutionCourse order 43
+ participant "core.domain\nBennu" as Bennu order 88
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 99
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 100
+ participant "domain\nFinalEvaluation" as FinalEvaluation order 101
+ participant "domain.messaging\nExecutionCourseForum" as ExecutionCourseForum order 102
+ participant "core.signals\nSignal" as Signal order 107
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 120
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 121
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 122
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 123
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 124
+ JSPInsertExecutionCourseAtExecutionPeriod -> InsertExecutionCourseAtExecutionPeriod: getConnection()
+ JSPInsertExecutionCourseAtExecutionPeriod <- InsertExecutionCourseAtExecutionPeriod: returnConnection()
+ JSPInsertExecutionCourseAtExecutionPeriod -> InsertExecutionCourseAtExecutionPeriod: executeAction()
+ InsertExecutionCourseAtExecutionPeriod -> InsertExecutionCourseAtExecutionPeriod: run(InfoExecutionCourseEditor):void
+ InsertExecutionCourseAtExecutionPeriod -> FenixFramework: getDomainObject(String):T
+ InsertExecutionCourseAtExecutionPeriod -> InfoExecutionCourseEditor: getInfoExecutionPeriod():InfoExecutionPeriod
+ InsertExecutionCourseAtExecutionPeriod -> InfoExecutionPeriod: getExternalId():String
+ InfoExecutionPeriod -> InfoExecutionPeriod: getExecutionPeriod():ExecutionSemester
+ InfoExecutionPeriod -> ExecutionSemester: getExternalId():String
+ InsertExecutionCourseAtExecutionPeriod -> ExecutionSemester: getExecutionCourseByInitials(String):ExecutionCourse
+ ExecutionSemester -> ExecutionSemester: getAssociatedExecutionCoursesSet():Set<ExecutionCourse>
+ ExecutionSemester -> ExecutionCourse: getSigla():String
+ InsertExecutionCourseAtExecutionPeriod -> InfoExecutionCourseEditor: getSigla():String
+ InsertExecutionCourseAtExecutionPeriod -> ExecutionCourse: ExecutionCourse\n(String,String,ExecutionSemester,EntryPhase)
+ ExecutionCourse -> ExecutionCourse: ExecutionCourse_Base()
+ ExecutionCourse -> ExecutionCourse: AbstractDomainObject()
+ ExecutionCourse -> ExecutionCourse: init$Instance(boolean):void
+ ExecutionCourse -> ExecutionCourse: ensureOid():void
+ ExecutionCourse -> ExecutionCourse: setRootDomainObject(Bennu):void
+ ExecutionCourse -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: Bennu()
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ ExecutionCourse -> ExecutionCourse: addAssociatedEvaluations(Evaluation):void
+ ExecutionCourse -> FinalEvaluation: FinalEvaluation()
+ ExecutionCourse -> ExecutionCourse: setAvailableGradeSubmission(Boolean):void
+ ExecutionCourse -> ExecutionCourse: setNome(String):void
+ ExecutionCourse -> ExecutionCourse: setExecutionPeriod(ExecutionSemester):void
+ ExecutionCourse -> ExecutionCourse: setSigla(String):void
+ ExecutionCourse -> ExecutionCourse: setComment(String):void
+ ExecutionCourse -> ExecutionCourse: setEntryPhase(EntryPhase):void
+ ExecutionCourse -> ExecutionCourse: setProjectTutorialCourse(Boolean):void
+ ExecutionCourse -> ExecutionCourse: setUnitCreditValue(BigDecimal):void
+ ExecutionCourse -> ExecutionCourseForum: ExecutionCourseForum()
+ ExecutionCourseForum -> ExecutionCourseForum: ExecutionCourseForum_Base()
+ ExecutionCourseForum -> ExecutionCourseForum: Forum()
+ ExecutionCourse -> ExecutionCourseForum: setName(LocalizedString):void
+ ExecutionCourse -> ExecutionCourse: getNameI18N():LocalizedString
+ ExecutionCourse -> ExecutionCourse: addForum(ExecutionCourseForum):void
+ ExecutionCourse -> Signal: emit(String,Object):void
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ ExecutionCourse -> DomainObjectEvent: DomainObjectEvent(T)
+ InsertExecutionCourseAtExecutionPeriod -> InfoExecutionCourseEditor: getNome():String
+ InsertExecutionCourseAtExecutionPeriod -> InfoExecutionCourseEditor: getSigla():String
+ InsertExecutionCourseAtExecutionPeriod -> InfoExecutionCourseEditor: getEntryPhase():EntryPhase
+ @enduml

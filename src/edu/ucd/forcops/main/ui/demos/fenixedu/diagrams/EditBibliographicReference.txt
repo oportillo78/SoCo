@@ -1,0 +1,54 @@
+@startuml
+ participant "JSP\nJSPEditBibliographicReference" as JSPEditBibliographicReference order 0
+ participant "services.teacher\nEditBibliographicReference" as EditBibliographicReference order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nBibliographicReference" as BibliographicReference order 14
+ participant "core.i18n\nBundleUtil" as BundleUtil order 37
+ participant "domain\nCurricularManagementLog" as CurricularManagementLog order 39
+ participant "domain\nExecutionCourse" as ExecutionCourse order 53
+ participant "domain\nDegree_Base" as Degree_Base order 60
+ participant "service.filter\nExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter" as ExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter order 61
+ participant "core.security\nAuthenticate" as Authenticate order 64
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 67
+ JSPEditBibliographicReference -> EditBibliographicReference: getConnection()
+ JSPEditBibliographicReference <- EditBibliographicReference: returnConnection()
+ JSPEditBibliographicReference -> EditBibliographicReference: executeAction()
+ EditBibliographicReference -> EditBibliographicReference: runEditBibliographicReference\n(String,String,String,String,String,Boolean):Boolean
+ EditBibliographicReference -> ExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseAndBibliographicReferenceLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ EditBibliographicReference -> EditBibliographicReference: run\n(String,String,String,String,String,Boolean):Boolean
+ EditBibliographicReference -> FenixFramework: getDomainObject(String):T
+ EditBibliographicReference -> BibliographicReference: edit\n(String,String,String,String,Boolean):void
+ BibliographicReference -> BibliographicReference: setTitle(String):void
+ BibliographicReference -> BibliographicReference: setAuthors(String):void
+ BibliographicReference -> BibliographicReference: setReference(String):void
+ BibliographicReference -> BibliographicReference: setYear(String):void
+ BibliographicReference -> BibliographicReference: setOptional(Boolean):void
+ BibliographicReference -> BibliographicReference: getExecutionCourse():ExecutionCourse
+ ALT optional
+ 	BibliographicReference -> BundleUtil: getString(String,String,String[]):String
+ ELSE else
+ 	BibliographicReference -> BundleUtil: getString(String,String,String[]):String
+ END
+ BibliographicReference -> CurricularManagementLog: createLog\n(ExecutionCourse,String,String,String[]):CurricularManagementLog
+ CurricularManagementLog -> CurricularManagementLog: generateLabelDescription(String,String,String[]):String
+ CurricularManagementLog -> BundleUtil: getString(String,String,String[]):String
+ CurricularManagementLog -> CurricularManagementLog: createCurricularManagementLog\n(ExecutionCourse,String):CurricularManagementLog
+ CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog(ExecutionCourse,String)
+ CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog_Base()
+ OPT getExecutionCourse() == null
+ 	CurricularManagementLog -> CurricularManagementLog: setExecutionCourse(ExecutionCourse):void
+ END
+ CurricularManagementLog -> CurricularManagementLog: setDescription(String):void
+ BibliographicReference -> ExecutionCourse: getName():String
+ ExecutionCourse -> ExecutionCourse: getNome():String
+ BibliographicReference -> ExecutionCourse: getDegreePresentationString():String
+ ExecutionCourse -> ExecutionCourse: getDegreesSortedByDegreeName():SortedSet<Degree>
+ LOOP for: degrees
+ 	ExecutionCourse -> Degree_Base: getSigla():String
+ END
+ @enduml

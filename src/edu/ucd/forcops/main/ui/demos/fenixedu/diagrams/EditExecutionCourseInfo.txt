@@ -1,0 +1,59 @@
+@startuml
+ participant "JSP\nJSPEditExecutionCourseInfo" as JSPEditExecutionCourseInfo order 0
+ participant "services.manager.executionCourseManagement\nEditExecutionCourseInfo" as EditExecutionCourseInfo order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 29
+ participant "dto\nInfoObject" as InfoObject order 34
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 35
+ participant "core.signals\nSignal" as Signal order 50
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 63
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 64
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 65
+ participant "pt.ist.fenixframework\nTransaction" as Transaction order 66
+ participant "core.signals\nDomainObjectEvent" as DomainObjectEvent order 67
+ participant "domain\nExecutionSemester" as ExecutionSemester order 68
+ participant "domain\nExecutionCourse" as ExecutionCourse order 73
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 74
+ JSPEditExecutionCourseInfo -> EditExecutionCourseInfo: getConnection()
+ JSPEditExecutionCourseInfo <- EditExecutionCourseInfo: returnConnection()
+ JSPEditExecutionCourseInfo -> EditExecutionCourseInfo: executeAction()
+ EditExecutionCourseInfo -> EditExecutionCourseInfo: run\n(InfoExecutionCourseEditor):InfoExecutionCourse
+ EditExecutionCourseInfo -> FenixFramework: getDomainObject(String):T
+ EditExecutionCourseInfo -> InfoObject: getExternalId():String
+ EditExecutionCourseInfo -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ EditExecutionCourseInfo -> ExecutionSemester: getExecutionCourseByInitials(String):ExecutionCourse
+ ExecutionSemester -> ExecutionSemester: getAssociatedExecutionCoursesSet():Set<ExecutionCourse>
+ ExecutionSemester -> ExecutionCourse: getSigla():String
+ EditExecutionCourseInfo -> InfoObject: getSigla():String
+ EditExecutionCourseInfo -> ExecutionCourse_Base: editInformation\n(String,String,String,Boolean,EntryPhase):void
+ ExecutionCourse_Base -> ExecutionCourse_Base: setNome(String):void
+ ExecutionCourse_Base -> ExecutionCourse_Base: setSigla(String):void
+ ExecutionCourse_Base -> ExecutionCourse_Base: setComment(String):void
+ ExecutionCourse_Base -> ExecutionCourse_Base: setAvailableGradeSubmission(Boolean):void
+ OPT entryPhase != null
+ 	ExecutionCourse_Base -> ExecutionCourse_Base: setEntryPhase(EntryPhase):void
+ END
+ ExecutionCourse_Base -> Signal: emit(String,Object):void
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ OPT ?
+ 	Signal -> FenixFramework: getTransaction():Transaction
+ 	Signal -> Transaction: getFromContext(String):T
+ 	OPT ?
+ 		Signal -> FenixFramework: getTransaction():Transaction
+ 		Signal -> Transaction: putInContext(String,Object):void
+ 	END
+ END
+ ExecutionCourse_Base -> DomainObjectEvent: DomainObjectEvent(T)
+ EditExecutionCourseInfo -> InfoObject: getNome():String
+ EditExecutionCourseInfo -> InfoObject: getSigla():String
+ EditExecutionCourseInfo -> InfoObject: getComment():String
+ EditExecutionCourseInfo -> InfoObject: getAvailableGradeSubmission():Boolean
+ EditExecutionCourseInfo -> InfoObject: getEntryPhase():EntryPhase
+ EditExecutionCourseInfo -> InfoExecutionCourse: InfoExecutionCourse(ExecutionCourse)
+ @enduml

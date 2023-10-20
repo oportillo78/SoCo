@@ -1,0 +1,104 @@
+@startuml
+ participant "JSP\nJSPEditDegreeCurricularPlan" as JSPEditDegreeCurricularPlan order 0
+ participant "services.scientificCouncil.curricularPlans\nEditDegreeCurricularPlan" as EditDegreeCurricularPlan order 1
+ participant "predicate\nAccessControl" as AccessControl order 21
+ participant "core.security\nAuthenticate" as Authenticate order 26
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 29
+ participant "core.domain\nUser_Base" as User_Base order 30
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 31
+ participant "domain\nPerson" as Person order 32
+ participant "core.domain\nUser" as User order 37
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 40
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 43
+ participant "domain\nExecutionYear" as ExecutionYear order 80
+ participant "domain.curricularPeriod\nCurricularPeriod" as CurricularPeriod order 81
+ participant "core.domain\nBennu" as Bennu order 90
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 101
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 102
+ participant "domain.degreeStructure\nRootCourseGroup" as RootCourseGroup order 103
+ participant "domain.degreeStructure\nRootCourseGroup" as RootCourseGroup order 104
+ JSPEditDegreeCurricularPlan -> EditDegreeCurricularPlan: getConnection()
+ JSPEditDegreeCurricularPlan <- EditDegreeCurricularPlan: returnConnection()
+ JSPEditDegreeCurricularPlan -> EditDegreeCurricularPlan: executeAction()
+ EditDegreeCurricularPlan -> EditDegreeCurricularPlan: run\n(String,String,CurricularStage,DegreeCurricularPlanState,GradeScale,String,AcademicPeriod):void
+ EditDegreeCurricularPlan -> EditDegreeCurricularPlan: check(AccessControlPredicate<?>):void
+ EditDegreeCurricularPlan -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ EditDegreeCurricularPlan -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		EditDegreeCurricularPlan -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ EditDegreeCurricularPlan -> FenixFramework: getDomainObject(String):T
+ ALT (executionYearID == null)
+ ELSE else
+ 	EditDegreeCurricularPlan -> FenixFramework: getDomainObject(String):T
+ END
+ EditDegreeCurricularPlan -> DegreeCurricularPlan: edit\n(String,CurricularStage,DegreeCurricularPlanState,GradeScale,ExecutionYear):void
+ ALT isApproved()                && (name != null && !getName().equals(name) || gradeScale != null && !getGradeScale().equals(gradeScale))
+ ELSE else
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: commonFieldsChange(String,GradeScale):void
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: setName(String):void
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: setGradeScale(GradeScale):void
+ END
+ DegreeCurricularPlan -> DegreeCurricularPlan: newStructureFieldsChange(CurricularStage,ExecutionYear):void
+ ALT curricularStage == null
+ ELSE else
+ 	ALT !getExecutionDegreesSet().isEmpty() && curricularStage == CurricularStage.DRAFT
+ 	ELSE else
+ 		ALT curricularStage == CurricularStage.APPROVED
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: approve(ExecutionYear):void
+ 			ALT beginExecutionYear == null
+ 			ELSE else
+ 				DegreeCurricularPlan -> ExecutionYear: getFirstExecutionPeriod():ExecutionSemester
+ 			END
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: checkIfCurricularCoursesBelongToApprovedCompetenceCourses\n():void
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: initBeginExecutionPeriodForDegreeCurricularPlan\n(CourseGroup,ExecutionSemester):void
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: getRoot():RootCourseGroup
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: setCurricularStage(CurricularStage):void
+ 		ELSE else
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: setCurricularStage(CurricularStage):void
+ 		END
+ 	END
+ END
+ DegreeCurricularPlan -> DegreeCurricularPlan: setState(DegreeCurricularPlanState):void
+ DegreeCurricularPlan -> DegreeCurricularPlan: getRoot():RootCourseGroup
+ DegreeCurricularPlan -> RootCourseGroup: setName(String):void
+ DegreeCurricularPlan -> DegreeCurricularPlan: getRoot():RootCourseGroup
+ DegreeCurricularPlan -> RootCourseGroup: setNameEn(String):void
+ EditDegreeCurricularPlan -> DegreeCurricularPlan: editDuration(AcademicPeriod):void
+ OPT !getDegreeStructure().getAcademicPeriod().equals(duration)
+ 	DegreeCurricularPlan -> DegreeCurricularPlan: setDegreeStructure(CurricularPeriod):void
+ 	DegreeCurricularPlan -> CurricularPeriod: CurricularPeriod(AcademicPeriod)
+ 	CurricularPeriod -> CurricularPeriod: CurricularPeriod_Base()
+ 	CurricularPeriod -> CurricularPeriod: setRootDomainObject(Bennu):void
+ 	CurricularPeriod -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: Bennu()
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	CurricularPeriod -> CurricularPeriod: setAcademicPeriod(AcademicPeriod):void
+ END
+ @enduml

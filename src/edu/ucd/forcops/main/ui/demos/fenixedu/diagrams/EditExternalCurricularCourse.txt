@@ -1,0 +1,18 @@
+@startuml
+ participant "JSP\nJSPEditExternalCurricularCourse" as JSPEditExternalCurricularCourse order 0
+ participant "services.administrativeOffice.externalUnits\nEditExternalCurricularCourse" as EditExternalCurricularCourse order 1
+ participant "dto.administrativeOffice.externalUnits\nEditExternalCurricularCourseBean" as EditExternalCurricularCourseBean order 13
+ participant "domain\nExternalCurricularCourse" as ExternalCurricularCourse order 14
+ JSPEditExternalCurricularCourse -> EditExternalCurricularCourse: getConnection()
+ JSPEditExternalCurricularCourse <- EditExternalCurricularCourse: returnConnection()
+ JSPEditExternalCurricularCourse -> EditExternalCurricularCourse: executeAction()
+ EditExternalCurricularCourse -> EditExternalCurricularCourse: run(EditExternalCurricularCourseBean):void
+ EditExternalCurricularCourse -> EditExternalCurricularCourseBean: getExternalCurricularCourse():ExternalCurricularCourse
+ EditExternalCurricularCourse -> ExternalCurricularCourse: edit(String,String):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: checkForExternalCurricularCourseWithSameNameAndCode\n(Unit,String,String):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: getUnit():Unit
+ ExternalCurricularCourse -> ExternalCurricularCourse: setName(String):void
+ ExternalCurricularCourse -> ExternalCurricularCourse: setCode(String):void
+ EditExternalCurricularCourse -> EditExternalCurricularCourseBean: getName():String
+ EditExternalCurricularCourse -> EditExternalCurricularCourseBean: getCode():String
+ @enduml

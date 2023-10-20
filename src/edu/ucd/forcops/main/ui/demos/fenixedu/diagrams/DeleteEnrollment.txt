@@ -1,0 +1,135 @@
+@startuml
+ participant "JSP\nJSPDeleteEnrollment" as JSPDeleteEnrollment order 0
+ participant "services.manager\nDeleteEnrollment" as DeleteEnrollment order 1
+ participant "domain.student\nRegistration" as Registration order 15
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 18
+ participant "domain\nEnrolmentEvaluation_Base" as EnrolmentEvaluation_Base order 19
+ participant "domain.studentCurriculum\nCurriculumModule_Base" as CurriculumModule_Base order 20
+ participant "domain.thesis\nThesis" as Thesis order 99
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 100
+ participant "domain\nAttends_Base" as Attends_Base order 101
+ participant "domain\nEnrolmentEvaluation" as EnrolmentEvaluation order 120
+ participant "domain.accounting.events\nImprovementOfApprovedEnrolmentEvent" as ImprovementOfApprovedEnrolmentEvent order 149
+ participant "domain.log\nEnrolmentLog" as EnrolmentLog order 150
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 169
+ participant "domain.exceptions\nDomainException" as DomainException order 170
+ participant "core.security\nAuthenticate" as Authenticate order 172
+ participant "core.domain\nUser" as User order 173
+ participant "domain.accounting.events.gratuity\nEnrolmentGratuityEvent" as EnrolmentGratuityEvent order 174
+ participant "domain.studentCurriculum\nCurriculumModule" as CurriculumModule order 179
+ JSPDeleteEnrollment -> DeleteEnrollment: getConnection()
+ JSPDeleteEnrollment <- DeleteEnrollment: returnConnection()
+ JSPDeleteEnrollment -> DeleteEnrollment: executeAction()
+ DeleteEnrollment -> DeleteEnrollment: run(Integer,DegreeType,String):void
+ LOOP for: Registration.readByNumberAndDegreeType(studentNumber, degreeType)
+ 	DeleteEnrollment -> Registration: findEnrolmentByEnrolmentID(String):Enrolment
+ 	LOOP for: getStudentCurricularPlansSet()
+ 		Registration -> StudentCurricularPlan: findEnrolmentByEnrolmentID(String):Enrolment
+ 	END
+ 	OPT enrollment != null
+ 		LOOP for: enrollment.getEvaluationsSet()
+ 			DeleteEnrollment -> EnrolmentEvaluation_Base: setEnrolmentEvaluationState(EnrolmentEvaluationState):void
+ 		END
+ 		DeleteEnrollment -> CurriculumModule_Base: getCurriculumGroup():CurriculumGroup
+ 		DeleteEnrollment -> CurriculumModule_Base: delete():void
+ 		CurriculumModule_Base -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: getDeletionBlockers():Collection<String>
+ 		CurriculumModule_Base -> CurriculumModule_Base: checkForDeletionBlockers(Collection<String>):void
+ 		LOOP for: ?
+ 			CurriculumModule_Base -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ 		END
+ 		CurriculumModule_Base -> CurriculumModule_Base: checkRulesToDelete():void
+ 		CurriculumModule_Base -> CurriculumModule_Base: createCurriculumLineLog(EnrolmentAction):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: getRegistration():Registration
+ 		CurriculumModule_Base -> CurriculumModule_Base: getCurricularCourse():CurricularCourse
+ 		CurriculumModule_Base -> CurriculumModule_Base: getExecutionPeriod():ExecutionSemester
+ 		CurriculumModule_Base -> CurriculumModule_Base: getCurrentUser():String
+ 		CurriculumModule_Base -> EnrolmentLog: EnrolmentLog\n(EnrolmentAction,Registration,CurricularCourse,ExecutionSemester,String)
+ 		EnrolmentLog -> EnrolmentLog: EnrolmentLog()
+ 		EnrolmentLog -> EnrolmentLog: EnrolmentLog_Base()
+ 		EnrolmentLog -> EnrolmentLog: init\n(EnrolmentAction,Registration,DegreeModule,ExecutionSemester,String):void
+ 		EnrolmentLog -> EnrolmentLog: checkParameters\n(EnrolmentAction,Registration,DegreeModule,ExecutionSemester):void
+ 		EnrolmentLog -> EnrolmentLog: setAction(EnrolmentAction):void
+ 		EnrolmentLog -> EnrolmentLog: setStudent(Registration):void
+ 		EnrolmentLog -> EnrolmentLog: setDegreeModule(DegreeModule):void
+ 		EnrolmentLog -> EnrolmentLog: setExecutionPeriod(ExecutionSemester):void
+ 		EnrolmentLog -> EnrolmentLog: setWho(String):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: deleteInformation():void
+ 		CurriculumModule_Base -> CurriculumModule_Base: getThesesSet():Set<Thesis>
+ 		LOOP while: theses.hasNext()
+ 			CurriculumModule_Base -> Thesis: delete():void
+ 		END
+ 		CurriculumModule_Base -> CurriculumModule_Base: getRegistration():Registration
+ 		CurriculumModule_Base -> CurriculumModule_Base: getStudentCurricularPlan():StudentCurricularPlan
+ 		CurriculumModule_Base -> StudentCurricularPlan: setIsFirstTimeToNull():void
+ 		CurriculumModule_Base -> CurriculumModule_Base: setExecutionPeriod(ExecutionSemester):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: setStudentCurricularPlan(StudentCurricularPlan):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: setDegreeModule(DegreeModule):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: setCurriculumGroup(CurriculumGroup):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: getNotNeedToEnrollCurricularCoursesSet():Set<NotNeedToEnrollInCurricularCourse>
+ 		CurriculumModule_Base -> CurriculumModule_Base: getAttendsSet():Set<Attends>
+ 		LOOP while: attendsIter.hasNext()
+ 			CurriculumModule_Base -> Attends_Base: setEnrolment(Enrolment):void
+ 			OPT attends.getAssociatedMarksSet().isEmpty() && attends.getStudentGroupsSet().isEmpty()
+ 				OPT !hasShiftEnrolment
+ 					CurriculumModule_Base -> Attends_Base: delete():void
+ 					Attends_Base -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 					Attends_Base -> Attends_Base: getDeletionBlockers():Collection<String>
+ 					Attends_Base -> Attends_Base: getProjectSubmissionLogsSet():Set<ProjectSubmissionLog>
+ 					Attends_Base -> Attends_Base: getGroupingsSet():Set<Grouping>
+ 					Attends_Base -> Attends_Base: setAluno(Registration):void
+ 					Attends_Base -> Attends_Base: setDisciplinaExecucao(ExecutionCourse):void
+ 					Attends_Base -> Attends_Base: setEnrolment(Enrolment):void
+ 					Attends_Base -> Attends_Base: setRootDomainObject(Bennu):void
+ 					Attends_Base -> Attends_Base: deleteDomainObject():void
+ 				END
+ 			END
+ 		END
+ 		CurriculumModule_Base -> CurriculumModule_Base: getEvaluationsSet():Set<EnrolmentEvaluation>
+ 		LOOP while: evalsIter.hasNext()
+ 			CurriculumModule_Base -> EnrolmentEvaluation: delete():void
+ 			EnrolmentEvaluation -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: getDeletionBlockers():Collection<String>
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setPersonResponsibleForGrade(Person):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setPerson(Person):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setEnrolment(Enrolment):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setMarkSheet(MarkSheet):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setRectification(EnrolmentEvaluation):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setRectified(EnrolmentEvaluation):void
+ 			OPT getImprovementOfApprovedEnrolmentEvent() != null
+ 				EnrolmentEvaluation -> EnrolmentEvaluation: getImprovementOfApprovedEnrolmentEvent():ImprovementOfApprovedEnrolmentEvent
+ 				EnrolmentEvaluation -> ImprovementOfApprovedEnrolmentEvent: removeImprovementEnrolmentEvaluations(EnrolmentEvaluation):void
+ 			END
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setExecutionPeriod(ExecutionSemester):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setEvaluationSeason(EvaluationSeason):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: setRootDomainObject(Bennu):void
+ 			EnrolmentEvaluation -> EnrolmentEvaluation: deleteDomainObject():void
+ 		END
+ 		CurriculumModule_Base -> CurriculumModule_Base: setEvaluationSeason(EvaluationSeason):void
+ 		OPT getEvent() != null
+ 			CurriculumModule_Base -> CurriculumModule_Base: getEvent():EnrolmentGratuityEvent
+ 			CurriculumModule_Base -> Authenticate: getUser():User
+ 			CurriculumModule_Base -> User: getPerson():Person
+ 			CurriculumModule_Base -> EnrolmentGratuityEvent: cancel(Person,String):void
+ 			EnrolmentGratuityEvent -> EnrolmentGratuityEvent: cancel(Person,String):void
+ 			EnrolmentGratuityEvent -> EnrolmentGratuityEvent: setEnrolment(Enrolment):void
+ 		END
+ 		CurriculumModule_Base -> CurriculumModule_Base: delete():void
+ 		CurriculumModule_Base -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: getDeletionBlockers():Collection<String>
+ 		CurriculumModule_Base -> CurriculumModule_Base: setDegreeModule(DegreeModule):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: setCurriculumGroup(CurriculumGroup):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: setRootDomainObject(Bennu):void
+ 		CurriculumModule_Base -> CurriculumModule_Base: deleteDomainObject():void
+ 		OPT parentCurriculumGroup != null && parentCurriculumGroup.isDeletable()
+ 			DeleteEnrollment -> CurriculumModule: delete():void
+ 			CurriculumModule -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			CurriculumModule -> CurriculumModule: getDeletionBlockers():Collection<String>
+ 			CurriculumModule -> CurriculumModule: setDegreeModule(DegreeModule):void
+ 			CurriculumModule -> CurriculumModule: setCurriculumGroup(CurriculumGroup):void
+ 			CurriculumModule -> CurriculumModule: setRootDomainObject(Bennu):void
+ 			CurriculumModule -> CurriculumModule: deleteDomainObject():void
+ 		END
+ 	END
+ END
+ @enduml

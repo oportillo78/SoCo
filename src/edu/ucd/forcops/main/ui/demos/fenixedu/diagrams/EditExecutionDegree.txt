@@ -1,0 +1,23 @@
+@startuml
+ participant "JSP\nJSPEditExecutionDegree" as JSPEditExecutionDegree order 0
+ participant "services.manager.executionDegreesManagement\nEditExecutionDegree" as EditExecutionDegree order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nExecutionDegree" as ExecutionDegree order 14
+ JSPEditExecutionDegree -> EditExecutionDegree: getConnection()
+ JSPEditExecutionDegree <- EditExecutionDegree: returnConnection()
+ JSPEditExecutionDegree -> EditExecutionDegree: executeAction()
+ EditExecutionDegree -> EditExecutionDegree: run(String,String,String,Boolean):void
+ EditExecutionDegree -> FenixFramework: getDomainObject(String):T
+ EditExecutionDegree -> FenixFramework: getDomainObject(String):T
+ EditExecutionDegree -> FenixFramework: getDomainObject(String):T
+ EditExecutionDegree -> ExecutionDegree: edit(ExecutionYear,Space,Boolean):void
+ ExecutionDegree -> ExecutionDegree: setExecutionYear(ExecutionYear):void
+ ExecutionDegree -> ExecutionDegree: setCampus(Space):void
+ LOOP for: this.getExecutionYear().getExecutionPeriodsSet()
+ 	ALT publishedExamMap
+ 		ExecutionDegree -> ExecutionDegree: getPublishedExamMapsSet():Set<ExecutionSemester>
+ 	ELSE else
+ 		ExecutionDegree -> ExecutionDegree: getPublishedExamMapsSet():Set<ExecutionSemester>
+ 	END
+ END
+ @enduml

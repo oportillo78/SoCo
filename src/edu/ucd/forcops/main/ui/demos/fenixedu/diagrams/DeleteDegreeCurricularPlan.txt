@@ -1,0 +1,98 @@
+@startuml
+ participant "JSP\nJSPDeleteDegreeCurricularPlan" as JSPDeleteDegreeCurricularPlan order 0
+ participant "services.scientificCouncil.curricularPlans\nDeleteDegreeCurricularPlan" as DeleteDegreeCurricularPlan order 1
+ participant "predicate\nAccessControl" as AccessControl order 17
+ participant "core.security\nAuthenticate" as Authenticate order 23
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 26
+ participant "core.domain\nUser_Base" as User_Base order 27
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 28
+ participant "domain\nPerson" as Person order 30
+ participant "core.domain\nUser" as User order 36
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 37
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 38
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 72
+ participant "domain.degreeStructure\nRootCourseGroup" as RootCourseGroup order 73
+ participant "domain.degreeStructure\nDegreeModule" as DegreeModule order 82
+ participant "domain.curricularPeriod\nCurricularPeriod" as CurricularPeriod order 83
+ participant "domain.accounting\nServiceAgreementTemplate" as ServiceAgreementTemplate order 96
+ participant "domain.exceptions\nDomainException" as DomainException order 105
+ JSPDeleteDegreeCurricularPlan -> DeleteDegreeCurricularPlan: getConnection()
+ JSPDeleteDegreeCurricularPlan <- DeleteDegreeCurricularPlan: returnConnection()
+ JSPDeleteDegreeCurricularPlan -> DeleteDegreeCurricularPlan: executeAction()
+ DeleteDegreeCurricularPlan -> DeleteDegreeCurricularPlan: run(String):void
+ DeleteDegreeCurricularPlan -> DeleteDegreeCurricularPlan: check(AccessControlPredicate<?>):void
+ DeleteDegreeCurricularPlan -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ DeleteDegreeCurricularPlan -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteDegreeCurricularPlan -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ DeleteDegreeCurricularPlan -> FenixFramework: getDomainObject(String):T
+ ALT dcpToDelete == null
+ ELSE else
+ 	DeleteDegreeCurricularPlan -> DegreeCurricularPlan: delete():void
+ 	ALT getCanBeDeleted()
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: setDegree(Degree):void
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: check(T,AccessControlPredicate<T>):void
+ 		DegreeCurricularPlan -> AccessControl: getPerson():Person
+ 		DegreeCurricularPlan -> AccessControlPredicate: evaluate(E):boolean
+ 		OPT !result
+ 			ALT requester == null
+ 			ELSE else
+ 				DegreeCurricularPlan -> Person: getUsername():String
+ 			END
+ 			DegreeCurricularPlan -> DomainObject: getExternalId():String
+ 		END
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: setDegree(Degree):void
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: getRoot():RootCourseGroup
+ 		DegreeCurricularPlan -> RootCourseGroup: delete():void
+ 		RootCourseGroup -> RootCourseGroup: removeChildDegreeModules():void
+ 		LOOP for: getChildDegreeModules()
+ 			RootCourseGroup -> DegreeModule: delete():void
+ 		END
+ 		RootCourseGroup -> RootCourseGroup: setParentDegreeCurricularPlan(DegreeCurricularPlan):void
+ 		RootCourseGroup -> RootCourseGroup: delete():void
+ 		OPT getDegreeStructure() != null
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: getDegreeStructure():CurricularPeriod
+ 			DegreeCurricularPlan -> CurricularPeriod: delete():void
+ 			CurricularPeriod -> CurricularPeriod: getContextsSet():Set<Context>
+ 			CurricularPeriod -> CurricularPeriod: setDegreeCurricularPlan(DegreeCurricularPlan):void
+ 			CurricularPeriod -> CurricularPeriod: setParent(CurricularPeriod):void
+ 			LOOP for: getChildsSet()
+ 				CurricularPeriod -> CurricularPeriod: delete():void
+ 			END
+ 			CurricularPeriod -> CurricularPeriod: setRootDomainObject(Bennu):void
+ 			CurricularPeriod -> CurricularPeriod: deleteDomainObject():void
+ 		END
+ 		OPT getServiceAgreementTemplate() != null
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: getServiceAgreementTemplate\n():DegreeCurricularPlanServiceAgreementTemplate
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: setServiceAgreementTemplate\n(DegreeCurricularPlanServiceAgreementTemplate):void
+ 			DegreeCurricularPlan -> ServiceAgreementTemplate: delete():void
+ 			ServiceAgreementTemplate -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			ServiceAgreementTemplate -> ServiceAgreementTemplate: getDeletionBlockers():Collection<String>
+ 			ServiceAgreementTemplate -> ServiceAgreementTemplate: setRootDomainObject(Bennu):void
+ 			ServiceAgreementTemplate -> ServiceAgreementTemplate: deleteDomainObject():void
+ 		END
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: setShift(MeasurementTestShift):void
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: setMembersGroup(PersistentGroup):void
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: setRootDomainObject(Bennu):void
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: deleteDomainObject():void
+ 	END
+ END
+ @enduml

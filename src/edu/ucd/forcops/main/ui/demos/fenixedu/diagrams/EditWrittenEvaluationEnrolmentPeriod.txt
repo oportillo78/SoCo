@@ -1,0 +1,82 @@
+@startuml
+ participant "JSP\nJSPEditWrittenEvaluationEnrolmentPeriod" as JSPEditWrittenEvaluationEnrolmentPeriod order 0
+ participant "services.teacher\nEditWrittenEvaluationEnrolmentPeriod" as EditWrittenEvaluationEnrolmentPeriod order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nWrittenEvaluation" as WrittenEvaluation order 16
+ participant "org.joda.time\nDateTime" as DateTime order 43
+ participant "org.joda.time\nDateTime" as DateTime order 44
+ participant "domain\nEvaluationManagementLog" as EvaluationManagementLog order 45
+ participant "core.i18n\nBundleUtil" as BundleUtil order 54
+ participant "domain\nExecutionCourse" as ExecutionCourse order 55
+ participant "domain\nCurricularCourse" as CurricularCourse order 64
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 65
+ participant "domain\nDegree_Base" as Degree_Base order 66
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 67
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 80
+ participant "domain\nExecutionCourse" as ExecutionCourse order 85
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 86
+ participant "core.security\nAuthenticate" as Authenticate order 87
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 90
+ JSPEditWrittenEvaluationEnrolmentPeriod -> EditWrittenEvaluationEnrolmentPeriod: getConnection()
+ JSPEditWrittenEvaluationEnrolmentPeriod <- EditWrittenEvaluationEnrolmentPeriod: returnConnection()
+ JSPEditWrittenEvaluationEnrolmentPeriod -> EditWrittenEvaluationEnrolmentPeriod: executeAction()
+ EditWrittenEvaluationEnrolmentPeriod -> EditWrittenEvaluationEnrolmentPeriod: runEditWrittenEvaluationEnrolmentPeriod(String,String,Date,Date,Date,Date):void
+ EditWrittenEvaluationEnrolmentPeriod -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ EditWrittenEvaluationEnrolmentPeriod -> EditWrittenEvaluationEnrolmentPeriod: run(String,String,Date,Date,Date,Date):void
+ EditWrittenEvaluationEnrolmentPeriod -> FenixFramework: getDomainObject(String):T
+ EditWrittenEvaluationEnrolmentPeriod -> WrittenEvaluation: editEnrolmentPeriod(Date,Date,Date,Date):void
+ WrittenEvaluation -> WrittenEvaluation: checkEnrolmentDates(Date,Date,Date,Date):void
+ WrittenEvaluation -> WrittenEvaluation: createDate(Date,Date):DateTime
+ WrittenEvaluation -> DateTime: DateTime(int,int,int,int,int,int,int)
+ WrittenEvaluation -> WrittenEvaluation: createDate(Date,Date):DateTime
+ WrittenEvaluation -> DateTime: DateTime(int,int,int,int,int,int,int)
+ WrittenEvaluation -> WrittenEvaluation: setEnrollmentBeginDayDate(Date):void
+ WrittenEvaluation -> WrittenEvaluation: setEnrollmentEndDayDate(Date):void
+ WrittenEvaluation -> WrittenEvaluation: setEnrollmentBeginTimeDate(Date):void
+ WrittenEvaluation -> WrittenEvaluation: setEnrollmentEndTimeDate(Date):void
+ LOOP for: getAssociatedExecutionCoursesSet()
+ 	WrittenEvaluation -> EvaluationManagementLog: createLog\n(ExecutionCourse,String,String,String[]):EvaluationManagementLog
+ 	EvaluationManagementLog -> EvaluationManagementLog: generateLabelDescription(String,String,String[]):String
+ 	EvaluationManagementLog -> BundleUtil: getString(String,String,String[]):String
+ 	EvaluationManagementLog -> EvaluationManagementLog: createEvaluationManagementLog\n(ExecutionCourse,String):EvaluationManagementLog
+ 	EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog(ExecutionCourse,String)
+ 	WrittenEvaluation -> WrittenEvaluation: getPresentationName():String
+ 	WrittenEvaluation -> ExecutionCourse: getName():String
+ 	WrittenEvaluation -> ExecutionCourse: getDegreePresentationString():String
+ 	ExecutionCourse -> ExecutionCourse: getDegreesSortedByDegreeName():SortedSet<Degree>
+ 	LOOP for: getAssociatedCurricularCoursesSet()
+ 		ExecutionCourse -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ExecutionCourse -> DegreeCurricularPlan_Base: getDegree():Degree
+ 	END
+ 	LOOP for: degrees
+ 		ExecutionCourse -> Degree_Base: getSigla():String
+ 	END
+ END
+ @enduml

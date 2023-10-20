@@ -1,0 +1,46 @@
+@startuml
+ participant "JSP\nJSPDeleteStudentCurricularPlan" as JSPDeleteStudentCurricularPlan order 0
+ participant "services.manager\nDeleteStudentCurricularPlan" as DeleteStudentCurricularPlan order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 11
+ participant "domain\nEnrolmentEvaluation_Base" as EnrolmentEvaluation_Base order 12
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 13
+ participant "domain.studentCurriculum\nRootCurriculumGroup" as RootCurriculumGroup order 34
+ participant "domain.degree.enrollment\nNotNeedToEnrollInCurricularCourse_Base" as NotNeedToEnrollInCurricularCourse_Base order 47
+ JSPDeleteStudentCurricularPlan -> DeleteStudentCurricularPlan: getConnection()
+ JSPDeleteStudentCurricularPlan <- DeleteStudentCurricularPlan: returnConnection()
+ JSPDeleteStudentCurricularPlan -> DeleteStudentCurricularPlan: executeAction()
+ DeleteStudentCurricularPlan -> DeleteStudentCurricularPlan: run(String):void
+ DeleteStudentCurricularPlan -> FenixFramework: getDomainObject(String):T
+ ALT studentCurricularPlan != null
+ 	LOOP for: studentCurricularPlan.getEnrolmentsSet()
+ 		LOOP for: enrolment.getEvaluationsSet()
+ 			DeleteStudentCurricularPlan -> EnrolmentEvaluation_Base: setEnrolmentEvaluationState(EnrolmentEvaluationState):void
+ 		END
+ 	END
+ 	DeleteStudentCurricularPlan -> StudentCurricularPlan: delete():void
+ 	StudentCurricularPlan -> StudentCurricularPlan: checkRulesToDelete():void
+ 	StudentCurricularPlan -> StudentCurricularPlan: getRoot():RootCurriculumGroup
+ 	StudentCurricularPlan -> RootCurriculumGroup: delete():void
+ 	RootCurriculumGroup -> RootCurriculumGroup: getChildCurriculumGroups():List<CurriculumGroup>
+ 	RootCurriculumGroup -> RootCurriculumGroup: setParentStudentCurricularPlan(StudentCurricularPlan):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: delete():void
+ 	RootCurriculumGroup -> RootCurriculumGroup: getChildCurriculumGroups():List<CurriculumGroup>
+ 	RootCurriculumGroup -> RootCurriculumGroup: setParentStudentCurricularPlan(StudentCurricularPlan):void
+ 	RootCurriculumGroup -> RootCurriculumGroup: delete():void
+ 	LOOP for:iter                .hasNext()
+ 		StudentCurricularPlan -> NotNeedToEnrollInCurricularCourse_Base: setStudentCurricularPlan(StudentCurricularPlan):void
+ 		StudentCurricularPlan -> NotNeedToEnrollInCurricularCourse_Base: delete():void
+ 		NotNeedToEnrollInCurricularCourse_Base -> NotNeedToEnrollInCurricularCourse_Base: setStudentCurricularPlan(StudentCurricularPlan):void
+ 		NotNeedToEnrollInCurricularCourse_Base -> NotNeedToEnrollInCurricularCourse_Base: setCurricularCourse(CurricularCourse):void
+ 		NotNeedToEnrollInCurricularCourse_Base -> NotNeedToEnrollInCurricularCourse_Base: setRootDomainObject(Bennu):void
+ 		NotNeedToEnrollInCurricularCourse_Base -> NotNeedToEnrollInCurricularCourse_Base: getEnrolmentsSet():Set<Enrolment>
+ 		NotNeedToEnrollInCurricularCourse_Base -> NotNeedToEnrollInCurricularCourse_Base: getExternalEnrolmentsSet():Set<ExternalEnrolment>
+ 		NotNeedToEnrollInCurricularCourse_Base -> NotNeedToEnrollInCurricularCourse_Base: deleteDomainObject():void
+ 	END
+ 	StudentCurricularPlan -> StudentCurricularPlan: setDegreeCurricularPlan(DegreeCurricularPlan):void
+ 	StudentCurricularPlan -> StudentCurricularPlan: setBranch(Branch):void
+ 	StudentCurricularPlan -> StudentCurricularPlan: setStudent(Registration):void
+ 	StudentCurricularPlan -> StudentCurricularPlan: setRootDomainObject(Bennu):void
+ 	StudentCurricularPlan -> StudentCurricularPlan: deleteDomainObject():void
+ END
+ @enduml

@@ -1,0 +1,81 @@
+@startuml
+participant "JSP\nJSPEditFormation" as JSPEditFormation order 0
+participant "services.alumni\nEditFormation" as EditFormation order 1
+participant "domain\nFormation" as Formation order 39
+participant "domain.organizationalStructure\nUniversityUnit" as UniversityUnit order 40
+participant "i18n\nI18N" as I18N order 41
+participant "i18n\nLocalizedString" as LocalizedString order 42
+participant "org.joda.time\nYearMonthDay" as YearMonthDay order 43
+participant "domain.organizationalStructure\nAcademicalInstitutionUnit_Base" as AcademicalInstitutionUnit_Base order 44
+participant "dto.alumni.formation\nAlumniFormation" as AlumniFormation order 45
+participant "domain\nFormation" as Formation order 67
+participant "domain\nQualificationType" as QualificationType order 125
+participant "org.joda.time\nDateTime" as DateTime order 126
+JSPEditFormation -> EditFormation: getConnection()
+JSPEditFormation <- EditFormation: returnConnection()
+JSPEditFormation -> EditFormation: executeAction()
+EditFormation -> EditFormation: runEditFormation(AlumniFormation):void
+EditFormation -> EditFormation: run(AlumniFormation):void
+EditFormation -> EditFormation: editAlumniFormation(AlumniFormation):void
+EditFormation -> AlumniFormation: getAssociatedFormation():Formation
+EditFormation -> Formation: edit\n(AlumniFormation,AcademicalInstitutionUnit):void
+EditFormation -> EditFormation: getFormationInstitution\n(AlumniFormation):AcademicalInstitutionUnit
+EditFormation -> AlumniFormation: getAssociatedFormation():Formation
+EditFormation -> Formation: edit\n(AlumniFormation,AcademicalInstitutionUnit):void
+Formation -> Formation: checkParameters\n(Person,FormationType,\nQualificationType,EducationArea,\nString,String,BigDecimal,\nInteger,AcademicalInstitutionUnit,\nAcademicalInstitutionType):void
+Formation -> AlumniFormation: getAssociatedFormation():Formation
+Formation -> Formation: getPerson():Person
+Formation -> AlumniFormation: getFormationType():FormationType
+Formation -> AlumniFormation: getFormationDegree():QualificationType
+Formation -> AlumniFormation: getEducationArea():EducationArea
+Formation -> AlumniFormation: getFormationBeginYear():String
+Formation -> AlumniFormation: getFormationEndYear():String
+Formation -> AlumniFormation: getFormationCredits():BigDecimal
+Formation -> AlumniFormation: getFormationHours():Integer
+Formation -> AlumniFormation: getParentInstitution():AcademicalInstitutionUnit
+Formation -> AlumniFormation: getInstitutionType():AcademicalInstitutionType
+Formation -> Formation: setFormationType(FormationType):void
+Formation -> AlumniFormation: getFormationType():FormationType
+alt formation.getFormationDegree() != null
+	Formation -> Formation: setDegree(String):void
+	Formation -> AlumniFormation: getFormationDegree():QualificationType
+	Formation -> QualificationType: getName():String
+else else
+	Formation -> Formation: setDegree(String):void
+end
+Formation -> Formation: setType(QualificationType):void
+Formation -> AlumniFormation: getFormationDegree():QualificationType
+Formation -> Formation: setEducationArea(EducationArea):void
+Formation -> AlumniFormation: getEducationArea():EducationArea
+Formation -> Formation: setBeginYear(String):void
+Formation -> AlumniFormation: getFormationBeginYear():String
+Formation -> Formation: setYear(String):void
+Formation -> AlumniFormation: getFormationEndYear():String
+Formation -> Formation: setEctsCredits(BigDecimal):void
+Formation -> AlumniFormation: getFormationCredits():BigDecimal
+Formation -> Formation: setFormationHours(Integer):void
+Formation -> AlumniFormation: getFormationHours():Integer
+Formation -> Formation: setInstitutionType(AcademicalInstitutionType):void
+Formation -> AlumniFormation: getInstitutionType():AcademicalInstitutionType
+Formation -> Formation: setInstitution(Unit):void
+Formation -> Formation: setBaseInstitution(Unit):void
+Formation -> AlumniFormation: getParentInstitution():AcademicalInstitutionUnit
+Formation -> Formation: setCountryUnit(CountryUnit):void
+Formation -> AlumniFormation: getCountryUnit():CountryUnit
+Formation -> Formation: setLastModificationDateDateTime(DateTime):void
+Formation -> DateTime: newDateTime()
+EditFormation -> EditFormation: getFormationInstitution\n(AlumniFormation):AcademicalInstitutionUnit
+EditFormation -> AlumniFormation: getInstitution():AcademicalInstitutionUnit
+opt institutionUnit == null && formation.getInstitutionType() != null \n&& (formation.getInstitutionType().equals(AcademicalInstitutionType.FOREIGN_INSTITUTION) \n|| formation.getInstitutionType().equals(AcademicalInstitutionType.OTHER_INSTITUTION))
+	opt !StringUtils.isEmpty(formation.getForeignUnit())
+		EditFormation -> UniversityUnit: createNewUniversityUnit\n(LocalizedString,String,Integer,\nString,YearMonthDay,YearMonthDay,\nUnit,String,UnitClassification,\nBoolean,Space):UniversityUnit
+		EditFormation -> I18N: getLocale():Locale
+		EditFormation -> AlumniFormation: getForeignUnit():String
+		EditFormation -> LocalizedString: newLocalizedString(Locale,String)
+		EditFormation -> YearMonthDay: newYearMonthDay()
+		EditFormation -> EditFormation: getParentUnit(AlumniFormation):Unit
+		EditFormation -> AcademicalInstitutionUnit_Base: setInstitutionType(AcademicalInstitutionType):void
+		EditFormation -> AlumniFormation: getInstitutionType():AcademicalInstitutionType
+	end
+end
+@enduml

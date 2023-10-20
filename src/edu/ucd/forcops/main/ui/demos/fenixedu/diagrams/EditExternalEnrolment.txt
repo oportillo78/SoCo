@@ -1,0 +1,46 @@
+@startuml
+ participant "JSP\nJSPEditExternalEnrolment" as JSPEditExternalEnrolment order 0
+ participant "services.administrativeOffice.externalUnits\nEditExternalEnrolment" as EditExternalEnrolment order 1
+ participant "dto.administrativeOffice.externalUnits\nEditExternalEnrolmentBean" as EditExternalEnrolmentBean order 19
+ participant "domain.studentCurriculum\nExternalEnrolment" as ExternalEnrolment order 20
+ participant "domain.degreeStructure\nEmptyConversionTable" as EmptyConversionTable order 45
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 52
+ participant "core.domain\nBennu" as Bennu order 54
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 60
+ participant "core.domain\nBennu" as Bennu order 61
+ JSPEditExternalEnrolment -> EditExternalEnrolment: getConnection()
+ JSPEditExternalEnrolment <- EditExternalEnrolment: returnConnection()
+ JSPEditExternalEnrolment -> EditExternalEnrolment: executeAction()
+ EditExternalEnrolment -> EditExternalEnrolment: run\n(EditExternalEnrolmentBean,Registration):void
+ EditExternalEnrolment -> EditExternalEnrolmentBean: getExternalEnrolment():ExternalEnrolment
+ EditExternalEnrolment -> ExternalEnrolment: edit\n(Registration,Grade,Grade,ExecutionSemester,YearMonthDay,Double):void
+ OPT registration != getRegistration()
+ 	ExternalEnrolment -> ExternalEnrolment: checkIfCanCreateExternalEnrolment\n(Registration,ExternalCurricularCourse):void
+ 	ExternalEnrolment -> ExternalEnrolment: getExternalCurricularCourse():ExternalCurricularCourse
+ END
+ ExternalEnrolment -> ExternalEnrolment: checkConstraints\n(Registration,ExternalCurricularCourse,ExecutionSemester,Grade,Double):void
+ ExternalEnrolment -> ExternalEnrolment: getExternalCurricularCourse():ExternalCurricularCourse
+ ExternalEnrolment -> ExternalEnrolment: setRegistration(Registration):void
+ ExternalEnrolment -> ExternalEnrolment: setGrade(Grade):void
+ ExternalEnrolment -> ExternalEnrolment: setNormalizedEctsGrade(Grade):void
+ ExternalEnrolment -> ExternalEnrolment: setEctsConversionTable(EctsConversionTable):void
+ ExternalEnrolment -> EmptyConversionTable: getInstance():EmptyConversionTable
+ OPT Bennu.getInstance().getEmptyConversionTable() == null
+ 	EmptyConversionTable -> FenixFramework: atomic(Runnable):void
+ END
+ EmptyConversionTable -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ EmptyConversionTable -> Bennu: getEmptyConversionTable():EmptyConversionTable
+ ExternalEnrolment -> ExternalEnrolment: setExecutionPeriod(ExecutionSemester):void
+ ExternalEnrolment -> ExternalEnrolment: setEvaluationDate(YearMonthDay):void
+ ExternalEnrolment -> ExternalEnrolment: setEctsCredits(Double):void
+ EditExternalEnrolment -> EditExternalEnrolmentBean: getGrade():Grade
+ EditExternalEnrolment -> EditExternalEnrolmentBean: getNormalizedGrade():Grade
+ EditExternalEnrolment -> EditExternalEnrolmentBean: getExecutionPeriod():ExecutionSemester
+ EditExternalEnrolment -> EditExternalEnrolmentBean: getEvaluationDate():YearMonthDay
+ EditExternalEnrolment -> EditExternalEnrolmentBean: getEctsCredits():Double
+ @enduml

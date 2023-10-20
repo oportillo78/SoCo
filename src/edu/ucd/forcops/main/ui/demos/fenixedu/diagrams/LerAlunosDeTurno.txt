@@ -1,0 +1,56 @@
+@startuml
+ participant "JSP\nJSPLerAlunosDeTurno" as JSPLerAlunosDeTurno order 0
+ participant "services.resourceAllocationManager\nLerAlunosDeTurno" as LerAlunosDeTurno order 1
+ participant "predicate\nAccessControl" as AccessControl order 27
+ participant "core.security\nAuthenticate" as Authenticate order 32
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 35
+ participant "core.domain\nUser_Base" as User_Base order 36
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 37
+ participant "domain\nPerson" as Person order 38
+ participant "core.domain\nUser" as User order 43
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 44
+ participant "dto\nShiftKey" as ShiftKey order 45
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 46
+ participant "domain\nExecutionCourse" as ExecutionCourse order 51
+ participant "domain\nExecutionCourse" as ExecutionCourse order 52
+ participant "domain\nShift_Base" as Shift_Base order 53
+ participant "dto\nInfoStudent" as InfoStudent order 54
+ JSPLerAlunosDeTurno -> LerAlunosDeTurno: getConnection()
+ JSPLerAlunosDeTurno <- LerAlunosDeTurno: returnConnection()
+ JSPLerAlunosDeTurno -> LerAlunosDeTurno: executeAction()
+ LerAlunosDeTurno -> LerAlunosDeTurno: run(ShiftKey):List<InfoStudent>
+ LerAlunosDeTurno -> LerAlunosDeTurno: check(AccessControlPredicate<?>):void
+ LerAlunosDeTurno -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ LerAlunosDeTurno -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		LerAlunosDeTurno -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ LerAlunosDeTurno -> FenixFramework: getDomainObject(String):T
+ LerAlunosDeTurno -> ShiftKey: getInfoExecutionCourse():InfoExecutionCourse
+ LerAlunosDeTurno -> InfoExecutionCourse: getExternalId():String
+ InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ LerAlunosDeTurno -> ExecutionCourse: findShiftByName(String):Shift
+ LerAlunosDeTurno -> ShiftKey: getShiftName():String
+ LerAlunosDeTurno -> Shift_Base: getStudentsSet():Set<Registration>
+ LOOP for: alunos
+ 	LerAlunosDeTurno -> InfoStudent: InfoStudent(Registration)
+ END
+ @enduml

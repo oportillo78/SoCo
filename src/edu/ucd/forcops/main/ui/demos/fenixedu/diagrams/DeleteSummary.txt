@@ -1,0 +1,111 @@
+@startuml
+ participant "JSP\nJSPDeleteSummary" as JSPDeleteSummary order 0
+ participant "services.teacher\nDeleteSummary" as DeleteSummary order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 13
+ participant "core.domain\nUser" as User order 18
+ participant "domain\nSummary" as Summary order 21
+ participant "domain\nContentManagementLog" as ContentManagementLog order 64
+ participant "core.i18n\nBundleUtil" as BundleUtil order 79
+ participant "domain\nShift" as Shift order 80
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 85
+ participant "i18n\nLocalizedString" as LocalizedString order 88
+ participant "i18n\nI18N" as I18N order 95
+ participant "domain\nShift" as Shift order 96
+ participant "util\nWeekDay" as WeekDay order 117
+ participant "domain\nLesson_Base" as Lesson_Base order 118
+ participant "util\nWeekDay" as WeekDay order 119
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 120
+ participant "util\nHourMinuteSecond" as HourMinuteSecond order 121
+ participant "domain\nSpace" as Space order 122
+ participant "domain\nShift" as Shift order 123
+ participant "domain\nShift" as Shift order 127
+ participant "service.filter\nSummaryManagementToTeacherAuthorizationFilter" as SummaryManagementToTeacherAuthorizationFilter order 131
+ participant "core.security\nAuthenticate" as Authenticate order 136
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 141
+ participant "domain\nProfessorship" as Professorship order 142
+ JSPDeleteSummary -> DeleteSummary: getConnection()
+ JSPDeleteSummary <- DeleteSummary: returnConnection()
+ JSPDeleteSummary -> DeleteSummary: executeAction()
+ DeleteSummary -> DeleteSummary: runDeleteSummary\n(ExecutionCourse,Summary,Professorship):Boolean
+ DeleteSummary -> SummaryManagementToTeacherAuthorizationFilter: execute(Summary,Professorship):void
+ SummaryManagementToTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ SummaryManagementToTeacherAuthorizationFilter -> Professorship: isResponsibleFor():boolean
+ Professorship -> Professorship: getResponsibleFor():Boolean
+ DeleteSummary -> DeleteSummary: run\n(ExecutionCourse,Summary,Professorship):Boolean
+ DeleteSummary -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ User -> User: getUsername():String
+ DeleteSummary -> Summary: delete():void
+ Summary -> ContentManagementLog: createLog\n(ExecutionCourse,String,String,String[]):ContentManagementLog
+ ContentManagementLog -> ContentManagementLog: generateLabelDescription(String,String,String[]):String
+ ContentManagementLog -> BundleUtil: getString(String,String,String[]):String
+ ContentManagementLog -> ContentManagementLog: createContentManagementLog\n(ExecutionCourse,String):ContentManagementLog
+ ContentManagementLog -> ContentManagementLog: ContentManagementLog(ExecutionCourse,String)
+ ContentManagementLog -> ContentManagementLog: ContentManagementLog_Base()
+ OPT getExecutionCourse() == null
+ 	ContentManagementLog -> ContentManagementLog: setExecutionCourse(ExecutionCourse):void
+ END
+ ContentManagementLog -> ContentManagementLog: setDescription(String):void
+ Summary -> Summary: getShift():Shift
+ Summary -> Shift: getExecutionCourse():ExecutionCourse
+ Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ ALT courseLoad != null
+ 	Shift -> CourseLoad_Base: getExecutionCourse():ExecutionCourse
+ END
+ Summary -> Summary: getTitle():LocalizedString
+ Summary -> LocalizedString: getContent():String
+ LocalizedString -> LocalizedString: getContent(Locale):String
+ LocalizedString -> I18N: getLocale():Locale
+ OPT ?
+ 	LocalizedString -> LocalizedString: getContent(Locale):String
+ END
+ Summary -> Summary: getShift():Shift
+ Summary -> Shift: getPresentationName():String
+ Shift -> Shift: getNome():String
+ OPT !this.getAssociatedLessonsSet().isEmpty()
+ 	LOOP for:iterator.hasNext()
+ 		Shift -> WeekDay: getWeekDay(DiaSemana):WeekDay
+ 		Shift -> Lesson_Base: getDiaSemana():DiaSemana
+ 		Shift -> WeekDay: getLabelShort():String
+ 		Shift -> Lesson_Base: getBeginHourMinuteSecond():HourMinuteSecond
+ 		Shift -> HourMinuteSecond: toString(String):String
+ 		Shift -> Lesson_Base: getEndHourMinuteSecond():HourMinuteSecond
+ 		Shift -> HourMinuteSecond: toString(String):String
+ 		OPT lesson.hasSala()
+ 			Shift -> Lesson_Base: getSala():Space
+ 			Shift -> Space: getName():String
+ 		END
+ 	END
+ END
+ Summary -> Summary: getShift():Shift
+ Summary -> Shift: getExecutionCourse():ExecutionCourse
+ Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ ALT courseLoad != null
+ 	Shift -> CourseLoad_Base: getExecutionCourse():ExecutionCourse
+ END
+ Summary -> Shift: getNome():String
+ Summary -> Summary: getShift():Shift
+ Summary -> Shift: getExecutionCourse():ExecutionCourse
+ Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ ALT courseLoad != null
+ 	Shift -> CourseLoad_Base: getExecutionCourse():ExecutionCourse
+ END
+ Summary -> Shift: getDegreePresentationString():String
+ Summary -> Summary: setExecutionCourse(ExecutionCourse):void
+ Summary -> Summary: setShift(Shift):void
+ Summary -> Summary: setLessonInstance(LessonInstance):void
+ Summary -> Summary: setRoom(Space):void
+ Summary -> Summary: setProfessorship(Professorship):void
+ Summary -> Summary: setTeacher(Teacher):void
+ Summary -> Summary: setRootDomainObject(Bennu):void
+ Summary -> Summary: deleteDomainObject():void
+ @enduml

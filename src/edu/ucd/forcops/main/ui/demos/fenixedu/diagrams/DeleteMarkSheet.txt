@@ -1,0 +1,53 @@
+@startuml
+participant "JSP\nJSPDeleteMarkSheet" as JSPDeleteMarkSheet order 0
+participant "services.administrativeOffice.gradeSubmission\nDeleteMarkSheet" as DeleteMarkSheet order 1
+participant "domain\nMarkSheet" as MarkSheet order 7
+participant "java.util\nSet" as Set order 48
+participant "domain\nEnrolmentEvaluation_Base" as EnrolmentEvaluation_Base order 49
+JSPDeleteMarkSheet -> DeleteMarkSheet: getConnection()
+JSPDeleteMarkSheet <- DeleteMarkSheet: returnConnection()
+JSPDeleteMarkSheet -> DeleteMarkSheet: executeAction()
+DeleteMarkSheet -> DeleteMarkSheet: run(MarkSheet):void
+DeleteMarkSheet -> MarkSheet: delete():void
+MarkSheet -> MarkSheet: setExecutionPeriod(ExecutionSemester):void
+alt isConfirmed()
+else else
+	MarkSheet -> MarkSheet: setExecutionPeriod(ExecutionSemester):void
+end
+MarkSheet -> MarkSheet: setEvaluationSeason(EvaluationSeason):void
+alt isConfirmed()
+else else
+	MarkSheet -> MarkSheet: setEvaluationSeason(EvaluationSeason):void
+end
+MarkSheet -> MarkSheet: setCurricularCourse(CurricularCourse):void
+alt isConfirmed()
+else else
+	MarkSheet -> MarkSheet: setCurricularCourse(CurricularCourse):void
+end
+MarkSheet -> MarkSheet: setResponsibleTeacher(Teacher):void
+alt isConfirmed()
+else else
+	MarkSheet -> MarkSheet: setResponsibleTeacher(Teacher):void
+end
+MarkSheet -> MarkSheet: setValidator(Person):void
+alt isConfirmed()
+else else
+	MarkSheet -> MarkSheet: setValidator(Person):void
+end
+MarkSheet -> MarkSheet: setCreator(Person):void
+alt isConfirmed()
+else else
+	MarkSheet -> MarkSheet: setCreator(Person):void
+end
+alt hasMarkSheetState(MarkSheetState.RECTIFICATION_NOT_CONFIRMED)
+	MarkSheet -> MarkSheet: changeRectifiedEnrolmentEvaluationToPreviowsState\n():void
+	MarkSheet -> MarkSheet: getEnrolmentEvaluationsSet():Set<EnrolmentEvaluation>
+	MarkSheet -> Set: iterator():Iterator<E>	
+	MarkSheet -> Set: next():E
+	MarkSheet -> Set: getRectified():EnrolmentEvaluation
+	MarkSheet -> EnrolmentEvaluation_Base: setEnrolmentEvaluationState(EnrolmentEvaluationState):void
+else else
+end
+MarkSheet -> MarkSheet: setRootDomainObject(Bennu):void
+MarkSheet -> MarkSheet: deleteDomainObject():void
+@enduml

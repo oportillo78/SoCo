@@ -1,0 +1,170 @@
+@startuml
+ participant "JSP\nJSPEditLesson" as JSPEditLesson order 0
+ participant "services.resourceAllocationManager\nEditLesson" as EditLesson order 1
+ participant "predicate\nAccessControl" as AccessControl order 25
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 39
+ participant "core.security\nAuthenticate" as Authenticate order 40
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 43
+ participant "core.domain\nUser_Base" as User_Base order 44
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 45
+ participant "domain\nPerson" as Person order 46
+ participant "core.domain\nUser" as User order 51
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 52
+ participant "dto\nInfoObject" as InfoObject order 54
+ participant "domain.space\nSpaceUtils" as SpaceUtils order 55
+ participant "domain\nSpace" as Space order 63
+ participant "core.domain\nBennu" as Bennu order 70
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 76
+ participant "core.domain\nBennu" as Bennu order 77
+ participant "dto\nInfoRoomOccupationEditor" as InfoRoomOccupationEditor order 78
+ participant "dto\nInfoRoom" as InfoRoom order 79
+ participant "domain\nLesson" as Lesson order 80
+ participant "domain.space\nLessonSpaceOccupation" as LessonSpaceOccupation order 131
+ participant "domain\nLessonInstance_Base" as LessonInstance_Base order 132
+ participant "domain.space\nLessonInstanceSpaceOccupation" as LessonInstanceSpaceOccupation order 133
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 134
+ participant "domain\nShift" as Shift order 135
+ participant "domain\nExecutionSemester" as ExecutionSemester order 162
+ participant "domain\nCurricularCourse" as CurricularCourse order 163
+ participant "domain\nExecutionDegree" as ExecutionDegree order 164
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 165
+ participant "domain\nOccupationPeriod" as OccupationPeriod order 166
+ participant "dto\nGenericPair" as GenericPair order 167
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 168
+ JSPEditLesson -> EditLesson: getConnection()
+ JSPEditLesson <- EditLesson: returnConnection()
+ JSPEditLesson -> EditLesson: executeAction()
+ EditLesson -> EditLesson: run\n(InfoLesson,DiaSemana,Calendar,Calendar,FrequencyType,InfoRoomOccupationEditor,InfoShift,YearMonthDay,YearMonthDay,Boolean):Lesson
+ EditLesson -> EditLesson: check(AccessControlPredicate<?>):void
+ EditLesson -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ EditLesson -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		EditLesson -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ EditLesson -> FenixFramework: getDomainObject(String):T
+ EditLesson -> InfoObject: getExternalId():String
+ OPT lesson != null
+ 	OPT infoRoomOccupation != null && infoRoomOccupation.getInfoRoom() != null
+ 		EditLesson -> SpaceUtils: findAllocatableSpaceForEducationByName(String):Space
+ 		SpaceUtils -> SpaceUtils: allocatableSpacesForEducation():Stream<Space>
+ 		SpaceUtils -> SpaceUtils: allocatableSpaces():Stream<Space>
+ 		SpaceUtils -> Space: getSpaces():Stream<Space>
+ 		Space -> Space: getAllSpaces():Stream<Space>
+ 		Space -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		Space -> Bennu: getSpaceSet():Set<Space>
+ 		EditLesson -> InfoRoomOccupationEditor: getInfoRoom():InfoRoom
+ 		EditLesson -> InfoRoom: getNome():String
+ 	END
+ 	EditLesson -> Lesson: edit\n(YearMonthDay,YearMonthDay,DiaSemana,Calendar,Calendar,FrequencyType,Boolean,Space):void
+ 	Lesson -> AccessControl: check(T,AccessControlPredicate<T>):void
+ 	AccessControl -> AccessControl: getPerson():Person
+ 	AccessControl -> AccessControlPredicate: evaluate(E):boolean
+ 	OPT !result
+ 		ALT requester == null
+ 		ELSE else
+ 			AccessControl -> Person: getUsername():String
+ 		END
+ 		AccessControl -> DomainObject: getExternalId():String
+ 	END
+ 	Lesson -> Lesson: getShift():Shift
+ 	Lesson -> Shift: getExecutionCourse():ExecutionCourse
+ 	Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ 	ALT courseLoad != null
+ 		Shift -> CourseLoad_Base: getExecutionCourse():ExecutionCourse
+ 	END
+ 	Lesson -> Shift: getMaxLessonsPeriod():GenericPair<YearMonthDay,YearMonthDay>
+ 	Shift -> Shift: getExecutionPeriod():ExecutionSemester
+ 	Shift -> ExecutionSemester: getSemester():Integer
+ 	LOOP for: getAssociatedCurricularCoursesSet()
+ 		Shift -> CurricularCourse: getExecutionDegreeFor(ExecutionYear):ExecutionDegree
+ 		Shift -> Shift: getExecutionYear():ExecutionYear
+ 		ALT semester == 1
+ 			Shift -> ExecutionDegree: getPeriodLessonsFirstSemester():OccupationPeriod
+ 			OPT periodLessonsFirstSemester != null
+ 				OPT minBeginDate == null || minBeginDate.isAfter(periodLessonsFirstSemester.getStartYearMonthDay())
+ 					Shift -> OccupationPeriod: getStartYearMonthDay():YearMonthDay
+ 				END
+ 				OPT maxEndDate == null || maxEndDate.isBefore(periodLessonsFirstSemester.getEndYearMonthDayWithNextPeriods())
+ 					Shift -> OccupationPeriod: getEndYearMonthDayWithNextPeriods():YearMonthDay
+ 				END
+ 			END
+ 		ELSE else
+ 			Shift -> ExecutionDegree: getPeriodLessonsSecondSemester():OccupationPeriod
+ 			OPT periodLessonsSecondSemester != null
+ 				OPT minBeginDate == null || minBeginDate.isAfter(periodLessonsSecondSemester.getStartYearMonthDay())
+ 					Shift -> OccupationPeriod: getStartYearMonthDay():YearMonthDay
+ 				END
+ 				OPT maxEndDate == null                            || maxEndDate.isBefore(periodLessonsSecondSemester.getEndYearMonthDayWithNextPeriods())
+ 					Shift -> OccupationPeriod: getEndYearMonthDayWithNextPeriods():YearMonthDay
+ 				END
+ 			END
+ 		END
+ 	END
+ 	OPT minBeginDate != null && maxEndDate != null
+ 		Shift -> GenericPair: GenericPair(T,V)
+ 	END
+ 	Lesson -> Lesson: refreshPeriodAndInstancesInEditOperation\n(YearMonthDay,YearMonthDay,Boolean,GenericPair<YearMonthDay,YearMonthDay>):void
+ 	Lesson -> Lesson: removeExistentInstancesWithoutSummaryAfterOrEqual\n(YearMonthDay):void
+ 	Lesson -> Lesson: getAllLessonInstancesDatesToCreate\n(YearMonthDay,YearMonthDay,Boolean):SortedSet<YearMonthDay>
+ 	Lesson -> Lesson: getLessonStartDay():YearMonthDay
+ 	Lesson -> YearMonthDay: minusDays(int):YearMonthDay
+ 	Lesson -> Lesson: refreshPeriod(YearMonthDay,YearMonthDay):void
+ 	Lesson -> Lesson: createAllLessonInstances(SortedSet<YearMonthDay>):void
+ 	Lesson -> Lesson: setDiaSemana(DiaSemana):void
+ 	Lesson -> Lesson: setInicio(Calendar):void
+ 	Lesson -> Lesson: setFim(Calendar):void
+ 	Lesson -> Lesson: setFrequency(FrequencyType):void
+ 	Lesson -> Lesson: checkShiftLoad(Shift):void
+ 	Lesson -> Lesson: getShift():Shift
+ 	Lesson -> Lesson: lessonSpaceOccupationManagement(Space):void
+ 	Lesson -> Lesson: getLessonSpaceOccupation():LessonSpaceOccupation
+ 	ALT newRoom != null
+ 		OPT !wasFinished()
+ 			ALT lessonSpaceOccupation == null
+ 				Lesson -> LessonSpaceOccupation: LessonSpaceOccupation(Space,Lesson)
+ 			ELSE else
+ 				Lesson -> LessonSpaceOccupation: edit(Space):void
+ 			END
+ 		END
+ 	ELSE else
+ 		OPT lessonSpaceOccupation != null
+ 			Lesson -> LessonSpaceOccupation: delete():void
+ 		END
+ 	END
+ 	LOOP for: getLessonInstancesSet()
+ 		OPT lessonInstance.getDay().isAfter(new LocalDate())
+ 			ALT newRoom == null
+ 				Lesson -> LessonInstance_Base: setLessonInstanceSpaceOccupation(LessonInstanceSpaceOccupation):void
+ 			ELSE else
+ 				Lesson -> SpaceUtils: getFirstOccurrenceOfResourceAllocationByClass\n(Space,Lesson):Occupation
+ 				OPT allocation == null
+ 					Lesson -> LessonInstanceSpaceOccupation: LessonInstanceSpaceOccupation(Space)
+ 				END
+ 				Lesson -> LessonInstanceSpaceOccupation: edit(LessonInstance):void
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

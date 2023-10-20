@@ -1,0 +1,54 @@
+@startuml
+ participant "JSP\nJSPDeleteExecutionDegreesOfDegreeCurricularPlan" as JSPDeleteExecutionDegreesOfDegreeCurricularPlan order 0
+ participant "services.manager\nDeleteExecutionDegreesOfDegreeCurricularPlan" as DeleteExecutionDegreesOfDegreeCurricularPlan order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 13
+ participant "domain\nExecutionDegree" as ExecutionDegree order 14
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 41
+ participant "domain.exceptions\nDomainException" as DomainException order 42
+ participant "domain\nGratuityValues" as GratuityValues order 43
+ participant "domain\nOccupationPeriodReference" as OccupationPeriodReference order 50
+ participant "domain\nExecutionYear" as ExecutionYear order 61
+ JSPDeleteExecutionDegreesOfDegreeCurricularPlan -> DeleteExecutionDegreesOfDegreeCurricularPlan: getConnection()
+ JSPDeleteExecutionDegreesOfDegreeCurricularPlan <- DeleteExecutionDegreesOfDegreeCurricularPlan: returnConnection()
+ JSPDeleteExecutionDegreesOfDegreeCurricularPlan -> DeleteExecutionDegreesOfDegreeCurricularPlan: executeAction()
+ DeleteExecutionDegreesOfDegreeCurricularPlan -> DeleteExecutionDegreesOfDegreeCurricularPlan: run(List<String>):List<String>
+ LOOP for: executionDegreesIds
+ 	DeleteExecutionDegreesOfDegreeCurricularPlan -> FenixFramework: getDomainObject(String):T
+ 	OPT executionDegree != null
+ 		ALT executionDegree.isDeletable()
+ 			DeleteExecutionDegreesOfDegreeCurricularPlan -> ExecutionDegree: delete():void
+ 			ExecutionDegree -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			ExecutionDegree -> ExecutionDegree: getDeletionBlockers():Collection<String>
+ 			ExecutionDegree -> ExecutionDegree: checkForDeletionBlockers(Collection<String>):void
+ 			LOOP for: ?
+ 				ExecutionDegree -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ 			END
+ 			OPT getGratuityValues() != null
+ 				ExecutionDegree -> ExecutionDegree: getGratuityValues():GratuityValues
+ 				ExecutionDegree -> GratuityValues: delete():void
+ 				GratuityValues -> GratuityValues: setExecutionDegree(ExecutionDegree):void
+ 				GratuityValues -> GratuityValues: setRootDomainObject(Bennu):void
+ 				GratuityValues -> GratuityValues: deleteDomainObject():void
+ 			END
+ 			ExecutionDegree -> ExecutionDegree: getPublishedExamMapsSet():Set<ExecutionSemester>
+ 			ExecutionDegree -> ExecutionDegree: setExecutionYear(ExecutionYear):void
+ 			ExecutionDegree -> ExecutionDegree: setDegreeCurricularPlan(DegreeCurricularPlan):void
+ 			ExecutionDegree -> ExecutionDegree: setCampus(Space):void
+ 			LOOP for: getOccupationPeriodReferencesSet()
+ 				ExecutionDegree -> OccupationPeriodReference: delete():void
+ 				OccupationPeriodReference -> OccupationPeriodReference: setOccupationPeriod(OccupationPeriod):void
+ 				OccupationPeriodReference -> OccupationPeriodReference: setExecutionDegree(ExecutionDegree):void
+ 				OccupationPeriodReference -> OccupationPeriodReference: setRootDomainObject(Bennu):void
+ 				OccupationPeriodReference -> OccupationPeriodReference: getEvaluationSeasonSet():Set<EvaluationSeason>
+ 				OccupationPeriodReference -> OccupationPeriodReference: deleteDomainObject():void
+ 			END
+ 			ExecutionDegree -> ExecutionDegree: setRootDomainObject(Bennu):void
+ 			ExecutionDegree -> ExecutionDegree: deleteDomainObject():void
+ 		ELSE else
+ 			DeleteExecutionDegreesOfDegreeCurricularPlan -> ExecutionDegree: getExecutionYear():ExecutionYear
+ 			DeleteExecutionDegreesOfDegreeCurricularPlan -> ExecutionYear: getYear():String
+ 			ExecutionYear -> ExecutionYear: getName():String
+ 		END
+ 	END
+ END
+ @enduml

@@ -1,0 +1,71 @@
+@startuml
+ participant "JSP\nJSPDeleteRegistrationRegime" as JSPDeleteRegistrationRegime order 0
+ participant "services.registration\nDeleteRegistrationRegime" as DeleteRegistrationRegime order 1
+ participant "domain.student\nRegistrationRegime" as RegistrationRegime order 7
+ participant "domain.student\nRegistration" as Registration order 54
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 63
+ participant "domain\nExecutionInterval_Base" as ExecutionInterval_Base order 64
+ participant "domain.student\nRegistration" as Registration order 66
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 78
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 79
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 80
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 81
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 94
+ participant "domain.exceptions\nDomainException" as DomainException order 95
+ JSPDeleteRegistrationRegime -> DeleteRegistrationRegime: getConnection()
+ JSPDeleteRegistrationRegime <- DeleteRegistrationRegime: returnConnection()
+ JSPDeleteRegistrationRegime -> DeleteRegistrationRegime: executeAction()
+ DeleteRegistrationRegime -> DeleteRegistrationRegime: run(RegistrationRegime):void
+ DeleteRegistrationRegime -> RegistrationRegime: delete():void
+ RegistrationRegime -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ RegistrationRegime -> RegistrationRegime: getDeletionBlockers():Collection<String>
+ RegistrationRegime -> RegistrationRegime: checkForDeletionBlockers(Collection<String>):void
+ LOOP for: ?
+ 	RegistrationRegime -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ END
+ RegistrationRegime -> RegistrationRegime: clearPartialRegimeEvents():void
+ RegistrationRegime -> RegistrationRegime: getRegistration():Registration
+ RegistrationRegime -> RegistrationRegime: getExecutionYear():ExecutionYear
+ RegistrationRegime -> Registration: getStudentCurricularPlan(ExecutionYear):StudentCurricularPlan
+ ALT executionYear == null
+ 	Registration -> Registration: getStudentCurricularPlan(YearMonthDay):StudentCurricularPlan
+ 	Registration -> YearMonthDay: YearMonthDay()
+ ELSE else
+ 	Registration -> Registration: getStudentCurricularPlan(YearMonthDay):StudentCurricularPlan
+ 	Registration -> ExecutionInterval_Base: getEndDateYearMonthDay():YearMonthDay
+ END
+ RegistrationRegime -> StudentCurricularPlan: getGratuityEvent(ExecutionYear,Class<T>):Stream<T>
+ StudentCurricularPlan -> StudentCurricularPlan: getGratuityEvent\n(ExecutionYear,Class<T>,boolean):Stream<T>
+ RegistrationRegime -> RegistrationRegime: getExecutionYear():ExecutionYear
+ RegistrationRegime -> StudentCurricularPlan: getGratuityEvent(ExecutionYear,Class<T>):Stream<T>
+ StudentCurricularPlan -> StudentCurricularPlan: getGratuityEvent\n(ExecutionYear,Class<T>,boolean):Stream<T>
+ RegistrationRegime -> RegistrationRegime: getExecutionYear():ExecutionYear
+ RegistrationRegime -> RegistrationRegime: getRegistration():Registration
+ RegistrationRegime -> RegistrationRegime: getExecutionYear():ExecutionYear
+ RegistrationRegime -> Registration: getStudentCurricularPlan(ExecutionYear):StudentCurricularPlan
+ ALT executionYear == null
+ 	Registration -> Registration: getStudentCurricularPlan(YearMonthDay):StudentCurricularPlan
+ 	LOOP for: getStudentCurricularPlansSet()
+ 		Registration -> StudentCurricularPlan_Base: getStartDateYearMonthDay():YearMonthDay
+ 	END
+ 	Registration -> YearMonthDay: YearMonthDay()
+ ELSE else
+ 	Registration -> Registration: getStudentCurricularPlan(YearMonthDay):StudentCurricularPlan
+ 	LOOP for: getStudentCurricularPlansSet()
+ 		Registration -> StudentCurricularPlan_Base: getStartDateYearMonthDay():YearMonthDay
+ 	END
+ 	Registration -> ExecutionInterval_Base: getEndDateYearMonthDay():YearMonthDay
+ END
+ RegistrationRegime -> StudentCurricularPlan: getGratuityEvent(ExecutionYear,Class<T>):Stream<T>
+ StudentCurricularPlan -> StudentCurricularPlan: getGratuityEvent\n(ExecutionYear,Class<T>,boolean):Stream<T>
+ StudentCurricularPlan -> StudentCurricularPlan: getGratuityEventsSet():Set<GratuityEvent>
+ RegistrationRegime -> RegistrationRegime: getExecutionYear():ExecutionYear
+ RegistrationRegime -> StudentCurricularPlan: getGratuityEvent(ExecutionYear,Class<T>):Stream<T>
+ StudentCurricularPlan -> StudentCurricularPlan: getGratuityEvent\n(ExecutionYear,Class<T>,boolean):Stream<T>
+ StudentCurricularPlan -> StudentCurricularPlan: getGratuityEventsSet():Set<GratuityEvent>
+ RegistrationRegime -> RegistrationRegime: getExecutionYear():ExecutionYear
+ RegistrationRegime -> RegistrationRegime: setRegistration(Registration):void
+ RegistrationRegime -> RegistrationRegime: setExecutionYear(ExecutionYear):void
+ RegistrationRegime -> RegistrationRegime: setRootDomainObject(Bennu):void
+ RegistrationRegime -> RegistrationRegime: deleteDomainObject():void
+ @enduml

@@ -1,0 +1,19 @@
+@startuml
+participant "JSP\nJSPEditAdHocEvaluation" as JSPEditAdHocEvaluation order 0
+participant "services.teacher\nEditAdHocEvaluation" as EditAdHocEvaluation order 1
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 9
+participant "domain\nAdHocEvaluation" as AdHocEvaluation order 10
+JSPEditAdHocEvaluation -> EditAdHocEvaluation: getConnection()
+JSPEditAdHocEvaluation <- EditAdHocEvaluation: returnConnection()
+JSPEditAdHocEvaluation -> EditAdHocEvaluation: executeAction()
+EditAdHocEvaluation -> EditAdHocEvaluation: run\n(String,String,String,String,GradeScale):void
+EditAdHocEvaluation -> FenixFramework: getDomainObject(String):T
+EditAdHocEvaluation -> AdHocEvaluation: edit(String,String,GradeScale):void
+AdHocEvaluation -> AdHocEvaluation: setName(String):void
+AdHocEvaluation -> AdHocEvaluation: setDescription(String):void
+opt getGradeScale() != gradeScale
+	AdHocEvaluation -> AdHocEvaluation: setGradeScale(GradeScale):void
+end
+AdHocEvaluation -> AdHocEvaluation: logEdit():void
+AdHocEvaluation -> AdHocEvaluation: logAuxBasic(String):void
+@enduml

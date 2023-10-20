@@ -1,0 +1,96 @@
+@startuml
+ participant "JSP\nJSPEditCompetenceCourseLoad" as JSPEditCompetenceCourseLoad order 0
+ participant "services.bolonhaManager\nEditCompetenceCourseLoad" as EditCompetenceCourseLoad order 1
+ participant "predicate\nAccessControl" as AccessControl order 67
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 68
+ participant "domain\nPerson" as Person order 69
+ participant "core.domain\nUser" as User order 74
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 75
+ participant "domain\nCompetenceCourse" as CompetenceCourse order 76
+ participant "domain.degreeStructure\nCompetenceCourseLoad" as CompetenceCourseLoad order 93
+ participant "domain.degreeStructure\nCompetenceCourseInformation" as CompetenceCourseInformation order 98
+ participant "domain\nExecutionSemester" as ExecutionSemester order 99
+ participant "domain.degreeStructure\nCompetenceCourseInformation" as CompetenceCourseInformation order 100
+ participant "dto.bolonhaManager\nCourseLoad" as CourseLoad order 101
+ participant "domain.degreeStructure\nCompetenceCourseLoad" as CompetenceCourseLoad order 102
+ JSPEditCompetenceCourseLoad -> EditCompetenceCourseLoad: getConnection()
+ JSPEditCompetenceCourseLoad <- EditCompetenceCourseLoad: returnConnection()
+ JSPEditCompetenceCourseLoad -> EditCompetenceCourseLoad: executeAction()
+ EditCompetenceCourseLoad -> EditCompetenceCourseLoad: run\n(String,RegimeType,Integer,List<CourseLoad>):void
+ EditCompetenceCourseLoad -> EditCompetenceCourseLoad: check(AccessControlPredicate<?>):void
+ EditCompetenceCourseLoad -> AccessControl: getPerson():Person
+ EditCompetenceCourseLoad -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		EditCompetenceCourseLoad -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ EditCompetenceCourseLoad -> FenixFramework: getDomainObject(String):T
+ EditCompetenceCourseLoad -> CompetenceCourse: setRegime(RegimeType):void
+ CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformationUntil\n(ExecutionSemester):CompetenceCourseInformation
+ CompetenceCourse -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ CompetenceCourse -> CompetenceCourseInformation: setRegime(RegimeType):void
+ LOOP for: courseLoads
+ 	ALT courseLoad.getAction().equals("create") && competenceCourse.getCompetenceCourseLoads().size() < numberOfPeriods
+ 		EditCompetenceCourseLoad -> CompetenceCourse: addCompetenceCourseLoad\n(Double,Double,Double,Double,Double,Double,Double,Double,Double,Integer,AcademicPeriod):void
+ 		CompetenceCourse -> CompetenceCourse: checkIfCanEdit(boolean):void
+ 		CompetenceCourse -> CompetenceCourse: getMostRecentCompetenceCourseInformation():CompetenceCourseInformation
+ 		CompetenceCourse -> CompetenceCourseLoad: CompetenceCourseLoad\n(Double,Double,Double,Double,Double,Double,Double,Double,Double,Integer,AcademicPeriod)
+ 		CompetenceCourseLoad -> CompetenceCourseLoad: CompetenceCourseLoad()
+ 		CompetenceCourseLoad -> CompetenceCourseLoad: setInformation\n(Double,Double,Double,Double,Double,Double,Double,Double,Double,Integer,AcademicPeriod):void
+ 		CompetenceCourse -> CompetenceCourseInformation: addCompetenceCourseLoads(CompetenceCourseLoad):void
+ 		EditCompetenceCourseLoad -> CourseLoad: getTheoreticalHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getProblemsHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getLaboratorialHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getSeminaryHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getFieldWorkHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getTrainingPeriodHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getTutorialOrientationHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getAutonomousWorkHours():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getEctsCredits():Double
+ 		EditCompetenceCourseLoad -> CourseLoad: getOrder():int
+ 	ELSE else
+ 		EditCompetenceCourseLoad -> FenixFramework: getDomainObject(String):T
+ 		EditCompetenceCourseLoad -> CourseLoad: getIdentification():String
+ 		ALT competenceCourseLoad != null && courseLoad.getAction().equals("edit")
+ 			EditCompetenceCourseLoad -> CompetenceCourseLoad: edit\n(Double,Double,Double,Double,Double,Double,Double,Double,Double,Integer,AcademicPeriod):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setInformation\n(Double,Double,Double,Double,Double,Double,Double,Double,Double,Integer,AcademicPeriod):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setTheoreticalHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setProblemsHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setLaboratorialHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setSeminaryHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setFieldWorkHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setTrainingPeriodHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setTutorialOrientationHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setAutonomousWorkHours(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setEctsCredits(Double):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setLoadOrder(Integer):void
+ 			CompetenceCourseLoad -> CompetenceCourseLoad: setAcademicPeriod(AcademicPeriod):void
+ 			EditCompetenceCourseLoad -> CourseLoad: getTheoreticalHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getProblemsHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getLaboratorialHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getSeminaryHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getFieldWorkHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getTrainingPeriodHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getTutorialOrientationHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getAutonomousWorkHours():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getEctsCredits():Double
+ 			EditCompetenceCourseLoad -> CourseLoad: getOrder():int
+ 		ELSE else
+ 			OPT competenceCourseLoad != null && courseLoad.getAction().equals("delete")
+ 				EditCompetenceCourseLoad -> CompetenceCourseLoad: delete():void
+ 				CompetenceCourseLoad -> CompetenceCourseLoad: setCompetenceCourseInformation(CompetenceCourseInformation):void
+ 				CompetenceCourseLoad -> CompetenceCourseLoad: setRootDomainObject(Bennu):void
+ 				CompetenceCourseLoad -> CompetenceCourseLoad: deleteDomainObject():void
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

@@ -1,0 +1,41 @@
+@startuml
+ participant "JSP\nJSPEnrollStudentInShifts" as JSPEnrollStudentInShifts order 0
+ participant "services.enrollment.shift\nEnrollStudentInShifts" as EnrollStudentInShifts order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 19
+ participant "core.security\nAuthenticate" as Authenticate order 24
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 27
+ participant "core.domain\nUser" as User order 28
+ participant "dto.enrollment.shift\nShiftEnrollmentErrorReport" as ShiftEnrollmentErrorReport order 33
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 38
+ participant "domain\nShift_Base" as Shift_Base order 39
+ JSPEnrollStudentInShifts -> EnrollStudentInShifts: getConnection()
+ JSPEnrollStudentInShifts <- EnrollStudentInShifts: returnConnection()
+ JSPEnrollStudentInShifts -> EnrollStudentInShifts: executeAction()
+ EnrollStudentInShifts -> EnrollStudentInShifts: run\n(Registration,String):ShiftEnrollmentErrorReport
+ EnrollStudentInShifts -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ User -> User: getUsername():String
+ User -> User: getUsername():String
+ EnrollStudentInShifts -> ShiftEnrollmentErrorReport: ShiftEnrollmentErrorReport()
+ ShiftEnrollmentErrorReport -> ShiftEnrollmentErrorReport: setUnAvailableShifts(List):void
+ ShiftEnrollmentErrorReport -> ShiftEnrollmentErrorReport: setUnExistingShifts(List):void
+ EnrollStudentInShifts -> FenixFramework: getDomainObject(String):T
+ OPT selectedShift == null
+ 	EnrollStudentInShifts -> ShiftEnrollmentErrorReport: getUnExistingShifts():List
+ END
+ EnrollStudentInShifts -> EnrollStudentInShifts: findShiftOfSameTypeForSameExecutionCourse\n(Registration,Shift):Shift
+ OPT selectedShift != shiftFromStudent
+ 	ALT selectedShift.reserveForStudent(registration)
+ 		OPT shiftFromStudent != null
+ 			EnrollStudentInShifts -> Shift_Base: removeStudents(Registration):void
+ 		END
+ 	ELSE else
+ 		EnrollStudentInShifts -> ShiftEnrollmentErrorReport: getUnAvailableShifts():List
+ 	END
+ END
+ @enduml

@@ -1,0 +1,130 @@
+@startuml
+ participant "JSP\nJSPImportLessonPlannings" as JSPImportLessonPlannings order 0
+ participant "services.teacher\nImportLessonPlannings" as ImportLessonPlannings order 1
+ participant "domain\nExecutionCourse" as ExecutionCourse order 13
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 38
+ participant "domain\nShift_Base" as Shift_Base order 39
+ participant "org.apache.commons.collections.comparators\nReverseComparator" as ReverseComparator order 40
+ participant "domain\nSummary_Base" as Summary_Base order 41
+ participant "domain\nLessonPlanning" as LessonPlanning order 42
+ participant "domain\nLessonPlanning_Base" as LessonPlanning_Base order 69
+ participant "domain\nLessonPlanning" as LessonPlanning order 70
+ participant "core.domain\nBennu" as Bennu order 97
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 104
+ participant "domain\nCurricularManagementLog" as CurricularManagementLog order 105
+ participant "i18n\nLocalizedString" as LocalizedString order 118
+ participant "domain\nShiftType" as ShiftType order 119
+ participant "domain\nExecutionCourse" as ExecutionCourse order 120
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 121
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 136
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 137
+ participant "domain\nExecutionCourse" as ExecutionCourse order 142
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 143
+ participant "core.security\nAuthenticate" as Authenticate order 144
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 147
+ JSPImportLessonPlannings -> ImportLessonPlannings: getConnection()
+ JSPImportLessonPlannings <- ImportLessonPlannings: returnConnection()
+ JSPImportLessonPlannings -> ImportLessonPlannings: executeAction()
+ ImportLessonPlannings -> ImportLessonPlannings: runImportLessonPlannings\n(String,ExecutionCourse,ExecutionCourse,Shift):void
+ ImportLessonPlannings -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ ImportLessonPlannings -> ImportLessonPlannings: run\n(String,ExecutionCourse,ExecutionCourse,Shift):void
+ OPT executionCourseTo != null && executionCourseFrom != null
+ 	ALT shift == null
+ 		ImportLessonPlannings -> ExecutionCourse: copyLessonPlanningsFrom(ExecutionCourse):void
+ 		ExecutionCourse -> ExecutionCourse: getShiftTypes():Set<ShiftType>
+ 		LOOP for: getCourseLoadsSet()
+ 			ExecutionCourse -> CourseLoad_Base: getType():ShiftType
+ 		END
+ 		LOOP for: executionCourseFrom.getShiftTypes()
+ 			OPT shiftTypes.contains(shiftType)
+ 				ExecutionCourse -> ExecutionCourse: getLessonPlanningsOrderedByOrder(ShiftType):List<LessonPlanning>
+ 				OPT !lessonPlanningsFrom.isEmpty()
+ 					LOOP for: lessonPlanningsFrom
+ 						ExecutionCourse -> LessonPlanning_Base: getTitle():LocalizedString
+ 						ExecutionCourse -> LessonPlanning_Base: getPlanning():LocalizedString
+ 						ExecutionCourse -> LessonPlanning_Base: getLessonType():ShiftType
+ 						ExecutionCourse -> LessonPlanning: LessonPlanning\n(LocalizedString,LocalizedString,ShiftType,ExecutionCourse)
+ 						LessonPlanning -> LessonPlanning: LessonPlanning_Base()
+ 						LessonPlanning -> LessonPlanning: setRootDomainObject(Bennu):void
+ 						LessonPlanning -> Bennu: getInstance():Bennu
+ 						LessonPlanning -> LessonPlanning: setLastOrder(ExecutionCourse,ShiftType):void
+ 						LessonPlanning -> LessonPlanning: setTitle(LocalizedString):void
+ 						LessonPlanning -> LessonPlanning: setPlanning(LocalizedString):void
+ 						LessonPlanning -> LessonPlanning: setLessonType(ShiftType):void
+ 						LessonPlanning -> LessonPlanning: setExecutionCourse(ExecutionCourse):void
+ 						LessonPlanning -> CurricularManagementLog: createLog\n(ExecutionCourse,String,String,String[]):CurricularManagementLog
+ 						LessonPlanning -> LocalizedString: getContent():String
+ 						LessonPlanning -> ShiftType: getFullNameTipoAula():String
+ 						LessonPlanning -> ExecutionCourse: getNome():String
+ 						LessonPlanning -> ExecutionCourse: getDegreePresentationString():String
+ 					END
+ 				END
+ 			END
+ 		END
+ 	ELSE else
+ 		ImportLessonPlannings -> ExecutionCourse: createLessonPlanningsUsingSummariesFrom(Shift):void
+ 		ExecutionCourse -> Shift_Base: getAssociatedSummariesSet():Set<Summary>
+ 		ExecutionCourse -> ReverseComparator: ReverseComparator(Comparator)
+ 		LOOP for: summaries
+ 			LOOP for: shift.getTypes()
+ 				ExecutionCourse -> Summary_Base: getTitle():LocalizedString
+ 				ExecutionCourse -> Summary_Base: getSummaryText():LocalizedString
+ 				ExecutionCourse -> LessonPlanning: LessonPlanning\n(LocalizedString,LocalizedString,ShiftType,ExecutionCourse)
+ 				LessonPlanning -> LessonPlanning: LessonPlanning_Base()
+ 				LessonPlanning -> LessonPlanning: setRootDomainObject(Bennu):void
+ 				LessonPlanning -> Bennu: getInstance():Bennu
+ 				OPT ?
+ 					Bennu -> Bennu: initialize():Bennu
+ 				END
+ 				Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 				Bennu -> DomainRoot: getBennu():Bennu
+ 				LessonPlanning -> LessonPlanning: setLastOrder(ExecutionCourse,ShiftType):void
+ 				LessonPlanning -> LessonPlanning: setTitle(LocalizedString):void
+ 				LessonPlanning -> LessonPlanning: setPlanning(LocalizedString):void
+ 				LessonPlanning -> LessonPlanning: setLessonType(ShiftType):void
+ 				LessonPlanning -> LessonPlanning: setExecutionCourse(ExecutionCourse):void
+ 				LessonPlanning -> CurricularManagementLog: createLog\n(ExecutionCourse,String,String,String[]):CurricularManagementLog
+ 				CurricularManagementLog -> CurricularManagementLog: generateLabelDescription(String,String,String[]):String
+ 				CurricularManagementLog -> CurricularManagementLog: createCurricularManagementLog\n(ExecutionCourse,String):CurricularManagementLog
+ 				CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog(ExecutionCourse,String)
+ 				CurricularManagementLog -> CurricularManagementLog: CurricularManagementLog_Base()
+ 				OPT getExecutionCourse() == null
+ 					CurricularManagementLog -> CurricularManagementLog: setExecutionCourse(ExecutionCourse):void
+ 				END
+ 				CurricularManagementLog -> CurricularManagementLog: setDescription(String):void
+ 				LessonPlanning -> LocalizedString: getContent():String
+ 				LessonPlanning -> ShiftType: getFullNameTipoAula():String
+ 				LessonPlanning -> ExecutionCourse: getNome():String
+ 				LessonPlanning -> ExecutionCourse: getDegreePresentationString():String
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

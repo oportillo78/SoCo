@@ -1,0 +1,33 @@
+@startuml
+participant "JSP\nJSPDeleteExternalEnrolments" as JSPDeleteExternalEnrolments order 0
+participant "services.administrativeOffice.enrolment\nDeleteExternalEnrolments" as DeleteExternalEnrolments order 1
+participant "domain.studentCurriculum\nExternalEnrolment" as ExternalEnrolment order 9
+participant "java.util\nSet" as Set order 28
+JSPDeleteExternalEnrolments -> DeleteExternalEnrolments: getConnection()
+JSPDeleteExternalEnrolments <- DeleteExternalEnrolments: returnConnection()
+JSPDeleteExternalEnrolments -> DeleteExternalEnrolments: executeAction()
+alt if cookiesNotFound
+     JSPDeleteExternalEnrolments <-- DeleteExternalEnrolments: showImpliedConsentCookieBanner(msg)
+     alt clickOnAcceptCookiesBtn
+          JSPDeleteExternalEnrolments -> DeleteExternalEnrolments: acceptAllCookies(sessionID)
+     else clickOnCloseBtn
+          JSPDeleteExternalEnrolments -> DeleteExternalEnrolments: keepDefaultCookies()
+     end
+else else
+	DeleteExternalEnrolments -> DeleteExternalEnrolments: run(Registration,String[]):void
+	loop for: externalEnrolmentIDs
+		DeleteExternalEnrolments -> DeleteExternalEnrolments: getExternalEnrolmentByID(Registration,String):ExternalEnrolment
+		DeleteExternalEnrolments -> ExternalEnrolment: delete():void
+		ExternalEnrolment -> ExternalEnrolment: checkRulesToDelete():void
+		ExternalEnrolment -> ExternalEnrolment: setEctsConversionTable(EctsConversionTable):void
+		ExternalEnrolment -> ExternalEnrolment: setExecutionPeriod(ExecutionSemester):void
+		ExternalEnrolment -> ExternalEnrolment: setExternalCurricularCourse(ExternalCurricularCourse):void
+		ExternalEnrolment -> ExternalEnrolment: setRegistration(Registration):void
+		ExternalEnrolment -> ExternalEnrolment: setRootDomainObject(Bennu):void
+		ExternalEnrolment -> ExternalEnrolment: getNotNeedToEnrollCurricularCoursesSet():Set<NotNeedToEnrollInCurricularCourse>
+		ExternalEnrolment -> Set: clear():void
+		ExternalEnrolment -> ExternalEnrolment: deleteDomainObject():void
+	end
+    JSPDeleteExternalEnrolments <- DeleteExternalEnrolments: showPersonalizedPage(cookies)
+end
+@enduml

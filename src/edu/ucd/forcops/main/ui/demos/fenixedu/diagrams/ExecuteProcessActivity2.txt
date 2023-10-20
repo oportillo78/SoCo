@@ -1,0 +1,29 @@
+@startuml
+ participant "JSP\nJSPExecuteProcessActivity" as JSPExecuteProcessActivity order 0
+ participant "services.caseHandling\nExecuteProcessActivity" as ExecuteProcessActivity order 1
+ participant "core.security\nAuthenticate" as Authenticate order 13
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 16
+ participant "domain.caseHandling\nProcess" as Process order 17
+ participant "domain.caseHandling\nActivity" as Activity order 22
+ participant "util\nPair" as Pair order 31
+ JSPExecuteProcessActivity -> ExecuteProcessActivity: getConnection()
+ JSPExecuteProcessActivity <- ExecuteProcessActivity: returnConnection()
+ JSPExecuteProcessActivity -> ExecuteProcessActivity: executeAction()
+ ExecuteProcessActivity -> ExecuteProcessActivity: run\n(Process,List<Pair<String,Object>>):Process
+ ExecuteProcessActivity -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ LOOP for: activities
+ 	ExecuteProcessActivity -> Process: executeActivity(User,String,Object):Process
+ 	Process -> Process: getActivity(String):Activity
+ 	Process -> Activity: execute(P,User,Object)
+ 	Activity -> Activity: checkPreConditions(P,User):void
+ 	Activity -> Activity: executeActivity(P,User,Object)
+ 	Activity -> Activity: executePosConditions(P,User,Object):void
+ 	Activity -> Activity: log(P,User,Object):void
+ 	ExecuteProcessActivity -> Pair: getKey()
+ 	ExecuteProcessActivity -> Pair: getValue()
+ END
+ @enduml

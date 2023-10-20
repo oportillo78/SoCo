@@ -1,0 +1,73 @@
+@startuml
+ participant "JSP\nJSPEditPrecedentDegreeInformation" as JSPEditPrecedentDegreeInformation order 0
+ participant "services.administrativeOffice.candidacy\nEditPrecedentDegreeInformation" as EditPrecedentDegreeInformation order 1
+ participant "dto.candidacy\nPrecedentDegreeInformationBean" as PrecedentDegreeInformationBean order 9
+ participant "domain.student\nPrecedentDegreeInformation" as PrecedentDegreeInformation order 20
+ participant "domain.organizationalStructure\nUnitUtils" as UnitUtils order 55
+ participant "core.domain\nBennu" as Bennu order 69
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 76
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 77
+ participant "core.domain\nBennu" as Bennu order 78
+ participant "domain.organizationalStructure\nAccountability_Base" as Accountability_Base order 79
+ participant "domain.organizationalStructure\nUnit" as Unit order 80
+ participant "i18n\nLocalizedString" as LocalizedString order 98
+ participant "org.joda.time\nYearMonthDay" as YearMonthDay order 99
+ participant "domain.organizationalStructure\nAccountabilityType" as AccountabilityType order 100
+ participant "org.joda.time\nDateTime" as DateTime order 101
+ JSPEditPrecedentDegreeInformation -> EditPrecedentDegreeInformation: getConnection()
+ JSPEditPrecedentDegreeInformation <- EditPrecedentDegreeInformation: returnConnection()
+ JSPEditPrecedentDegreeInformation -> EditPrecedentDegreeInformation: executeAction()
+ EditPrecedentDegreeInformation -> EditPrecedentDegreeInformation: run(PrecedentDegreeInformationBean):void
+ EditPrecedentDegreeInformation -> PrecedentDegreeInformationBean: getPrecedentDegreeInformation():PrecedentDegreeInformation
+ EditPrecedentDegreeInformation -> PrecedentDegreeInformation: edit(PrecedentDegreeInformationBean):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getInstitution():Unit
+ OPT institution == null && !StringUtils.isEmpty(precedentDegreeInformationBean.getInstitutionName())
+ 	PrecedentDegreeInformation -> UnitUtils: readExternalInstitutionUnitByName(String):Unit
+ 	UnitUtils -> UnitUtils: readExternalInstitutionUnitByName(Unit,String):Unit
+ 	LOOP for: unit.getChildsSet()
+ 		UnitUtils -> Accountability_Base: getChildParty():Party
+ 		OPT child instanceof Unit
+ 			UnitUtils -> UnitUtils: readExternalInstitutionUnitByName(Unit,String):Unit
+ 		END
+ 	END
+ 	UnitUtils -> UnitUtils: readExternalInstitutionUnit():Unit
+ 	UnitUtils -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	UnitUtils -> Bennu: getExternalInstitutionUnit():Unit
+ 	PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getInstitutionName():String
+ 	OPT institution == null
+ 		PrecedentDegreeInformation -> Unit: createNewNoOfficialExternalInstitution(String):Unit
+ 		Unit -> Unit: createNewNoOfficialExternalInstitution(String,Country):Unit
+ 		Unit -> UnitUtils: readExternalInstitutionUnit():Unit
+ 		Unit -> Unit: Unit()
+ 		Unit -> Unit: init\n(LocalizedString,String,Integer,String,YearMonthDay,YearMonthDay,String,UnitClassification,AdministrativeOffice,Boolean,Space):void
+ 		Unit -> LocalizedString: LocalizedString(Locale,String)
+ 		Unit -> YearMonthDay: YearMonthDay()
+ 		Unit -> Unit: addParentUnit(Unit,AccountabilityType):Accountability
+ 		Unit -> AccountabilityType: readByType\n(AccountabilityTypeEnum):AccountabilityType
+ 		Unit -> Unit: setCountry(Country):void
+ 		PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getInstitutionName():String
+ 	END
+ END
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setInstitution(Unit):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setDegreeDesignation(String):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getDegreeDesignation():String
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setConclusionGrade(String):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getConclusionGrade():String
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setConclusionYear(Integer):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getConclusionYear():Integer
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setCountry(Country):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getCountry():Country
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setCountryHighSchool(Country):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getCountryWhereFinishedHighSchoolLevel():Country
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setSchoolLevel(SchoolLevelType):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getSchoolLevel():SchoolLevelType
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setOtherSchoolLevel(String):void
+ PrecedentDegreeInformation -> PrecedentDegreeInformationBean: getOtherSchoolLevel():String
+ PrecedentDegreeInformation -> PrecedentDegreeInformation: setLastModifiedDate(DateTime):void
+ PrecedentDegreeInformation -> DateTime: DateTime()
+ @enduml

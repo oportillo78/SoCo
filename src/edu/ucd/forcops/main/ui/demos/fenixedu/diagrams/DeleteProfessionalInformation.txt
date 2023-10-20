@@ -1,0 +1,17 @@
+@startuml
+ participant "JSP\nJSPDeleteProfessionalInformation" as JSPDeleteProfessionalInformation order 0
+ participant "services.alumni\nDeleteProfessionalInformation" as DeleteProfessionalInformation order 1
+ participant "domain\nJob" as Job order 7
+ JSPDeleteProfessionalInformation -> DeleteProfessionalInformation: getConnection()
+ JSPDeleteProfessionalInformation <- DeleteProfessionalInformation: returnConnection()
+ JSPDeleteProfessionalInformation -> DeleteProfessionalInformation: executeAction()
+ DeleteProfessionalInformation -> DeleteProfessionalInformation: run(Job):void
+ DeleteProfessionalInformation -> Job: delete():void
+ Job -> Job: setPerson(Person):void
+ Job -> Job: setCreator(Person):void
+ Job -> Job: setCountry(Country):void
+ Job -> Job: setBusinessArea(BusinessArea):void
+ Job -> Job: setParentBusinessArea(BusinessArea):void
+ Job -> Job: setRootDomainObject(Bennu):void
+ Job -> Job: deleteDomainObject():void
+ @enduml

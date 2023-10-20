@@ -1,0 +1,36 @@
+@startuml
+ participant "JSP\nJSPListMasterDegreeStudents" as JSPListMasterDegreeStudents order 0
+ participant "services.gep\nListMasterDegreeStudents" as ListMasterDegreeStudents order 1
+ participant "domain\nExecutionYear" as ExecutionYear order 21
+ participant "org.apache.commons.collections\nCollectionUtils" as CollectionUtils order 22
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 23
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 24
+ participant "domain.student\nRegistration" as Registration order 29
+ participant "dto\nInfoStudentCurricularPlanWithFirstTimeEnrolment" as InfoStudentCurricularPlanWithFirstTimeEnrolment order 30
+ participant "dto\nInfoStudentCurricularPlanWithFirstTimeEnrolment" as InfoStudentCurricularPlanWithFirstTimeEnrolment order 35
+ JSPListMasterDegreeStudents -> ListMasterDegreeStudents: getConnection()
+ JSPListMasterDegreeStudents <- ListMasterDegreeStudents: returnConnection()
+ JSPListMasterDegreeStudents -> ListMasterDegreeStudents: executeAction()
+ ListMasterDegreeStudents -> ListMasterDegreeStudents: run(String):Collection
+ ListMasterDegreeStudents -> ExecutionYear: readExecutionYearByName(String):ExecutionYear
+ ListMasterDegreeStudents -> ListMasterDegreeStudents: readByDegreeTypeAndState():List<DegreeCurricularPlan>
+ ListMasterDegreeStudents -> CollectionUtils: filter(Collection,Predicate):void
+ LOOP for: masterDegreeCurricularPlans
+ 	ListMasterDegreeStudents -> DegreeCurricularPlan_Base: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ END
+ LOOP for: studentCurricularPlans
+ 	ALT studentCurricularPlan.getSpecialization() != null                    && studentCurricularPlan.getSpecialization().equals(Specialization.STUDENT_CURRICULAR_PLAN_MASTER_DEGREE)
+ 		ListMasterDegreeStudents -> StudentCurricularPlan: getRegistration():Registration
+ 		StudentCurricularPlan -> StudentCurricularPlan: getStudent():Registration
+ 		StudentCurricularPlan -> StudentCurricularPlan: getRegistration():Registration
+ 		ListMasterDegreeStudents -> Registration: getStudentCurricularPlansBySpecialization\n(Specialization):List<StudentCurricularPlan>
+ 	END
+ 	ListMasterDegreeStudents -> InfoStudentCurricularPlanWithFirstTimeEnrolment: newInfoFromDomain\n(StudentCurricularPlan):InfoStudentCurricularPlanWithFirstTimeEnrolment
+ 	ALT studentCurricularPlan == null
+ 	ELSE else
+ 		InfoStudentCurricularPlanWithFirstTimeEnrolment -> InfoStudentCurricularPlanWithFirstTimeEnrolment: InfoStudentCurricularPlanWithFirstTimeEnrolment\n(StudentCurricularPlan)
+ 		InfoStudentCurricularPlanWithFirstTimeEnrolment -> InfoStudentCurricularPlanWithFirstTimeEnrolment: InfoStudentCurricularPlan(StudentCurricularPlan)
+ 	END
+ 	ListMasterDegreeStudents -> InfoStudentCurricularPlanWithFirstTimeEnrolment: setFirstTimeEnrolment(Boolean):void
+ END
+ @enduml

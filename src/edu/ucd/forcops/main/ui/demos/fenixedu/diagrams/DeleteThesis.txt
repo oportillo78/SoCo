@@ -1,0 +1,23 @@
+@startuml
+ participant "JSP\nJSPDeleteThesis" as JSPDeleteThesis order 0
+ participant "services.thesis\nDeleteThesis" as DeleteThesis order 1
+ participant "services.thesis\nDeleteThesis" as DeleteThesis order 5
+ participant "domain.thesis\nThesis" as Thesis order 8
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 25
+ participant "domain.exceptions\nDomainException" as DomainException order 26
+ JSPDeleteThesis -> DeleteThesis: getConnection()
+ JSPDeleteThesis <- DeleteThesis: returnConnection()
+ JSPDeleteThesis -> DeleteThesis: executeAction()
+ DeleteThesis -> DeleteThesis: run(DegreeCurricularPlan,Thesis):void
+ DeleteThesis -> Thesis: delete():void
+ Thesis -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ Thesis -> Thesis: getDeletionBlockers():Collection<String>
+ Thesis -> Thesis: checkForDeletionBlockers(Collection<String>):void
+ LOOP for: ?
+ 	Thesis -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ END
+ Thesis -> Thesis: setRootDomainObject(Bennu):void
+ Thesis -> Thesis: setDegree(Degree):void
+ Thesis -> Thesis: removeEnrolment():void
+ Thesis -> Thesis: deleteDomainObject():void
+ @enduml

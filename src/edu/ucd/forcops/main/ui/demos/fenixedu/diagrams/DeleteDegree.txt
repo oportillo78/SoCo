@@ -1,0 +1,62 @@
+@startuml
+ participant "JSP\nJSPDeleteDegree" as JSPDeleteDegree order 0
+ participant "services.scientificCouncil.curricularPlans\nDeleteDegree" as DeleteDegree order 1
+ participant "services.scientificCouncil.curricularPlans\nDeleteDegree" as DeleteDegree order 5
+ participant "predicate\nAccessControl" as AccessControl order 18
+ participant "core.security\nAuthenticate" as Authenticate order 23
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 26
+ participant "core.domain\nUser_Base" as User_Base order 27
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 28
+ participant "domain\nPerson" as Person order 29
+ participant "core.domain\nUser" as User order 34
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 35
+ participant "domain\nAcademicProgram" as AcademicProgram order 36
+ participant "core.i18n\nBundleUtil" as BundleUtil order 55
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 56
+ participant "domain.exceptions\nDomainException" as DomainException order 57
+ JSPDeleteDegree -> DeleteDegree: getConnection()
+ JSPDeleteDegree <- DeleteDegree: returnConnection()
+ JSPDeleteDegree -> DeleteDegree: executeAction()
+ DeleteDegree -> DeleteDegree: run(String):void
+ DeleteDegree -> DeleteDegree: check(AccessControlPredicate<?>):void
+ DeleteDegree -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ DeleteDegree -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteDegree -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ DeleteDegree -> FenixFramework: getDomainObject(String):T
+ ALT degreeToDelete == null
+ ELSE else
+ 	DeleteDegree -> AcademicProgram: delete():void
+ 	AcademicProgram -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 	AcademicProgram -> AcademicProgram: getDeletionBlockers():Collection<String>
+ 	AcademicProgram -> AcademicProgram: checkForDeletionBlockers(Collection<String>):void
+ 	AcademicProgram -> AcademicProgram: checkForDeletionBlockers(Collection<String>):void
+ 	OPT !getAcademicAuthorizationGroupSet().isEmpty() || !getAccessRuleSet().isEmpty()
+ 		AcademicProgram -> BundleUtil: getString(String,String,String[]):String
+ 	END
+ 	LOOP for: ?
+ 		AcademicProgram -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ 	END
+ 	AcademicProgram -> AcademicProgram: disconnect():void
+ 	AcademicProgram -> AcademicProgram: setAdministrativeOffice(AdministrativeOffice):void
+ 	AcademicProgram -> AcademicProgram: deleteDomainObject():void
+ END
+ @enduml

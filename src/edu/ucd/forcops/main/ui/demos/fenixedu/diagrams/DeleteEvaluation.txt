@@ -1,0 +1,73 @@
+@startuml
+scale 7/10
+participant "JSP\nJSPDeleteEvaluation" as JSPDeleteEvaluation order 0
+participant "services.teacher\nDeleteEvaluation" as DeleteEvaluation order 1
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 21
+participant "domain\nEvaluation" as Evaluation order 24
+participant "service.filter\nExecutionCourseLecturing\nTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 25
+participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 38
+participant "dto\nSummariesManagementBean" as SummariesManagementBean order 39
+participant "service.filter\nExecutionCourseCoordinator\nAuthorizationFilter" as ExecutionCourseCoordinatorAuthorizationFilter order 40
+participant "core.security\nAuthenticate" as Authenticate order 67
+participant "core.domain\nUser" as User order 68
+participant "java.util\nTreeSet" as TreeSet order 69
+participant "service.filter.coordinator\n.CoordinatorAuthorizationFilter\nCoordinatorByExecutionDegreeComparator" as CoordinatorByExecutionDegreeComparator order 70
+participant "domain\nPerson_Base" as Person_Base order 71
+participant "domain\nCoordinator_Base" as Coordinator_Base order 72
+participant "domain\nExecutionDegree" as ExecutionDegree order 73
+JSPDeleteEvaluation -> DeleteEvaluation: getConnection()
+JSPDeleteEvaluation <- DeleteEvaluation: returnConnection()
+JSPDeleteEvaluation -> DeleteEvaluation: executeAction()
+DeleteEvaluation -> DeleteEvaluation: runDeleteEvaluation\n(String,String):void
+DeleteEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object)\n:ExecutionCourse
+alt argument == null
+else else
+	alt argument instanceof ExecutionCourse
+	else else
+		alt argument instanceof InfoExecutionCourse
+			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+		else else
+			alt argument instanceof String
+				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+			else else
+				alt argument instanceof SummariesManagementBean
+					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse()\n:ExecutionCourse
+				else else
+				end
+			end
+		end
+	end
+end
+DeleteEvaluation -> DeleteEvaluation: run(String,String):void
+DeleteEvaluation -> FenixFramework: getDomainObject(String):T
+DeleteEvaluation -> Evaluation: delete():void
+opt NotAuthorizedException ex1
+	DeleteEvaluation -> ExecutionCourseCoordinatorAuthorizationFilter: execute(String):void
+	ExecutionCourseCoordinatorAuthorizationFilter -> Authenticate: getUser():User
+	ExecutionCourseCoordinatorAuthorizationFilter -> User: getPerson():Person
+	opt coordinators.isEmpty()
+		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+	end
+	ExecutionCourseCoordinatorAuthorizationFilter -> TreeSet: newTreeSet(Comparator<? super E>)
+	ExecutionCourseCoordinatorAuthorizationFilter -> CoordinatorByExecutionDegreeComparator: newCoordinatorByExecutionDegreeComparator()
+	ExecutionCourseCoordinatorAuthorizationFilter -> TreeSet: addAll(Collection<? extends E>):boolean
+	ExecutionCourseCoordinatorAuthorizationFilter -> Person_Base: getCoordinatorsSet():Set<Coordinator>
+	opt !RoleType.COORDINATOR.isMember(person.getUser())
+		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+	end
+	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: getSpecificExecutionYear(String):ExecutionYear
+	ExecutionCourseCoordinatorAuthorizationFilter -> TreeSet: first():E
+	ExecutionCourseCoordinatorAuthorizationFilter -> Coordinator_Base: getExecutionDegree():ExecutionDegree
+	ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionDegree: getExecutionYear():ExecutionYear
+	opt executionYear == null || \ncoordinatorExecutionYear.compareTo(executionYear) < 0
+		ExecutionCourseCoordinatorAuthorizationFilter -> ExecutionCourseCoordinatorAuthorizationFilter: deny():void
+	end
+	DeleteEvaluation -> DeleteEvaluation: run(String,String):void
+	DeleteEvaluation -> FenixFramework: getDomainObject(String):T
+	DeleteEvaluation -> Evaluation: delete():void
+end
+@enduml

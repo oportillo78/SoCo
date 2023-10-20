@@ -1,0 +1,73 @@
+@startuml
+ participant "JSP\nJSPImportEvaluationMethod" as JSPImportEvaluationMethod order 0
+ participant "services.teacher\nImportEvaluationMethod" as ImportEvaluationMethod order 1
+ participant "domain\nExecutionCourse" as ExecutionCourse order 11
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 24
+ participant "domain\nEvaluationMethod_Base" as EvaluationMethod_Base order 25
+ participant "domain\nEvaluationMethod" as EvaluationMethod order 26
+ participant "domain\nContentManagementLog" as ContentManagementLog order 43
+ participant "domain\nExecutionCourse" as ExecutionCourse order 44
+ participant "domain\nExecutionCourse" as ExecutionCourse order 45
+ participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 46
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 61
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 62
+ participant "domain\nExecutionCourse" as ExecutionCourse order 67
+ participant "dto\nSummariesManagementBean" as SummariesManagementBean order 68
+ participant "core.security\nAuthenticate" as Authenticate order 69
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 72
+ JSPImportEvaluationMethod -> ImportEvaluationMethod: getConnection()
+ JSPImportEvaluationMethod <- ImportEvaluationMethod: returnConnection()
+ JSPImportEvaluationMethod -> ImportEvaluationMethod: executeAction()
+ ImportEvaluationMethod -> ImportEvaluationMethod: runImportEvaluationMethod\n(String,ExecutionCourse,ExecutionCourse,Shift):void
+ ImportEvaluationMethod -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(ExecutionCourse):void
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ExecutionCourseLecturingTeacherAuthorizationFilter -> ExecutionCourseLecturingTeacherAuthorizationFilter: getExecutionCourse(Object):ExecutionCourse
+ ALT argument == null
+ ELSE else
+ 	ALT argument instanceof ExecutionCourse
+ 	ELSE else
+ 		ALT argument instanceof InfoExecutionCourse
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ExecutionCourseLecturingTeacherAuthorizationFilter -> InfoExecutionCourse: getExternalId():String
+ 			InfoExecutionCourse -> InfoExecutionCourse: getExecutionCourse():ExecutionCourse
+ 			InfoExecutionCourse -> ExecutionCourse: getExternalId():String
+ 		ELSE else
+ 			ALT argument instanceof String
+ 				ExecutionCourseLecturingTeacherAuthorizationFilter -> FenixFramework: getDomainObject(String):T
+ 			ELSE else
+ 				ALT argument instanceof SummariesManagementBean
+ 					ExecutionCourseLecturingTeacherAuthorizationFilter -> SummariesManagementBean: getExecutionCourse():ExecutionCourse
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ ImportEvaluationMethod -> ImportEvaluationMethod: run\n(String,ExecutionCourse,ExecutionCourse,Shift):void
+ OPT executionCourseTo != null && executionCourseFrom != null
+ 	ImportEvaluationMethod -> ExecutionCourse: copyEvaluationMethodFrom(ExecutionCourse):void
+ 	OPT executionCourseFrom.getEvaluationMethod() != null
+ 		ExecutionCourse -> ExecutionCourse_Base: getEvaluationMethod():EvaluationMethod
+ 		ExecutionCourse -> ExecutionCourse: getEvaluationMethod():EvaluationMethod
+ 		ALT evaluationMethodTo == null
+ 			ExecutionCourse -> ExecutionCourse: createEvaluationMethod(LocalizedString):void
+ 			ExecutionCourse -> EvaluationMethod_Base: getEvaluationElements():LocalizedString
+ 		ELSE else
+ 			ExecutionCourse -> EvaluationMethod: edit(LocalizedString):void
+ 			EvaluationMethod -> EvaluationMethod: setEvaluationElements(LocalizedString):void
+ 			EvaluationMethod -> ContentManagementLog: createLog\n(ExecutionCourse,String,String,String[]):ContentManagementLog
+ 			EvaluationMethod -> EvaluationMethod: getExecutionCourse():ExecutionCourse
+ 			EvaluationMethod -> EvaluationMethod: getExecutionCourse():ExecutionCourse
+ 			EvaluationMethod -> ExecutionCourse: getNome():String
+ 			EvaluationMethod -> EvaluationMethod: getExecutionCourse():ExecutionCourse
+ 			EvaluationMethod -> ExecutionCourse: getDegreePresentationString():String
+ 			EvaluationMethod -> EvaluationMethod: setEvaluationElements(LocalizedString):void
+ 			ExecutionCourse -> EvaluationMethod_Base: getEvaluationElements():LocalizedString
+ 		END
+ 	END
+ END
+ @enduml

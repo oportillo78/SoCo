@@ -1,0 +1,63 @@
+@startuml
+ participant "JSP\nJSPDeleteExecutionCourses" as JSPDeleteExecutionCourses order 0
+ participant "services.manager\nDeleteExecutionCourses" as DeleteExecutionCourses order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 11
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 12
+ participant "domain\nEvaluation" as Evaluation order 53
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 54
+ participant "domain.exceptions\nDomainException" as DomainException order 55
+ participant "core.domain\nSender" as Sender order 56
+ participant "domain\nEvaluationMethod" as EvaluationMethod order 71
+ JSPDeleteExecutionCourses -> DeleteExecutionCourses: getConnection()
+ JSPDeleteExecutionCourses <- DeleteExecutionCourses: returnConnection()
+ JSPDeleteExecutionCourses -> DeleteExecutionCourses: executeAction()
+ DeleteExecutionCourses -> DeleteExecutionCourses: run(List<String>):List<String>
+ LOOP for: executionCourseIDs
+ 	DeleteExecutionCourses -> FenixFramework: getDomainObject(String):T
+ 	ALT !executionCourse.isDeletable()
+ 		DeleteExecutionCourses -> ExecutionCourse_Base: getSigla():String
+ 	ELSE else
+ 		DeleteExecutionCourses -> ExecutionCourse_Base: delete():void
+ 		ExecutionCourse_Base -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getDeletionBlockers():Collection<String>
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: checkForDeletionBlockers(Collection<String>):void
+ 		LOOP for: ?
+ 			ExecutionCourse_Base -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ 		END
+ 		OPT super.getSender() != null
+ 			ExecutionCourse_Base -> ExecutionCourse_Base: getSender():Sender
+ 			ExecutionCourse_Base -> ExecutionCourse_Base: setSender(Sender):void
+ 			ExecutionCourse_Base -> Sender: delete():void
+ 			Sender -> Sender: getMessageSet():Set<Message>
+ 			Sender -> Sender: setMemberGroup(PersistentGroup):void
+ 			Sender -> Sender: getRecipientSet():Set<PersistentGroup>
+ 			Sender -> Sender: getOptedInUserSet():Set<User>
+ 			Sender -> Sender: getInvitedUserSet():Set<User>
+ 			Sender -> Sender: setMessagingSystem(MessagingSystem):void
+ 			Sender -> Sender: deleteDomainObject():void
+ 		END
+ 		OPT getEvaluationMethod() != null
+ 			ExecutionCourse_Base -> ExecutionCourse_Base: getEvaluationMethod():EvaluationMethod
+ 			ExecutionCourse_Base -> EvaluationMethod: delete():void
+ 			EvaluationMethod -> EvaluationMethod: setExecutionCourse(ExecutionCourse):void
+ 			EvaluationMethod -> EvaluationMethod: setRootDomainObject(Bennu):void
+ 			EvaluationMethod -> EvaluationMethod: deleteDomainObject():void
+ 		END
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: removeFinalEvaluations():void
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getAssociatedEvaluationsSet():Set<Evaluation>
+ 		LOOP while: iterator.hasNext()
+ 			ALT evaluation.isFinal()
+ 				ExecutionCourse_Base -> Evaluation: delete():void
+ 			END
+ 		END
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getAssociatedCurricularCoursesSet():Set<CurricularCourse>
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getNonAffiliatedTeachersSet():Set<NonAffiliatedTeacher>
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getTeacherGroupSet():Set<PersistentTeacherGroup>
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getStudentGroupSet():Set<PersistentStudentGroup>
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: getSpecialCriteriaOverExecutionCourseGroupSet\n():Set<PersistentSpecialCriteriaOverExecutionCourseGroup>
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: setExecutionPeriod(ExecutionSemester):void
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: setRootDomainObject(Bennu):void
+ 		ExecutionCourse_Base -> ExecutionCourse_Base: deleteDomainObject():void
+ 	END
+ END
+ @enduml

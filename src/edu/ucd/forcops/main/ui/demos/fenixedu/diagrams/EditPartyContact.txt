@@ -1,0 +1,88 @@
+@startuml
+ participant "JSP\nJSPEditPartyContact" as JSPEditPartyContact order 0
+ participant "services.contacts\nEditPartyContact" as EditPartyContact order 1
+ participant "dto.contacts\nPartyContactBean" as PartyContactBean order 13
+ participant "domain.contacts\nPartyContact" as PartyContact order 44
+ participant "domain.contacts\nPartyContact_Base" as PartyContact_Base order 45
+ participant "domain.contacts\nPartyContactValidation" as PartyContactValidation order 46
+ participant "org.joda.time\nDateTime" as DateTime order 57
+ participant "domain.organizationalStructure\nParty" as Party order 60
+ participant "domain.contacts\nPartyContact" as PartyContact order 61
+ participant "domain.contacts\nPartyContactValidation" as PartyContactValidation order 70
+ participant "org.joda.time\nDateTime" as DateTime order 93
+ participant "domain.contacts\nPartyContact_Base" as PartyContact_Base order 94
+ participant "domain.organizationalStructure\nParty" as Party order 95
+ participant "domain.contacts\nPartyContact" as PartyContact order 96
+ participant "domain.contacts\nPartyContactValidation" as PartyContactValidation order 97
+ JSPEditPartyContact -> EditPartyContact: getConnection()
+ JSPEditPartyContact <- EditPartyContact: returnConnection()
+ JSPEditPartyContact -> EditPartyContact: executeAction()
+ EditPartyContact -> EditPartyContact: run(PartyContactBean,boolean):Boolean
+ EditPartyContact -> PartyContactBean: edit():Boolean
+ PartyContactBean -> PartyContactBean: isValueChanged():boolean
+ PartyContactBean -> PartyContactBean: getPresentationValue():String
+ PartyContactBean -> PartyContactBean: getValue():String
+ OPT isValueChanged
+ 	OPT !getContact().waitsValidation()
+ 		ALT getContact().getCurrentPartyContact() != null
+ 			PartyContactBean -> PartyContactBean: getContact():PartyContact
+ 			PartyContactBean -> PartyContact: getCurrentPartyContact():PartyContact
+ 			PartyContactBean -> PartyContact_Base: getPartyContactValidation():PartyContactValidation
+ 			PartyContactBean -> PartyContactValidation: reset():void
+ 			PartyContactValidation -> PartyContactValidation: setInvalid():void
+ 			PartyContactValidation -> PartyContactValidation: setRequestDate(DateTime):void
+ 			PartyContactValidation -> DateTime: DateTime()
+ 			DateTime -> DateTime: BaseDateTime()
+ 			PartyContactValidation -> PartyContactValidation: setTries(Integer):void
+ 			PartyContactValidation -> PartyContactValidation: setToken(String):void
+ 		ELSE else
+ 			PartyContactBean -> PartyContactBean: createNewContact():PartyContact
+ 			PartyContactBean -> PartyContact_Base: setPrevPartyContact(PartyContact):void
+ 			PartyContactBean -> PartyContactBean: getContact():PartyContact
+ 		END
+ 		PartyContactBean -> PartyContactBean: setContact(PartyContact):void
+ 	END
+ END
+ PartyContactBean -> PartyContactBean: setContactProperties():boolean
+ PartyContactBean -> PartyContactBean: getParty():Party
+ PartyContactBean -> PartyContactBean: getContact():PartyContact
+ PartyContactBean -> Party: logEditContact\n(PartyContact,boolean,boolean,boolean,String):void
+ OPT wasChanged
+ 	EditPartyContact -> PartyContactBean: getContact():PartyContact
+ 	ALT toBeValidated
+ 		EditPartyContact -> PartyContact: triggerValidationProcessIfNeeded():void
+ 		OPT getPartyContactValidation() != null
+ 			PartyContact -> PartyContact: getPartyContactValidation():PartyContactValidation
+ 			PartyContact -> PartyContactValidation: triggerValidationProcessIfNeeded():void
+ 			OPT getToken() == null
+ 				PartyContactValidation -> PartyContactValidation: triggerValidationProcess():void
+ 			END
+ 		END
+ 	ELSE else
+ 		OPT contact instanceof PhysicalAddress || contact instanceof WebAddress
+ 			EditPartyContact -> PartyContact: setValid():void
+ 			OPT getPartyContactValidation() != null
+ 				PartyContact -> PartyContact: getPartyContactValidation():PartyContactValidation
+ 				PartyContact -> PartyContactValidation: setValid():void
+ 				OPT getContactRoot() != null
+ 					PartyContactValidation -> PartyContactValidation: setContactRoot(ContactRoot):void
+ 				END
+ 				PartyContactValidation -> PartyContactValidation: setState(PartyContactValidationState):void
+ 				PartyContactValidation -> PartyContactValidation: setLastChangeDate(DateTime):void
+ 				PartyContactValidation -> DateTime: DateTime()
+ 				PartyContactValidation -> PartyContactValidation: getPartyContact():PartyContact
+ 				PartyContactValidation -> PartyContact_Base: getParty():Party
+ 				PartyContactValidation -> Party: logValidContact(PartyContact):void
+ 				OPT partyContact.getPrevPartyContact() != null
+ 					PartyContactValidation -> PartyContact_Base: getPrevPartyContact():PartyContact
+ 					PartyContactValidation -> PartyContact: deleteWithoutCheckRules():void
+ 				END
+ 				PartyContactValidation -> PartyContactValidation: getToBeDefault():Boolean
+ 				OPT toBeDefault != null
+ 					PartyContactValidation -> PartyContact_Base: setDefaultContactInformation(boolean):void
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ @enduml

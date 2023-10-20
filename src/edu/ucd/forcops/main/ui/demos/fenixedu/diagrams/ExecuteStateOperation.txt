@@ -1,0 +1,14 @@
+@startuml
+ participant "JSP\nJSPExecuteStateOperation" as JSPExecuteStateOperation order 0
+ participant "services.candidacy\nExecuteStateOperation" as ExecuteStateOperation order 1
+ participant "domain.util.workflow\nOperation" as Operation order 7
+ participant "domain.util.workflow\nIStateWithOperations" as IStateWithOperations order 14
+ JSPExecuteStateOperation -> ExecuteStateOperation: getConnection()
+ JSPExecuteStateOperation <- ExecuteStateOperation: returnConnection()
+ JSPExecuteStateOperation -> ExecuteStateOperation: executeAction()
+ ExecuteStateOperation -> ExecuteStateOperation: run(Operation,Person):void
+ ExecuteStateOperation -> Operation: execute(Person):void
+ Operation -> Operation: internalExecute():void
+ Operation -> Operation: getState():IStateWithOperations
+ Operation -> IStateWithOperations: onOperationFinished(Operation,Person):void
+ @enduml

@@ -1,0 +1,22 @@
+@startuml
+ participant "JSP\nJSPGratuityPaymentPlanManager" as JSPGratuityPaymentPlanManager order 0
+ participant "services.accounting.gratuity.paymentPlan\nGratuityPaymentPlanManager" as GratuityPaymentPlanManager order 1
+ participant "domain.accounting\nPaymentPlan" as PaymentPlan order 7
+ participant "domain.accounting\nInstallment" as Installment order 20
+ JSPGratuityPaymentPlanManager -> GratuityPaymentPlanManager: getConnection()
+ JSPGratuityPaymentPlanManager <- GratuityPaymentPlanManager: returnConnection()
+ JSPGratuityPaymentPlanManager -> GratuityPaymentPlanManager: executeAction()
+ GratuityPaymentPlanManager -> GratuityPaymentPlanManager: delete(PaymentPlan):void
+ GratuityPaymentPlanManager -> PaymentPlan: delete():void
+ LOOP while: !getInstallmentsSet().isEmpty()
+ 	PaymentPlan -> PaymentPlan: getInstallmentsSet():Set<Installment>
+ 	PaymentPlan -> PaymentPlan: getInstallmentsSet():Set<Installment>
+ 	PaymentPlan -> Installment: delete():void
+ 	Installment -> Installment: setPaymentPlan(PaymentPlan):void
+ 	Installment -> Installment: setRootDomainObject(Bennu):void
+ 	Installment -> Installment: deleteDomainObject():void
+ END
+ PaymentPlan -> PaymentPlan: removeParameters():void
+ PaymentPlan -> PaymentPlan: setRootDomainObject(Bennu):void
+ PaymentPlan -> PaymentPlan: deleteDomainObject():void
+ @enduml

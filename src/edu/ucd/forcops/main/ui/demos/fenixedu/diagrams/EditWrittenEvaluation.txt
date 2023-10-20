@@ -1,0 +1,172 @@
+@startuml
+scale .5
+participant "JSP\nJSPEditWrittenEvaluation" as JSPEditWrittenEvaluation order 0
+participant "services.resourceAllocationManager.exams\nEditWrittenEvaluation" as EditWrittenEvaluation order 1
+participant "services.resourceAllocationManager.exams.EditWrittenEvaluation\nEditWrittenEvaluationEvent" as EditWrittenEvaluationEvent order 163
+participant "domain\nExam" as Exam order 164
+participant "org.joda.time\nDateTime" as DateTime order 165
+participant "org.joda.time\nDateTime" as DateTime order 166
+participant "services.resourceAllocationManager.exams.EditWrittenEvaluation\nEditWrittenEvaluationEvent" as EditWrittenEvaluationEvent order 167
+participant "domain\nExam" as Exam order 168
+participant "org.joda.time\nDateTime" as DateTime order 169
+participant "org.joda.time\nDateTime" as DateTime order 170
+participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 171
+participant "core.signals\nSignal" as Signal order 172
+participant "services.resourceAllocationManager.exams.EditWrittenEvaluation\nEditWrittenEvaluationEvent" as EditWrittenEvaluationEvent order 173
+participant "domain\nWrittenEvaluation" as WrittenEvaluation order 174
+participant "domain\nExam" as Exam order 175
+participant "domain\nWrittenEvaluation" as WrittenEvaluation order 176
+participant "service\nGOPSendMessageService" as GOPSendMessageService order 177
+participant "java.util\nDate" as Date order 178
+participant "org.joda.time\nDateTime" as DateTime order 179
+participant "java.util\nDate" as Date order 180
+participant "org.joda.time\nDateTime" as DateTime order 181
+participant "domain.space\nEventSpaceOccupation" as EventSpaceOccupation order 182
+participant "java.util\nList" as List order 183
+participant "service.filter\nEditWrittenEvaluationAuthorization" as EditWrittenEvaluationAuthorization order 184
+participant "service.filter\nResourceAllocationManagerAuthorizationFilter" as ResourceAllocationManagerAuthorizationFilter order 189
+participant "core.security\nAuthenticate" as Authenticate order 192
+participant "service.filter\nExecutionCourseLecturingTeacherAuthorizationFilter" as ExecutionCourseLecturingTeacherAuthorizationFilter order 193
+participant "service.filter\nExecutionCourseCoordinatorAuthorizationFilter" as ExecutionCourseCoordinatorAuthorizationFilter order 194
+JSPEditWrittenEvaluation -> EditWrittenEvaluation: getConnection()
+JSPEditWrittenEvaluation <- EditWrittenEvaluation: returnConnection()
+JSPEditWrittenEvaluation -> EditWrittenEvaluation: executeAction()
+EditWrittenEvaluation -> EditWrittenEvaluation: runEditWrittenEvaluation\n(String,Date,Date,Date,List<String>,List<String>,List<String>,String,Season,String,GradeScale):void
+EditWrittenEvaluation -> EditWrittenEvaluationAuthorization: execute(String):void
+EditWrittenEvaluationAuthorization -> Authenticate: getUser():User
+opt !RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(userView.getPerson().getUser())
+	EditWrittenEvaluationAuthorization -> EditWrittenEvaluationAuthorization: readWrittenEvaluation(String):WrittenEvaluation
+end
+EditWrittenEvaluation -> ResourceAllocationManagerAuthorizationFilter: execute():void
+ResourceAllocationManagerAuthorizationFilter -> Authenticate: getUser():User
+EditWrittenEvaluation -> EditWrittenEvaluation: run\n(String,Date,Date,\nDate,List<String>,List<String>,\nList<String>,String,Season,\nString,GradeScale):void
+EditWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+EditWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+EditWrittenEvaluation -> EditWrittenEvaluation: readExecutionCourses(List<String>):List<ExecutionCourse>
+EditWrittenEvaluation -> EditWrittenEvaluation: readCurricularCourseScopesAndContexts(List<String>):List<DegreeModuleScope>
+opt roomIDs != null
+	EditWrittenEvaluation -> EditWrittenEvaluation: readRooms(List<String>):List<Space>
+end
+EditWrittenEvaluation -> Signal: emit(String,Object):void
+EditWrittenEvaluation -> EditWrittenEvaluationEvent: newEditWrittenEvaluationEvent(WrittenEvaluation,Date,Date)
+EditWrittenEvaluation -> WrittenEvaluation: getAssociatedRooms():List<Space>
+alt examSeason != null
+	EditWrittenEvaluation -> Exam: edit\n(Date,Date,Date,\nList<ExecutionCourse>,List<DegreeModuleScope>,\nList<Space>,GradeScale,\nSeason):void
+else else
+	alt writtenTestDescription != null
+		EditWrittenEvaluation -> WrittenEvaluation: getDayDate():Date
+		EditWrittenEvaluation -> WrittenEvaluation: getBeginningDate():Date
+		EditWrittenEvaluation -> WrittenEvaluation: getEndDate():Date
+		EditWrittenEvaluation -> WrittenEvaluation: edit\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,String):void
+		opt writtenTest.getRequestRoomSentDate() != null
+			opt !prevTestDate.equals(writtenEvaluationDate) || !prevStartTime.equals(writtenEvaluationStartTime)                        || !prevTestEnd.equals(writtenEvaluationEndTime)
+				opt !RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(AccessControl.getPerson().getUser())
+					EditWrittenEvaluation -> GOPSendMessageService: requestChangeRoom(WrittenTest,Date,Date,Date):void
+				end
+			end
+		end
+	else else
+	end
+end
+opt roomsToAssociate != null
+	loop for: roomsToAssociate
+		EditWrittenEvaluation -> Date: getTime():long
+		EditWrittenEvaluation -> DateTime: newDateTime(long)
+		EditWrittenEvaluation -> DateTime: withSecondOfMinute(int):DateTime		
+		EditWrittenEvaluation -> DateTime: withMillisOfSecond(int):DateTime
+		EditWrittenEvaluation -> Date: getTime():long
+		EditWrittenEvaluation -> DateTime: newDateTime(long)
+		EditWrittenEvaluation -> DateTime: withSecondOfMinute(int):DateTime
+		EditWrittenEvaluation -> DateTime: withMillisOfSecond(int):DateTime		
+		loop for: allocatableSpace.getOccupationSet()
+			opt occupation instanceof EventSpaceOccupation
+				EditWrittenEvaluation -> EventSpaceOccupation: getEventSpaceOccupationIntervals(DateTime,DateTime):List<Interval>
+				EditWrittenEvaluation -> List: size():int
+			end
+		end
+
+	end
+end
+opt NotAuthorizedException ex1
+	EditWrittenEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+	EditWrittenEvaluation -> EditWrittenEvaluation: run\n(String,Date,Date,Date,List<String>,List<String>,List<String>,String,Season,String,GradeScale):void
+	EditWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+	EditWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+	EditWrittenEvaluation -> EditWrittenEvaluation: readExecutionCourses(List<String>):List<ExecutionCourse>	
+	opt roomsToAssociate != null
+		loop for: roomsToAssociate
+			EditWrittenEvaluation -> Date: getTime():long
+			EditWrittenEvaluation -> DateTime: newDateTime(long)
+			EditWrittenEvaluation -> DateTime: withSecondOfMinute(int):DateTime
+			EditWrittenEvaluation -> Date: getTime():long
+			EditWrittenEvaluation -> DateTime: withMillisOfSecond(int):DateTime
+			EditWrittenEvaluation -> DateTime: withSecondOfMinute(int):DateTime
+			EditWrittenEvaluation -> DateTime: withMillisOfSecond(int):DateTime
+			EditWrittenEvaluation -> DateTime: newDateTime(long)
+			loop for: allocatableSpace.getOccupationSet()
+				opt occupation instanceof EventSpaceOccupation
+					EditWrittenEvaluation -> List: size():int
+					EditWrittenEvaluation -> EventSpaceOccupation: getEventSpaceOccupationIntervals(DateTime,DateTime):List<Interval>
+				end
+			end
+		end
+	end
+	opt roomIDs != null
+		EditWrittenEvaluation -> EditWrittenEvaluation: readRooms(List<String>):List<Space>
+	end
+	EditWrittenEvaluation -> Signal: emit(String,Object):void
+	EditWrittenEvaluation -> EditWrittenEvaluationEvent: newEditWrittenEvaluationEvent(WrittenEvaluation,Date,Date)
+	EditWrittenEvaluation -> WrittenEvaluation: getAssociatedRooms():List<Space>
+end	
+opt NotAuthorizedException ex2
+	EditWrittenEvaluation -> ExecutionCourseLecturingTeacherAuthorizationFilter: execute(String):void
+	EditWrittenEvaluation -> EditWrittenEvaluation: run\n(String,Date,Date,Date,List<String>,List<String>,List<String>,String,Season,String,GradeScale):void
+	EditWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+	EditWrittenEvaluation -> FenixFramework: getDomainObject(String):T
+	EditWrittenEvaluation -> EditWrittenEvaluation: readExecutionCourses(List<String>):List<ExecutionCourse>
+	EditWrittenEvaluation -> EditWrittenEvaluation: readCurricularCourseScopesAndContexts(List<String>):List<DegreeModuleScope>
+	opt roomIDs != null
+		EditWrittenEvaluation -> EditWrittenEvaluation: readRooms(List<String>):List<Space>
+	end
+	EditWrittenEvaluation -> EditWrittenEvaluationEvent: newEditWrittenEvaluationEvent(WrittenEvaluation,Date,Date)
+	EditWrittenEvaluation -> WrittenEvaluation: getAssociatedRooms():List<Space>
+	alt examSeason != null
+		EditWrittenEvaluation -> Exam: edit\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,Season):void
+	else else
+		alt writtenTestDescription != null
+			EditWrittenEvaluation -> WrittenEvaluation: getDayDate():Date
+			EditWrittenEvaluation -> WrittenEvaluation: edit\n(Date,Date,Date,List<ExecutionCourse>,List<DegreeModuleScope>,List<Space>,GradeScale,String):void
+			opt writtenTest.getRequestRoomSentDate() != null
+				opt !prevTestDate.equals(writtenEvaluationDate) || !prevStartTime.equals(writtenEvaluationStartTime)                        || !prevTestEnd.equals(writtenEvaluationEndTime)
+					opt  !RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(AccessControl.getPerson().getUser())
+						EditWrittenEvaluation -> GOPSendMessageService: requestChangeRoom(WrittenTest,Date,Date,Date):void
+					end
+				end
+			end	
+			EditWrittenEvaluation -> WrittenEvaluation: getBeginningDate():Date
+			EditWrittenEvaluation -> WrittenEvaluation: getEndDate():Date
+			else else
+			end
+		end
+		opt roomsToAssociate != null
+			loop for: roomsToAssociate
+				EditWrittenEvaluation -> Date: getTime():long
+				EditWrittenEvaluation -> DateTime: withSecondOfMinute(int):DateTime
+				EditWrittenEvaluation -> DateTime: newDateTime(long)
+				EditWrittenEvaluation -> DateTime: withMillisOfSecond(int):DateTime
+				EditWrittenEvaluation -> DateTime: withMillisOfSecond(int):DateTime
+				EditWrittenEvaluation -> DateTime: newDateTime(long)
+				EditWrittenEvaluation -> DateTime: withSecondOfMinute(int):DateTime
+				EditWrittenEvaluation -> Date: getTime():long
+				loop for: allocatableSpace.getOccupationSet()
+					opt occupation instanceof EventSpaceOccupation
+						EditWrittenEvaluation -> EventSpaceOccupation: getEventSpaceOccupationIntervals(DateTime,DateTime):List<Interval>
+						EditWrittenEvaluation -> List: size():int
+					end
+				end
+			end
+		EditWrittenEvaluation -> Signal: emit(String,Object):void
+		EditWrittenEvaluation -> ExecutionCourseCoordinatorAuthorizationFilter: execute(String):void
+	end
+end
+@enduml

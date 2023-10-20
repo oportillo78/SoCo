@@ -1,0 +1,90 @@
+@startuml
+ participant "JSP\nJSPLerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular" as JSPLerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular order 0
+ participant "services.resourceAllocationManager\nLerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular" as LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular order 1
+ participant "predicate\nAccessControl" as AccessControl order 29
+ participant "core.security\nAuthenticate" as Authenticate order 34
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 37
+ participant "core.domain\nUser_Base" as User_Base order 38
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 39
+ participant "domain\nPerson" as Person order 40
+ participant "core.domain\nUser" as User order 45
+ participant "domain\nCurricularYear" as CurricularYear order 46
+ participant "core.domain\nBennu" as Bennu order 51
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 58
+ participant "core.domain\nBennu" as Bennu order 59
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 60
+ participant "dto\nInfoExecutionPeriod" as InfoExecutionPeriod order 61
+ participant "domain\nExecutionSemester" as ExecutionSemester order 66
+ participant "dto\nInfoExecutionDegree" as InfoExecutionDegree order 67
+ participant "dto\nInfoDegreeCurricularPlan" as InfoDegreeCurricularPlan order 68
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 73
+ participant "domain\nExecutionSemester" as ExecutionSemester order 74
+ participant "StringNormalizer" as StringNormalizer order 81
+ participant "java.text\nNormalizer" as Normalizer order 88
+ participant "domain\nExecutionCourse" as ExecutionCourse order 89
+ participant "dto\nInfoExecutionCourse" as InfoExecutionCourse order 90
+ JSPLerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular: getConnection()
+ JSPLerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular <- LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular: returnConnection()
+ JSPLerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular: executeAction()
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular: run\n(InfoExecutionDegree,InfoExecutionPeriod,Integer):List
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular: check(AccessControlPredicate<?>):void
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> CurricularYear: readByYear(Integer):CurricularYear
+ CurricularYear -> Bennu: getInstance():Bennu
+ OPT ?
+ 	Bennu -> Bennu: initialize():Bennu
+ END
+ Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ Bennu -> DomainRoot: getBennu():Bennu
+ CurricularYear -> Bennu: getCurricularYearsSet():Set<CurricularYear>
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> FenixFramework: getDomainObject(String):T
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> InfoExecutionPeriod: getExternalId():String
+ InfoExecutionPeriod -> InfoExecutionPeriod: getExecutionPeriod():ExecutionSemester
+ InfoExecutionPeriod -> ExecutionSemester: getExternalId():String
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> FenixFramework: getDomainObject(String):T
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> InfoExecutionDegree: getInfoDegreeCurricularPlan():InfoDegreeCurricularPlan
+ LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> InfoDegreeCurricularPlan: getExternalId():String
+ InfoDegreeCurricularPlan -> InfoDegreeCurricularPlan: getDegreeCurricularPlan():DegreeCurricularPlan
+ InfoDegreeCurricularPlan -> DegreeCurricularPlan: getExternalId():String
+ OPT executionSemester != null
+ 	LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> ExecutionSemester: getExecutionCoursesByDegreeCurricularPlanAndSemesterAndCurricularYearAndName\n(DegreeCurricularPlan,CurricularYear,String):List<ExecutionCourse>
+ 	ALT (name != null)
+ 		ExecutionSemester -> StringNormalizer: normalize(String):String
+ 		StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 		StringNormalizer -> Normalizer: normalize(CharSequence,Form):String
+ 	END
+ 	LOOP for: getAssociatedExecutionCoursesSet()
+ 		ExecutionSemester -> StringNormalizer: normalize(String):String
+ 		StringNormalizer -> StringNormalizer: normalizePreservingCapitalizedLetters(String):String
+ 		ExecutionSemester -> ExecutionCourse: getNome():String
+ 	END
+ 	LOOP while: iterator.hasNext()
+ 		LerDisciplinasExecucaoDeLicenciaturaExecucaoEAnoCurricular -> InfoExecutionCourse: newInfoFromDomain(ExecutionCourse):InfoExecutionCourse
+ 		ALT executionCourse == null
+ 		ELSE else
+ 			InfoExecutionCourse -> InfoExecutionCourse: InfoExecutionCourse(ExecutionCourse)
+ 		END
+ 	END
+ END
+ @enduml

@@ -1,0 +1,81 @@
+@startuml
+ participant "JSP\nJSPEditDegree" as JSPEditDegree order 0
+ participant "services.scientificCouncil.curricularPlans\nEditDegree" as EditDegree order 1
+ participant "predicate\nAccessControl" as AccessControl order 23
+ participant "core.security\nAuthenticate" as Authenticate order 28
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 31
+ participant "core.domain\nUser_Base" as User_Base order 32
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 33
+ participant "domain\nPerson" as Person order 34
+ participant "core.domain\nUser" as User order 39
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 40
+ participant "domain\nDegree" as Degree order 41
+ participant "domain\nEmptyDegree" as EmptyDegree order 51
+ participant "core.domain\nBennu" as Bennu order 52
+ participant "core.domain\nBennu" as Bennu order 53
+ participant "domain\nDegree" as Degree order 54
+ participant "domain\nDegreeInfo" as DegreeInfo order 92
+ participant "i18n\nLocalizedString" as LocalizedString order 93
+ JSPEditDegree -> EditDegree: getConnection()
+ JSPEditDegree <- EditDegree: returnConnection()
+ JSPEditDegree -> EditDegree: executeAction()
+ EditDegree -> EditDegree: run\n(String,String,String,String,DegreeType,Double,GradeScale,String,ExecutionYear,String,String):void
+ EditDegree -> EditDegree: check(AccessControlPredicate<?>):void
+ EditDegree -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ EditDegree -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		EditDegree -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 		END
+ 	END
+ END
+ EditDegree -> FenixFramework: getDomainObject(String):T
+ ALT degreeToEdit == null
+ ELSE else
+ 	OPT !degreeToEdit.getSigla().equalsIgnoreCase(acronym)                || !degreeToEdit.getNameFor(executionYear).getContent(org.fenixedu.academic.util.LocaleUtils.PT).equalsIgnoreCase(name)                || !degreeToEdit.getDegreeType().equals(degreeType)
+ 		EditDegree -> Degree: readNotEmptyDegrees():List<Degree>
+ 		Degree -> Bennu: getInstance():Bennu
+ 		Degree -> Bennu: getDegreesSet():Set<Degree>
+ 		Degree -> Degree: readEmptyDegree():Degree
+ 		Degree -> EmptyDegree: getInstance():EmptyDegree
+ 	END
+ END
+ EditDegree -> Degree: edit\n(String,String,String,DegreeType,Double,GradeScale,String,ExecutionYear):void
+ Degree -> Degree: checkIfCanEdit(DegreeType):void
+ Degree -> Degree: commonFieldsChange\n(String,String,String,GradeScale,ExecutionYear):void
+ Degree -> Degree: getDegreeInfoFor(ExecutionYear):DegreeInfo
+ OPT degreeInfo == null
+ 	Degree -> Degree: tryCreateUsingMostRecentInfo(ExecutionYear):DegreeInfo
+ END
+ Degree -> DegreeInfo: setName(LocalizedString):void
+ Degree -> LocalizedString: LocalizedString()
+ Degree -> LocalizedString: with(Locale,String):LocalizedString
+ Degree -> LocalizedString: with(Locale,String):LocalizedString
+ Degree -> Degree: setNome(String):void
+ Degree -> Degree: setNameEn(String):void
+ Degree -> Degree: setSigla(String):void
+ Degree -> Degree: setGradeScale(GradeScale):void
+ Degree -> Degree: newStructureFieldsChange(DegreeType,Double,String):void
+ Degree -> Degree: setDegreeType(DegreeType):void
+ Degree -> Degree: setEctsCredits(Double):void
+ Degree -> Degree: setPrevailingScientificArea(String):void
+ EditDegree -> Degree: setCode(String):void
+ Degree -> Degree: find(String):Degree
+ Degree -> Degree: setCode(String):void
+ EditDegree -> Degree: setMinistryCode(String):void
+ Degree -> Degree: setMinistryCode(String):void
+ @enduml

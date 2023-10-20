@@ -1,0 +1,48 @@
+@startuml
+ participant "JSP\nJSPEnrollStudentInShifts" as JSPEnrollStudentInShifts order 0
+ participant "services.enrollment.shift\nEnrollStudentInShifts" as EnrollStudentInShifts order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 23
+ participant "dto.enrollment.shift\nShiftEnrollmentErrorReport" as ShiftEnrollmentErrorReport order 24
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 25
+ participant "domain\nShift_Base" as Shift_Base order 26
+ participant "service.filter.enrollment\nClassEnrollmentAuthorizationFilter" as ClassEnrollmentAuthorizationFilter order 27
+ participant "core.security\nAuthenticate" as Authenticate order 40
+ participant "core.domain\nUser" as User order 41
+ participant "domain.student\nRegistration" as Registration order 42
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nClassEnrollmentCondition" as ClassEnrollmentCondition order 43
+ participant "domain\nPerson" as Person order 44
+ JSPEnrollStudentInShifts -> EnrollStudentInShifts: getConnection()
+ JSPEnrollStudentInShifts <- EnrollStudentInShifts: returnConnection()
+ JSPEnrollStudentInShifts -> EnrollStudentInShifts: executeAction()
+ EnrollStudentInShifts -> EnrollStudentInShifts: runEnrollStudentInShifts\n(Registration,String,ExecutionSemester):ShiftEnrollmentErrorReport
+ EnrollStudentInShifts -> ClassEnrollmentAuthorizationFilter: execute(Registration,ExecutionSemester):void
+ ClassEnrollmentAuthorizationFilter -> Authenticate: getUser():User
+ ClassEnrollmentAuthorizationFilter -> User: getPerson():Person
+ OPT RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(person.getUser())
+ 	ClassEnrollmentAuthorizationFilter -> Registration: getPerson():Person
+ END
+ LOOP for: conditions
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentCondition: verify(Registration):void
+ END
+ ClassEnrollmentAuthorizationFilter -> Person: getActiveStudentCurricularPlansSortedByDegreeTypeAndDegreeName\n():SortedSet<StudentCurricularPlan>
+ LOOP for: activeStudentCurricularPlans
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verify\n(StudentCurricularPlan,ExecutionSemester):FenixServiceException
+ END
+ EnrollStudentInShifts -> EnrollStudentInShifts: run\n(Registration,String):ShiftEnrollmentErrorReport
+ EnrollStudentInShifts -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ EnrollStudentInShifts -> ShiftEnrollmentErrorReport: ShiftEnrollmentErrorReport()
+ EnrollStudentInShifts -> FenixFramework: getDomainObject(String):T
+ OPT selectedShift == null
+ 	EnrollStudentInShifts -> ShiftEnrollmentErrorReport: getUnExistingShifts():List
+ END
+ EnrollStudentInShifts -> EnrollStudentInShifts: findShiftOfSameTypeForSameExecutionCourse\n(Registration,Shift):Shift
+ OPT selectedShift != shiftFromStudent
+ 	ALT selectedShift.reserveForStudent(registration)
+ 		OPT shiftFromStudent != null
+ 			EnrollStudentInShifts -> Shift_Base: removeStudents(Registration):void
+ 		END
+ 	ELSE else
+ 		EnrollStudentInShifts -> ShiftEnrollmentErrorReport: getUnAvailableShifts():List
+ 	END
+ END
+ @enduml

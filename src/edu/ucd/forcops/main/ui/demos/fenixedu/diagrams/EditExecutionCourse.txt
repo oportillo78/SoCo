@@ -1,0 +1,75 @@
+@startuml
+ participant "JSP\nJSPEditExecutionCourse" as JSPEditExecutionCourse order 0
+ participant "services.resourceAllocationManager\nEditExecutionCourse" as EditExecutionCourse order 1
+ participant "predicate\nAccessControl" as AccessControl order 23
+ participant "core.security\nAuthenticate" as Authenticate order 28
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 31
+ participant "core.domain\nUser_Base" as User_Base order 32
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 33
+ participant "domain\nPerson" as Person order 34
+ participant "core.domain\nUser" as User order 39
+ participant "dto.resourceAllocationManager\nCourseLoadBean" as CourseLoadBean order 42
+ participant "domain\nExecutionCourse" as ExecutionCourse order 43
+ participant "domain\nCourseLoad" as CourseLoad order 50
+ participant "core.domain\nBennu" as Bennu order 67
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 74
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 75
+ participant "domain\nCourseLoad" as CourseLoad order 76
+ JSPEditExecutionCourse -> EditExecutionCourse: getConnection()
+ JSPEditExecutionCourse <- EditExecutionCourse: returnConnection()
+ JSPEditExecutionCourse -> EditExecutionCourse: executeAction()
+ EditExecutionCourse -> EditExecutionCourse: run(CourseLoadBean):void
+ EditExecutionCourse -> EditExecutionCourse: check(AccessControlPredicate<?>):void
+ EditExecutionCourse -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ EditExecutionCourse -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		EditExecutionCourse -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ OPT bean != null
+ 	EditExecutionCourse -> CourseLoadBean: getExecutionCourse():ExecutionCourse
+ 	EditExecutionCourse -> ExecutionCourse: editCourseLoad(ShiftType,BigDecimal,BigDecimal):void
+ 	ExecutionCourse -> ExecutionCourse: getCourseLoadByShiftType(ShiftType):CourseLoad
+ 	ALT courseLoad == null
+ 		ExecutionCourse -> CourseLoad: CourseLoad\n(ExecutionCourse,ShiftType,BigDecimal,BigDecimal)
+ 		CourseLoad -> CourseLoad: CourseLoad_Base()
+ 		CourseLoad -> CourseLoad: setRootDomainObject(Bennu):void
+ 		CourseLoad -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		CourseLoad -> CourseLoad: setUnitQuantity(BigDecimal):void
+ 		CourseLoad -> CourseLoad: setTotalQuantity(BigDecimal):void
+ 		CourseLoad -> CourseLoad: setExecutionCourse(ExecutionCourse):void
+ 		CourseLoad -> CourseLoad: setType(ShiftType):void
+ 		CourseLoad -> CourseLoad: checkQuantities():void
+ 	ELSE else
+ 		ExecutionCourse -> CourseLoad: edit(BigDecimal,BigDecimal):void
+ 		CourseLoad -> CourseLoad: setUnitQuantity(BigDecimal):void
+ 		CourseLoad -> CourseLoad: setTotalQuantity(BigDecimal):void
+ 		CourseLoad -> CourseLoad: checkQuantities():void
+ 	END
+ 	EditExecutionCourse -> CourseLoadBean: getType():ShiftType
+ 	EditExecutionCourse -> CourseLoadBean: getUnitQuantity():BigDecimal
+ 	EditExecutionCourse -> CourseLoadBean: getTotalQuantity():BigDecimal
+ END
+ @enduml

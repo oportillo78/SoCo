@@ -1,0 +1,27 @@
+@startuml
+ participant "JSP\nJSPLogFirstTimeCandidacyTimestamp" as JSPLogFirstTimeCandidacyTimestamp order 0
+ participant "services.candidacy\nLogFirstTimeCandidacyTimestamp" as LogFirstTimeCandidacyTimestamp order 1
+ participant "domain.candidacy\nStudentCandidacy_Base" as StudentCandidacy_Base order 15
+ participant "domain.log\nFirstTimeCandidacyLog" as FirstTimeCandidacyLog order 16
+ participant "domain.log\nFirstTimeCandidacyLogEntry" as FirstTimeCandidacyLogEntry order 27
+ participant "org.joda.time\nDateTime" as DateTime order 34
+ JSPLogFirstTimeCandidacyTimestamp -> LogFirstTimeCandidacyTimestamp: getConnection()
+ JSPLogFirstTimeCandidacyTimestamp <- LogFirstTimeCandidacyTimestamp: returnConnection()
+ JSPLogFirstTimeCandidacyTimestamp -> LogFirstTimeCandidacyTimestamp: executeAction()
+ LogFirstTimeCandidacyTimestamp -> LogFirstTimeCandidacyTimestamp: logTimestamp\n(StudentCandidacy,FirstTimeCandidacyStage):void
+ LogFirstTimeCandidacyTimestamp -> StudentCandidacy_Base: getFirstTimeCandidacyLog():FirstTimeCandidacyLog
+ OPT log == null
+ 	LogFirstTimeCandidacyTimestamp -> FirstTimeCandidacyLog: FirstTimeCandidacyLog(StudentCandidacy)
+ 	FirstTimeCandidacyLog -> FirstTimeCandidacyLog: FirstTimeCandidacyLog_Base()
+ 	FirstTimeCandidacyLog -> FirstTimeCandidacyLog: AbstractDomainObject()
+ 	FirstTimeCandidacyLog -> FirstTimeCandidacyLog: setStudentCandidacy(StudentCandidacy):void
+ 	LogFirstTimeCandidacyTimestamp -> StudentCandidacy_Base: setFirstTimeCandidacyLog(FirstTimeCandidacyLog):void
+ END
+ LogFirstTimeCandidacyTimestamp -> FirstTimeCandidacyLog: addEntry(FirstTimeCandidacyStage,DateTime):void
+ FirstTimeCandidacyLog -> FirstTimeCandidacyLog: addFirstTimeCandidacyLogEntry(FirstTimeCandidacyLogEntry):void
+ FirstTimeCandidacyLog -> FirstTimeCandidacyLogEntry: FirstTimeCandidacyLogEntry\n(FirstTimeCandidacyStage,DateTime,FirstTimeCandidacyLog)
+ FirstTimeCandidacyLogEntry -> FirstTimeCandidacyLogEntry: setStage(FirstTimeCandidacyStage):void
+ FirstTimeCandidacyLogEntry -> FirstTimeCandidacyLogEntry: setEntryDate(DateTime):void
+ FirstTimeCandidacyLogEntry -> FirstTimeCandidacyLogEntry: setFirstTimeCandidacyLog(FirstTimeCandidacyLog):void
+ LogFirstTimeCandidacyTimestamp -> DateTime: DateTime()
+ @enduml

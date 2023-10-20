@@ -1,0 +1,79 @@
+@startuml
+ participant "JSP\nJSPDeleteProfessorshipWithPerson" as JSPDeleteProfessorshipWithPerson order 0
+ participant "services.teacher\nDeleteProfessorshipWithPerson" as DeleteProfessorshipWithPerson order 1
+ participant "predicate\nAccessControl" as AccessControl order 13
+ participant "core.security\nAuthenticate" as Authenticate order 18
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 21
+ participant "core.domain\nUser_Base" as User_Base order 22
+ participant "domain\nPerson" as Person order 23
+ participant "domain\nProfessorship" as Professorship order 28
+ participant "core.i18n\nBundleUtil" as BundleUtil order 73
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 75
+ participant "domain.exceptions\nDomainException" as DomainException order 76
+ participant "domain\nProfessorshipManagementLog" as ProfessorshipManagementLog order 77
+ participant "domain\nPerson" as Person order 91
+ participant "domain\nExecutionCourse" as ExecutionCourse order 92
+ participant "domain\nExecutionCourse" as ExecutionCourse order 93
+ participant "domain\nProfessorshipPermissions" as ProfessorshipPermissions order 94
+ JSPDeleteProfessorshipWithPerson -> DeleteProfessorshipWithPerson: getConnection()
+ JSPDeleteProfessorshipWithPerson <- DeleteProfessorshipWithPerson: returnConnection()
+ JSPDeleteProfessorshipWithPerson -> DeleteProfessorshipWithPerson: executeAction()
+ DeleteProfessorshipWithPerson -> DeleteProfessorshipWithPerson: run(Person,ExecutionCourse):Boolean
+ DeleteProfessorshipWithPerson -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ DeleteProfessorshipWithPerson -> Person: getProfessorshipByExecutionCourse(ExecutionCourse):Professorship
+ Person -> Person: getProfessorshipsSet():Set<Professorship>
+ DeleteProfessorshipWithPerson -> Person: getProfessorshipByExecutionCourse(ExecutionCourse):Professorship
+ Person -> Person: getProfessorshipsSet():Set<Professorship>
+ DeleteProfessorshipWithPerson -> Professorship: delete():void
+ Professorship -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ Professorship -> Professorship: getDeletionBlockers():Collection<String>
+ Professorship -> Professorship: checkForDeletionBlockers(Collection<String>):void
+ Professorship -> Professorship: checkForDeletionBlockers(Collection<String>):void
+ OPT !getAssociatedSummariesSet().isEmpty()
+ 	Professorship -> BundleUtil: getString(String,String,String[]):String
+ END
+ OPT !getAssociatedShiftProfessorshipSet().isEmpty()
+ 	Professorship -> BundleUtil: getString(String,String,String[]):String
+ END
+ LOOP for: ?
+ 	Professorship -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ END
+ Professorship -> ProfessorshipManagementLog: createLog\n(ExecutionCourse,String,String,String[]):ProfessorshipManagementLog
+ ProfessorshipManagementLog -> ProfessorshipManagementLog: generateLabelDescription(String,String,String[]):String
+ ProfessorshipManagementLog -> BundleUtil: getString(String,String,String[]):String
+ ProfessorshipManagementLog -> ProfessorshipManagementLog: createProfessorshipManagementLog\n(ExecutionCourse,String):ProfessorshipManagementLog
+ ProfessorshipManagementLog -> ProfessorshipManagementLog: ProfessorshipManagementLog(ExecutionCourse,String)
+ ProfessorshipManagementLog -> ProfessorshipManagementLog: ProfessorshipManagementLog_Base()
+ OPT getExecutionCourse() == null
+ 	ProfessorshipManagementLog -> ProfessorshipManagementLog: setExecutionCourse(ExecutionCourse):void
+ END
+ ProfessorshipManagementLog -> ProfessorshipManagementLog: setDescription(String):void
+ Professorship -> Professorship: getExecutionCourse():ExecutionCourse
+ Professorship -> Professorship: getPerson():Person
+ Professorship -> Person: getPresentationName():String
+ Professorship -> Professorship: getExecutionCourse():ExecutionCourse
+ Professorship -> ExecutionCourse: getNome():String
+ Professorship -> Professorship: getExecutionCourse():ExecutionCourse
+ Professorship -> ExecutionCourse: getDegreePresentationString():String
+ Professorship -> Professorship: setExecutionCourse(ExecutionCourse):void
+ Professorship -> Professorship: setPerson(Person):void
+ OPT super.getPermissions() != null
+ 	Professorship -> Professorship: getPermissions():ProfessorshipPermissions
+ 	Professorship -> ProfessorshipPermissions: delete():void
+ 	ProfessorshipPermissions -> ProfessorshipPermissions: setRootDomainObject(Bennu):void
+ 	ProfessorshipPermissions -> ProfessorshipPermissions: setProfessorship(Professorship):void
+ 	ProfessorshipPermissions -> ProfessorshipPermissions: deleteDomainObject():void
+ END
+ Professorship -> Professorship: setRootDomainObject(Bennu):void
+ Professorship -> Professorship: setCreator(Person):void
+ Professorship -> Professorship: deleteDomainObject():void
+ @enduml

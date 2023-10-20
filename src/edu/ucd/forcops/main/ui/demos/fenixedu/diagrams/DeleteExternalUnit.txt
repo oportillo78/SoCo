@@ -1,0 +1,194 @@
+@startuml
+ participant "JSP\nJSPDeleteExternalUnit" as JSPDeleteExternalUnit order 0
+ participant "services.administrativeOffice.externalUnits\nDeleteExternalUnit" as DeleteExternalUnit order 1
+ participant "domain.organizationalStructure\nUnit" as Unit order 7
+ participant "domain.organizationalStructure\nAccountability" as Accountability order 176
+ participant "domain.organizationalStructure\nUnitName" as UnitName order 177
+ participant "domain.organizationalStructure\nAccountability" as Accountability order 178
+ participant "domain.organizationalStructure\nUnitName" as UnitName order 189
+ participant "domain.organizationalStructure\nAccountability" as Accountability order 190
+ participant "domain.organizationalStructure\nUnitName" as UnitName order 201
+ participant "domain.organizationalStructure\nUnitNamePart" as UnitNamePart order 214
+ participant "domain.organizationalStructure\nAccountability" as Accountability order 219
+ participant "domain.organizationalStructure\nUnitName" as UnitName order 230
+ participant "pt.ist.fenixframework.dml\nDeletionBlockerListener" as DeletionBlockerListener order 231
+ participant "domain.exceptions\nDomainException" as DomainException order 232
+ participant "domain.organizationalStructure\nAccountability" as Accountability order 233
+ participant "core.domain\nSender" as Sender order 244
+ participant "domain.organizationalStructure\nUnitName" as UnitName order 301
+ JSPDeleteExternalUnit -> DeleteExternalUnit: getConnection()
+ JSPDeleteExternalUnit <- DeleteExternalUnit: returnConnection()
+ JSPDeleteExternalUnit -> DeleteExternalUnit: executeAction()
+ DeleteExternalUnit -> DeleteExternalUnit: run(Unit):void
+ ALT externalUnit.isOfficialExternal()
+ 	DeleteExternalUnit -> Unit: delete():void
+ 	Unit -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 	Unit -> Unit: getDeletionBlockers():Collection<String>
+ 	Unit -> Unit: checkForDeletionBlockers(Collection<String>):void
+ 	LOOP for: ?
+ 		Unit -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ 	END
+ 	OPT hasAnyParentUnits()
+ 		Unit -> Unit: getParentsSet():Set<Accountability>
+ 		Unit -> Accountability: delete():void
+ 		Accountability -> Accountability: setAccountabilityType(AccountabilityType):void
+ 		Accountability -> Accountability: setChildParty(Party):void
+ 		Accountability -> Accountability: setParentParty(Party):void
+ 		Accountability -> Accountability: setRootDomainObject(Bennu):void
+ 		Accountability -> Accountability: deleteDomainObject():void
+ 	END
+ 	OPT super.getSender() != null
+ 		Unit -> Unit: getSender():Sender
+ 		Unit -> Unit: setSender(Sender):void
+ 		Unit -> Sender: delete():void
+ 		Sender -> Sender: getMessageSet():Set<Message>
+ 		Sender -> Sender: setMemberGroup(PersistentGroup):void
+ 		Sender -> Sender: getRecipientSet():Set<PersistentGroup>
+ 		Sender -> Sender: getOptedInUserSet():Set<User>
+ 		Sender -> Sender: getInvitedUserSet():Set<User>
+ 		Sender -> Sender: setMessagingSystem(MessagingSystem):void
+ 		Sender -> Sender: deleteDomainObject():void
+ 	END
+ 	Unit -> Unit: getUnitName():UnitName
+ 	Unit -> UnitName: delete():void
+ 	Unit -> Unit: setRootDomainObjectForEarthUnit(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForExternalInstitutionUnit\n(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForInstitutionUnit(Bennu):void
+ 	Unit -> Unit: setCampus(Space):void
+ 	Unit -> Unit: setUnitAcronym(UnitAcronym):void
+ 	Unit -> Unit: setAdministrativeOffice(AdministrativeOffice):void
+ 	Unit -> Unit: delete():void
+ 	Unit -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 	Unit -> Unit: getDeletionBlockers():Collection<String>
+ 	Unit -> Unit: checkForDeletionBlockers(Collection<String>):void
+ 	LOOP for: ?
+ 		Unit -> DeletionBlockerListener: getDeletionBlockers(T,Collection<String>):void
+ 	END
+ 	OPT hasAnyParentUnits()
+ 		Unit -> Unit: getParentsSet():Set<Accountability>
+ 		Unit -> Accountability: delete():void
+ 		Accountability -> Accountability: setAccountabilityType(AccountabilityType):void
+ 		Accountability -> Accountability: setChildParty(Party):void
+ 		Accountability -> Accountability: setParentParty(Party):void
+ 		Accountability -> Accountability: setRootDomainObject(Bennu):void
+ 		Accountability -> Accountability: deleteDomainObject():void
+ 	END
+ 	OPT super.getSender() != null
+ 		Unit -> Unit: getSender():Sender
+ 		Unit -> Unit: setSender(Sender):void
+ 		Unit -> Sender: delete():void
+ 		Sender -> Sender: getMessageSet():Set<Message>
+ 		Sender -> Sender: setMemberGroup(PersistentGroup):void
+ 		Sender -> Sender: getRecipientSet():Set<PersistentGroup>
+ 		Sender -> Sender: getOptedInUserSet():Set<User>
+ 		Sender -> Sender: getInvitedUserSet():Set<User>
+ 		Sender -> Sender: setMessagingSystem(MessagingSystem):void
+ 		Sender -> Sender: deleteDomainObject():void
+ 	END
+ 	Unit -> Unit: getUnitName():UnitName
+ 	Unit -> UnitName: delete():void
+ 	Unit -> Unit: setRootDomainObjectForEarthUnit(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForExternalInstitutionUnit\n(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForInstitutionUnit(Bennu):void
+ 	Unit -> Unit: setCampus(Space):void
+ 	Unit -> Unit: setUnitAcronym(UnitAcronym):void
+ 	Unit -> Unit: setAdministrativeOffice(AdministrativeOffice):void
+ 	Unit -> Unit: delete():void
+ 	Unit -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 	Unit -> Unit: getDeletionBlockers():Collection<String>
+ 	OPT hasAnyParentUnits()
+ 		Unit -> Unit: getParentsSet():Set<Accountability>
+ 		Unit -> Accountability: delete():void
+ 		Accountability -> Accountability: setAccountabilityType(AccountabilityType):void
+ 		Accountability -> Accountability: setChildParty(Party):void
+ 		Accountability -> Accountability: setParentParty(Party):void
+ 		Accountability -> Accountability: setRootDomainObject(Bennu):void
+ 		Accountability -> Accountability: deleteDomainObject():void
+ 	END
+ 	OPT super.getSender() != null
+ 		Unit -> Unit: getSender():Sender
+ 		Unit -> Unit: setSender(Sender):void
+ 		Unit -> Sender: delete():void
+ 		Sender -> Sender: getMessageSet():Set<Message>
+ 		Sender -> Sender: setMemberGroup(PersistentGroup):void
+ 		Sender -> Sender: getRecipientSet():Set<PersistentGroup>
+ 		Sender -> Sender: getOptedInUserSet():Set<User>
+ 		Sender -> Sender: getInvitedUserSet():Set<User>
+ 		Sender -> Sender: setMessagingSystem(MessagingSystem):void
+ 		Sender -> Sender: deleteDomainObject():void
+ 	END
+ 	Unit -> Unit: getUnitName():UnitName
+ 	Unit -> UnitName: delete():void
+ 	UnitName -> UnitName: getUnitNamePartSet():Set<UnitNamePart>
+ 	UnitName -> UnitName: getUnitNamePartSet():Set<UnitNamePart>
+ 	UnitName -> UnitName: setUnit(Unit):void
+ 	UnitName -> UnitName: setRootDomainObject(Bennu):void
+ 	UnitName -> UnitName: deleteDomainObject():void
+ 	LOOP for: unitNameParts
+ 		UnitName -> UnitNamePart: deleteIfEmpty():void
+ 		OPT getUnitNameSet().isEmpty()
+ 			UnitNamePart -> UnitNamePart: setRootDomainObject(Bennu):void
+ 			UnitNamePart -> UnitNamePart: deleteDomainObject():void
+ 		END
+ 	END
+ 	Unit -> Unit: setRootDomainObjectForEarthUnit(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForExternalInstitutionUnit\n(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForInstitutionUnit(Bennu):void
+ 	Unit -> Unit: setCampus(Space):void
+ 	Unit -> Unit: setUnitAcronym(UnitAcronym):void
+ 	Unit -> Unit: setAdministrativeOffice(AdministrativeOffice):void
+ 	Unit -> Unit: delete():void
+ 	Unit -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 	Unit -> Unit: getDeletionBlockers():Collection<String>
+ 	OPT hasAnyParentUnits()
+ 		Unit -> Unit: getParentsSet():Set<Accountability>
+ 		Unit -> Accountability: delete():void
+ 		Accountability -> Accountability: setAccountabilityType(AccountabilityType):void
+ 		Accountability -> Accountability: setChildParty(Party):void
+ 		Accountability -> Accountability: setParentParty(Party):void
+ 		Accountability -> Accountability: setRootDomainObject(Bennu):void
+ 		Accountability -> Accountability: deleteDomainObject():void
+ 	END
+ 	OPT super.getSender() != null
+ 		Unit -> Unit: getSender():Sender
+ 		Unit -> Unit: setSender(Sender):void
+ 		Unit -> Sender: delete():void
+ 		Sender -> Sender: getMessageSet():Set<Message>
+ 		Sender -> Sender: setMemberGroup(PersistentGroup):void
+ 		Sender -> Sender: getRecipientSet():Set<PersistentGroup>
+ 		Sender -> Sender: getOptedInUserSet():Set<User>
+ 		Sender -> Sender: getInvitedUserSet():Set<User>
+ 		Sender -> Sender: setMessagingSystem(MessagingSystem):void
+ 		Sender -> Sender: deleteDomainObject():void
+ 	END
+ 	Unit -> Unit: getUnitName():UnitName
+ 	Unit -> UnitName: delete():void
+ 	Unit -> Unit: setRootDomainObjectForEarthUnit(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForExternalInstitutionUnit\n(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForInstitutionUnit(Bennu):void
+ 	Unit -> Unit: setCampus(Space):void
+ 	Unit -> Unit: setUnitAcronym(UnitAcronym):void
+ 	Unit -> Unit: setAdministrativeOffice(AdministrativeOffice):void
+ 	Unit -> Unit: delete():void
+ 	Unit -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 	Unit -> Unit: getDeletionBlockers():Collection<String>
+ 	OPT hasAnyParentUnits()
+ 		Unit -> Unit: getParentsSet():Set<Accountability>
+ 		Unit -> Accountability: delete():void
+ 	END
+ 	OPT super.getSender() != null
+ 		Unit -> Unit: getSender():Sender
+ 		Unit -> Unit: setSender(Sender):void
+ 		Unit -> Sender: delete():void
+ 	END
+ 	Unit -> Unit: getUnitName():UnitName
+ 	Unit -> UnitName: delete():void
+ 	Unit -> Unit: setRootDomainObjectForEarthUnit(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForExternalInstitutionUnit\n(Bennu):void
+ 	Unit -> Unit: setRootDomainObjectForInstitutionUnit(Bennu):void
+ 	Unit -> Unit: setCampus(Space):void
+ 	Unit -> Unit: setUnitAcronym(UnitAcronym):void
+ 	Unit -> Unit: setAdministrativeOffice(AdministrativeOffice):void
+ 	Unit -> Unit: delete():void
+ END
+ @enduml

@@ -1,0 +1,94 @@
+@startuml
+ participant "JSP\nJSPDeleteShift" as JSPDeleteShift order 0
+ participant "services.resourceAllocationManager\nDeleteShift" as DeleteShift order 1
+ participant "predicate\nAccessControl" as AccessControl order 19
+ participant "core.security\nAuthenticate" as Authenticate order 25
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 28
+ participant "core.domain\nUser_Base" as User_Base order 29
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 30
+ participant "domain\nPerson" as Person order 32
+ participant "core.domain\nUser" as User order 38
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 41
+ participant "dto\nInfoShift" as InfoShift order 42
+ participant "domain\nShift" as Shift order 47
+ participant "domain\nShift" as Shift order 48
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 76
+ participant "domain.exceptions\nDomainException" as DomainException order 77
+ participant "domain\nShiftGroupingProperties" as ShiftGroupingProperties order 78
+ participant "domain\nExecutionCourse" as ExecutionCourse order 87
+ participant "domain\nCourseLoad_Base" as CourseLoad_Base order 102
+ participant "domain\nShiftType" as ShiftType order 103
+ participant "domain\nShift_Base" as Shift_Base order 104
+ JSPDeleteShift -> DeleteShift: getConnection()
+ JSPDeleteShift <- DeleteShift: returnConnection()
+ JSPDeleteShift -> DeleteShift: executeAction()
+ DeleteShift -> DeleteShift: run(InfoShift):void
+ DeleteShift -> DeleteShift: check(AccessControlPredicate<?>):void
+ DeleteShift -> AccessControl: getPerson():Person
+ AccessControl -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ALT userView == null
+ ELSE else
+ 	AccessControl -> User_Base: getPerson():Person
+ END
+ DeleteShift -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		DeleteShift -> Person: getUsername():String
+ 		Person -> Person: getUser():User
+ 		ALT user == null
+ 		ELSE else
+ 			Person -> User: getUsername():String
+ 			User -> User: getUsername():String
+ 		END
+ 	END
+ END
+ DeleteShift -> FenixFramework: getDomainObject(String):T
+ DeleteShift -> InfoShift: getExternalId():String
+ InfoShift -> InfoShift: getShift():Shift
+ InfoShift -> Shift: getExternalId():String
+ DeleteShift -> Shift: delete():void
+ Shift -> Shift: check(T,AccessControlPredicate<T>):void
+ Shift -> AccessControl: getPerson():Person
+ Shift -> AccessControlPredicate: evaluate(E):boolean
+ OPT !result
+ 	ALT requester == null
+ 	ELSE else
+ 		Shift -> Person: getUsername():String
+ 	END
+ 	Shift -> DomainObject: getExternalId():String
+ END
+ Shift -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ Shift -> Shift: getDeletionBlockers():Collection<String>
+ Shift -> Shift: getExecutionCourse():ExecutionCourse
+ Shift -> Shift: getAssociatedClassesSet():Set<SchoolClass>
+ Shift -> Shift: getCourseLoadsSet():Set<CourseLoad>
+ OPT getShiftGroupingProperties() != null
+ 	Shift -> Shift: getShiftGroupingProperties():ShiftGroupingProperties
+ 	Shift -> ShiftGroupingProperties: delete():void
+ 	ShiftGroupingProperties -> ShiftGroupingProperties: setGrouping(Grouping):void
+ 	ShiftGroupingProperties -> ShiftGroupingProperties: setShift(Shift):void
+ 	ShiftGroupingProperties -> ShiftGroupingProperties: setRootDomainObject(Bennu):void
+ 	ShiftGroupingProperties -> ShiftGroupingProperties: deleteDomainObject():void
+ END
+ Shift -> Shift: setRootDomainObject(Bennu):void
+ Shift -> Shift: deleteDomainObject():void
+ Shift -> ExecutionCourse: setShiftNames():void
+ ExecutionCourse -> ExecutionCourse: constructSortedSet\n(Collection<T>,Comparator<? super T>):SortedSet<T>
+ ExecutionCourse -> ExecutionCourse: getAssociatedShifts():Set<Shift>
+ LOOP for: getCourseLoadsSet()
+ 	ExecutionCourse -> CourseLoad_Base: getShiftsSet():Set<Shift>
+ END
+ LOOP for: shifts
+ 	ExecutionCourse -> ExecutionCourse: constructShiftName(Shift,int):String
+ 	LOOP for: shift.getSortedTypes()
+ 		ExecutionCourse -> ShiftType: getSiglaTipoAula():String
+ 	END
+ 	ExecutionCourse -> ExecutionCourse: getSigla():String
+ 	ExecutionCourse -> Shift_Base: setNome(String):void
+ END
+ @enduml

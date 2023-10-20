@@ -1,0 +1,122 @@
+@startuml
+scale .5
+participant "JSP\nJSPEditMarkSheet" as JSPEditMarkSheet order 0
+participant "services.administrativeOffice.gradeSubmission\nEditMarkSheet" as EditMarkSheet order 1
+participant "domain\nMarkSheet" as MarkSheet order 7
+participant "predicate\nAccessControl" as AccessControl order 118
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 119
+participant "domain\nPerson" as Person order 120
+participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 121
+participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 122
+participant "domain\nExecutionSemester_Base" as ExecutionSemester_Base order 123
+participant "domain\nEvaluationSeason" as EvaluationSeason order 124
+participant "java.util.stream\nStream" as Stream order 125
+participant "java.util.stream\nCollectors" as Collectors order 126
+participant "java.util\nDate" as Date order 127
+participant "org.joda.time\nDateTime" as DateTime order 128
+participant "domain\nCurricularCourse" as CurricularCourse order 129
+participant "domain\nTeacher_Base" as Teacher_Base order 130
+participant "domain\nExecutionSemester" as ExecutionSemester order 131
+participant "domain\nExecutionSemester" as ExecutionSemester order 132
+participant "domain\nTeacher" as Teacher order 133
+participant "org.joda.time\nDateTime" as DateTime order 134
+participant "domain\nEvaluationSeason" as EvaluationSeason order 135
+participant "domain\nEnrolmentEvaluation_Base" as EnrolmentEvaluation_Base order 136
+participant "util\nFenixDigestUtils" as FenixDigestUtils order 137
+participant "domain\nCurricularCourse" as CurricularCourse order 138
+participant "org.joda.time\nDateTime" as DateTime order 141
+JSPEditMarkSheet -> EditMarkSheet: getConnection()
+JSPEditMarkSheet <- EditMarkSheet: returnConnection()
+JSPEditMarkSheet -> EditMarkSheet: executeAction()
+EditMarkSheet -> EditMarkSheet: run(MarkSheet,Teacher,Date):void
+EditMarkSheet -> MarkSheet: editNormal(Teacher,Date):void
+MarkSheet -> MarkSheet: check(T,AccessControlPredicate<T>):void
+MarkSheet -> AccessControl: getPerson():Person
+MarkSheet -> AccessControlPredicate: evaluate(E):boolean
+opt !result
+	alt requester == null
+	else else
+		MarkSheet -> Person: getUsername():String
+	end
+	MarkSheet -> DomainObject: getExternalId():String
+end
+alt isConfirmed()
+else else
+	alt hasMarkSheetState(MarkSheetState.RECTIFICATION_NOT_CONFIRMED)
+	else else
+		MarkSheet -> MarkSheet: checkIfTeacherIsResponsibleOrCoordinator\n(CurricularCourse,ExecutionSemester,Teacher,EvaluationSeason):void
+		MarkSheet -> MarkSheet: getCurricularCourse():CurricularCourse
+		MarkSheet -> MarkSheet: getExecutionPeriod():ExecutionSemester
+		MarkSheet -> MarkSheet: getEvaluationSeason():EvaluationSeason
+		MarkSheet -> MarkSheet: checkIfEvaluationDateIsInExamsPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,EvaluationSeason):void
+		MarkSheet -> DegreeCurricularPlan: getExecutionDegreeByYear(ExecutionYear):ExecutionDegree
+		MarkSheet -> ExecutionSemester_Base: getExecutionYear():ExecutionYear
+		alt executionDegree == null
+		else else
+			opt !(season.isSpecialAuthorization() || (evaluationDate != null && season.getExamPeriods(executionDegree,executionSemester).anyMatch(o1 -> o1.nestedOccupationPeriodsContainsDay(YearMonthDay.fromDateFields(evaluationDate)))))
+				MarkSheet -> EvaluationSeason: getExamPeriods\n(ExecutionDegree,ExecutionSemester):Stream<OccupationPeriod>
+				MarkSheet -> Stream: map\n(Function<? super T,? extends R>):Stream<R>
+				MarkSheet -> Collectors: joining\n(CharSequence):Collector<CharSequence,?,String>
+				MarkSheet -> Stream: collect(Collector<? super T,A,R>):R			
+			end
+		end
+		MarkSheet -> MarkSheet: getCurricularCourse():CurricularCourse
+		MarkSheet -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+		CurricularCourse -> CurricularCourse: getParentDegree\nCurricularPlan():DegreeCurricularPlan
+		MarkSheet -> MarkSheet: getExecutionPeriod():ExecutionSemester
+		MarkSheet -> MarkSheet: getEvaluationSeason():EvaluationSeason
+		MarkSheet -> MarkSheet: getEvaluationDateDateTime():DateTime
+		MarkSheet -> DateTime: toDate():Date
+		MarkSheet -> MarkSheet: setResponsibleTeacher(Teacher):void
+		alt isConfirmed()
+		else else
+			MarkSheet -> MarkSheet: setResponsibleTeacher(Teacher):void
+		end
+		MarkSheet -> MarkSheet: setEvaluationDate(Date):void
+		alt isConfirmed()
+		else else
+			alt evaluationDate == null
+				MarkSheet -> MarkSheet: setEvaluationDateDateTime(DateTime):void
+			else else
+				MarkSheet -> MarkSheet: setEvaluationDateDateTime(DateTime):void
+				MarkSheet -> Date: getTime():long
+				MarkSheet -> DateTime: newDateTime(long)
+			end
+		end
+		MarkSheet -> MarkSheet: editMarkSheetEnrolmentEvaluationsWithSameEvaluationDate\n(Teacher,Date,Date,Set<EnrolmentEvaluation>):void
+		MarkSheet -> MarkSheet: check(T,AccessControlPredicate<T>):void
+		loop for: enrolmentEvaluationsToEdit
+			opt DateFormatUtil.compareDates(dateFormat, enrolmentEvaluation.getExamDate(), oldEvaluationDate) == 0
+				MarkSheet -> MarkSheet: checkIfEvaluationDateIsInExamsPeriod\n(DegreeCurricularPlan,ExecutionSemester,Date,EvaluationSeason):void
+				MarkSheet -> MarkSheet: getCurricularCourse():CurricularCourse
+				MarkSheet -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+				MarkSheet -> MarkSheet: getExecutionPeriod():ExecutionSemester
+				MarkSheet -> MarkSheet: getEvaluationSeason():EvaluationSeason
+				MarkSheet -> EnrolmentEvaluation_Base: edit(Person,Date):void
+				MarkSheet -> Teacher_Base: getPerson():Person
+			end
+		end
+		MarkSheet -> MarkSheet: getEnrolmentEvaluationsSet():Set<EnrolmentEvaluation>
+		MarkSheet -> MarkSheet: generateCheckSum():void
+		opt isNotConfirmed()
+			MarkSheet -> MarkSheet: getExecutionPeriod():ExecutionSemester
+			MarkSheet -> ExecutionSemester: getExecutionYear():ExecutionYear
+			MarkSheet -> ExecutionSemester: getYear():String
+			MarkSheet -> MarkSheet: getExecutionPeriod():ExecutionSemester
+			MarkSheet -> ExecutionSemester: getSemester():Integer
+			MarkSheet -> MarkSheet: getResponsibleTeacher():Teacher
+			MarkSheet -> Teacher: getPerson():Person
+			MarkSheet -> Teacher: getUsername():String
+			MarkSheet -> MarkSheet: getEvaluationDateDateTime():DateTime
+			MarkSheet -> DateTime: toString(String):String
+			MarkSheet -> MarkSheet: getEvaluationSeason():EvaluationSeason
+			MarkSheet -> EvaluationSeason: getExternalId():String
+			loop for: getEnrolmentEvaluationsSortedByStudentNumber()
+				MarkSheet -> EnrolmentEvaluation_Base: getCheckSum():String
+			end
+			MarkSheet -> MarkSheet: setCheckSum(String):void
+			MarkSheet -> FenixDigestUtils: createDigest(String):String
+		end
+	end
+end
+@enduml

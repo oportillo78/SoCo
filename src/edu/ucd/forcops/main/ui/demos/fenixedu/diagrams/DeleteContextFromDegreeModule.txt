@@ -1,0 +1,54 @@
+@startuml
+ participant "JSP\nJSPDeleteContextFromDegreeModule" as JSPDeleteContextFromDegreeModule order 0
+ participant "services.bolonhaManager\nDeleteContextFromDegreeModule" as DeleteContextFromDegreeModule order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 11
+ participant "domain.degreeStructure\nDegreeModule" as DegreeModule order 12
+ participant "domain.degreeStructure\nContext" as Context order 17
+ participant "predicate\nAccessControl" as AccessControl order 68
+ participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 69
+ participant "domain\nPerson" as Person order 70
+ participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 71
+ JSPDeleteContextFromDegreeModule -> DeleteContextFromDegreeModule: getConnection()
+ JSPDeleteContextFromDegreeModule <- DeleteContextFromDegreeModule: returnConnection()
+ JSPDeleteContextFromDegreeModule -> DeleteContextFromDegreeModule: executeAction()
+ DeleteContextFromDegreeModule -> DeleteContextFromDegreeModule: run(String,String):void
+ DeleteContextFromDegreeModule -> FenixFramework: getDomainObject(String):T
+ DeleteContextFromDegreeModule -> FenixFramework: getDomainObject(String):T
+ DeleteContextFromDegreeModule -> DegreeModule: deleteContext(Context):void
+ OPT getParentContextsSet().contains(context)
+ 	DegreeModule -> Context: delete():void
+ 	Context -> Context: getChildDegreeModule():DegreeModule
+ 	Context -> Context: setChildDegreeModule(DegreeModule):void
+ 	Context -> Context: check(T,AccessControlPredicate<T>):void
+ 	Context -> AccessControl: getPerson():Person
+ 	Context -> AccessControlPredicate: evaluate(E):boolean
+ 	OPT !result
+ 		ALT requester == null
+ 		ELSE else
+ 			Context -> Person: getUsername():String
+ 		END
+ 		Context -> DomainObject: getExternalId():String
+ 	END
+ 	Context -> Context: setChildDegreeModule(DegreeModule):void
+ 	Context -> Context: check(T,AccessControlPredicate<T>):void
+ 	Context -> Context: setChildDegreeModule(DegreeModule):void
+ 	Context -> Context: check(T,AccessControlPredicate<T>):void
+ 	Context -> Context: setChildDegreeModule(DegreeModule):void
+ 	Context -> Context: checkCurriculumLines(DegreeModule):void
+ 	Context -> Context: setCurricularPeriod(CurricularPeriod):void
+ 	Context -> Context: check(T,AccessControlPredicate<T>):void
+ 	Context -> Context: setCurricularPeriod(CurricularPeriod):void
+ 	Context -> Context: setParentCourseGroup(CourseGroup):void
+ 	Context -> Context: check(T,AccessControlPredicate<T>):void
+ 	Context -> Context: setParentCourseGroup(CourseGroup):void
+ 	Context -> Context: setBeginExecutionPeriod(ExecutionSemester):void
+ 	Context -> Context: setBeginExecutionPeriod(ExecutionSemester):void
+ 	Context -> Context: setEndExecutionPeriod(ExecutionSemester):void
+ 	Context -> Context: setRootDomainObject(Bennu):void
+ 	Context -> Context: getAssociatedWrittenEvaluationsSet():Set<WrittenEvaluation>
+ 	Context -> Context: deleteDomainObject():void
+ END
+ OPT getParentContextsSet().isEmpty()
+ 	DegreeModule -> DegreeModule: delete():void
+ END
+ @enduml

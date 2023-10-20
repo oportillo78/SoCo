@@ -1,0 +1,46 @@
+@startuml
+participant "JSP\nJSPDeleteCredits" as JSPDeleteCredits order 0
+participant "services.administrativeOffice.dismissal\nDeleteCredits" as DeleteCredits order 1
+participant "domain.studentCurriculum\nCredits" as Credits order 9
+participant "predicate\nAccessControl" as AccessControl order 46
+participant "predicate\nAccessControlPredicate" as AccessControlPredicate order 47
+participant "domain\nPerson" as Person order 48
+participant "pt.ist.fenixframework\nDomainObject" as DomainObject order 49
+participant "java.util\nSet" as Set order 50
+participant "java.util\nSet" as Set order 51
+JSPDeleteCredits -> DeleteCredits: getConnection()
+JSPDeleteCredits <- DeleteCredits: returnConnection()
+JSPDeleteCredits -> DeleteCredits: executeAction()
+DeleteCredits -> DeleteCredits: run(StudentCurricularPlan,String[]):void
+loop for: creditsIDs
+	DeleteCredits -> DeleteCredits: getCreditsByID(StudentCurricularPlan,String):Credits
+	DeleteCredits -> Credits: delete():void
+	Credits -> Credits: check(T,AccessControlPredicate<T>):void
+	Credits -> AccessControl: getPerson():Person
+	Credits -> AccessControlPredicate: evaluate(E):boolean	
+	opt !result
+		alt requester == null
+		else else
+			Credits -> Person: getUsername():String
+		end
+		Credits -> DomainObject: getExternalId():String
+	end	
+	Credits -> Credits: disconnect():void
+	loop while: !getDismissalsSet().isEmpty()
+		Credits -> Credits: getDismissalsSet():Set<Dismissal>
+		Credits -> Set: iterator():Iterator<E>
+		Credits -> Set: next():E
+		Credits -> Set: deleteFromCredits():void
+	end
+	loop while: !getEnrolmentsSet().isEmpty()
+		Credits -> Credits: getEnrolmentsSet():Set<EnrolmentWrapper>
+		Credits -> Set: iterator():Iterator<E>
+		Credits -> Set: next():E
+		Credits -> Set: delete():void
+	end
+	Credits -> Credits: setStudentCurricularPlan(StudentCurricularPlan):void
+	Credits -> Credits: setRootDomainObject(Bennu):void
+	Credits -> Credits: setExecutionPeriod(ExecutionSemester):void
+	Credits -> Credits: deleteDomainObject():void
+end
+@enduml
