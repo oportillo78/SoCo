@@ -1,0 +1,89 @@
+@startuml
+ participant "JSP\nJSPWriteMarks" as JSPWriteMarks order 0
+ participant "services.teacher\nWriteMarks" as WriteMarks order 1
+ participant "domain\nAttends" as Attends order 37
+ participant "domain.student\nRegistration" as Registration order 40
+ participant "domain.student\nStudent" as Student order 47
+ participant "domain.exceptions\nDomainException" as DomainException order 48
+ participant "domain\nMark" as Mark order 53
+ participant "domain\nEvaluation" as Evaluation order 64
+ participant "domain\nMark" as Mark order 67
+ participant "core.domain\nBennu" as Bennu order 84
+ participant "domain\nEvaluationManagementLog" as EvaluationManagementLog order 85
+ participant "core.i18n\nBundleUtil" as BundleUtil order 100
+ participant "domain\nExecutionCourse" as ExecutionCourse order 101
+ participant "domain\nDegree_Base" as Degree_Base order 108
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 109
+ JSPWriteMarks -> WriteMarks: getConnection()
+ JSPWriteMarks <- WriteMarks: returnConnection()
+ JSPWriteMarks -> WriteMarks: executeAction()
+ WriteMarks -> WriteMarks: writeByAttend(String,String,List<AttendsMark>):void
+ WriteMarks -> FenixFramework: getDomainObject(String):T
+ WriteMarks -> FenixFramework: getDomainObject(String):T
+ WriteMarks -> WriteMarks: writeMarks\n(List<AttendsMark>,ExecutionCourse,Evaluation):void
+ LOOP for: marks
+ 	WriteMarks -> WriteMarks: findAttend(ExecutionCourse,String):Attends
+ 	ALT attend.getEnrolment() != null && attend.getEnrolment().isImpossible()
+ 		WriteMarks -> Attends: getRegistration():Registration
+ 		Attends -> Attends: getAluno():Registration
+ 		WriteMarks -> Registration: getStudent():Student
+ 		WriteMarks -> Registration: getNumber():Integer
+ 		ALT (super.getNumber() != null)
+ 			Registration -> Registration: getNumber():Integer
+ 		ELSE else
+ 			Registration -> Registration: getStudent():Student
+ 			Registration -> Student: getNumber():Integer
+ 		END
+ 		WriteMarks -> DomainException: DomainException(String,String[])
+ 		DomainException -> DomainException: DomainException(String,String,String[])
+ 		DomainException -> DomainException: DomainException(Status,String,String,String[])
+ 	ELSE else
+ 		WriteMarks -> Attends: getMarkByEvaluation(Evaluation):Mark
+ 		ALT isToDeleteMark(markValue)
+ 			OPT mark != null
+ 				WriteMarks -> Mark: delete():void
+ 				Mark -> Mark: setAttend(Attends):void
+ 				Mark -> Mark: setEvaluation(Evaluation):void
+ 				Mark -> Mark: setRootDomainObject(Bennu):void
+ 				Mark -> Mark: deleteDomainObject():void
+ 			END
+ 		ELSE else
+ 			ALT mark == null
+ 				WriteMarks -> Evaluation: addNewMark(Attends,String):Mark
+ 				Evaluation -> Mark: Mark(Attends,Evaluation,String)
+ 				Mark -> Mark: Mark()
+ 				Mark -> Mark: Mark_Base()
+ 				Mark -> Mark: setRootDomainObject(Bennu):void
+ 				Mark -> Bennu: getInstance():Bennu
+ 				Mark -> Mark: setAttend(Attends):void
+ 				Mark -> Mark: setEvaluation(Evaluation):void
+ 				Mark -> Mark: setMark(String):void
+ 				Mark -> Mark: setPublishedMark(String):void
+ 			ELSE else
+ 				WriteMarks -> Mark: setMark(String):void
+ 				ALT validateMark(mark)
+ 					Mark -> Mark: setMark(String):void
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ WriteMarks -> EvaluationManagementLog: createLog\n(ExecutionCourse,String,String,String[]):EvaluationManagementLog
+ EvaluationManagementLog -> EvaluationManagementLog: generateLabelDescription(String,String,String[]):String
+ EvaluationManagementLog -> BundleUtil: getString(String,String,String[]):String
+ EvaluationManagementLog -> EvaluationManagementLog: createEvaluationManagementLog\n(ExecutionCourse,String):EvaluationManagementLog
+ EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog(ExecutionCourse,String)
+ EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog_Base()
+ OPT getExecutionCourse() == null
+ 	EvaluationManagementLog -> EvaluationManagementLog: setExecutionCourse(ExecutionCourse):void
+ END
+ EvaluationManagementLog -> EvaluationManagementLog: setDescription(String):void
+ WriteMarks -> Evaluation: getPresentationName():String
+ WriteMarks -> ExecutionCourse: getName():String
+ ExecutionCourse -> ExecutionCourse: getNome():String
+ WriteMarks -> ExecutionCourse: getDegreePresentationString():String
+ ExecutionCourse -> ExecutionCourse: getDegreesSortedByDegreeName():SortedSet<Degree>
+ LOOP for: degrees
+ 	ExecutionCourse -> Degree_Base: getSigla():String
+ END
+ @enduml

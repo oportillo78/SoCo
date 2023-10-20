@@ -1,0 +1,192 @@
+@startuml
+ participant "JSP\nJSPWriteStudentAttendingCourse" as JSPWriteStudentAttendingCourse order 0
+ participant "services.enrollment.shift\nWriteStudentAttendingCourse" as WriteStudentAttendingCourse order 1
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 17
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 19
+ participant "core.domain\nUser" as User order 24
+ participant "service.filter.enrollment\nClassEnrollmentAuthorizationFilter" as ClassEnrollmentAuthorizationFilter order 27
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nCurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan" as CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan order 92
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 95
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 96
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 97
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nOutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan" as OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan order 98
+ participant "domain\nDegreeCurricularPlan" as DegreeCurricularPlan order 101
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nCurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan" as CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan order 110
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 113
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 114
+ participant "domain\nEnrolmentPeriod" as EnrolmentPeriod order 115
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nOutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan" as OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan order 116
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 119
+ participant "domain\nDegreeCurricularPlanEquivalencePlan_Base" as DegreeCurricularPlanEquivalencePlan_Base order 121
+ participant "core.security\nAuthenticate" as Authenticate order 122
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 128
+ participant "core.domain\nUser" as User order 129
+ participant "domain.student\nRegistration" as Registration order 130
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 166
+ participant "domain\nEnrolment" as Enrolment order 168
+ participant "domain\nAttends" as Attends order 178
+ participant "domain.exceptions\nDomainException" as DomainException order 197
+ participant "domain\nAttends" as Attends order 199
+ participant "domain\nAttends" as Attends order 200
+ participant "domain\nAttends" as Attends order 218
+ participant "core.domain\nBennu" as Bennu order 233
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 239
+ participant "domain.student\nRegistration_Base" as Registration_Base order 240
+ participant "domain.student\nStudent" as Student order 241
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nClassEnrollmentCondition" as ClassEnrollmentCondition order 242
+ participant "domain\nPerson" as Person order 243
+ JSPWriteStudentAttendingCourse -> WriteStudentAttendingCourse: getConnection()
+ JSPWriteStudentAttendingCourse <- WriteStudentAttendingCourse: returnConnection()
+ JSPWriteStudentAttendingCourse -> WriteStudentAttendingCourse: executeAction()
+ WriteStudentAttendingCourse -> WriteStudentAttendingCourse: runWriteStudentAttendingCourse\n(Registration,String,ExecutionSemester):void
+ WriteStudentAttendingCourse -> ClassEnrollmentAuthorizationFilter: execute(Registration,ExecutionSemester):void
+ ClassEnrollmentAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ClassEnrollmentAuthorizationFilter -> User: getPerson():Person
+ OPT RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(person.getUser())
+ 	ClassEnrollmentAuthorizationFilter -> Registration: getPerson():Person
+ 	Registration -> Registration: getStudent():Student
+ 	Registration -> Student: getPerson():Person
+ END
+ LOOP for: conditions
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentCondition: verify(Registration):void
+ END
+ ClassEnrollmentAuthorizationFilter -> Person: getActiveStudentCurricularPlansSortedByDegreeTypeAndDegreeName\n():SortedSet<StudentCurricularPlan>
+ LOOP for: getStudentsSet()
+ 	Person -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	ALT isActive()
+ 		Registration -> Registration: getLastStudentCurricularPlan():StudentCurricularPlan
+ 		Registration -> Registration: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ 	END
+ END
+ LOOP for: activeStudentCurricularPlans
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verify\n(StudentCurricularPlan,ExecutionSemester):FenixServiceException
+ 	ClassEnrollmentAuthorizationFilter -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	ALT scp.getRegistration().getRegistrationProtocol().isMobilityAgreement()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriodMobility\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: getEnrolmentPeriodsSet():Set<EnrolmentPeriod>
+ 	ELSE else
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriod\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 		DegreeCurricularPlan -> DegreeCurricularPlan: getEnrolmentPeriodsSet():Set<EnrolmentPeriod>
+ 	END
+ 	OPT !enrolmentPeriodInClasses.isPresent() || enrolmentPeriodInClasses.get().getStartDateDateTime() == null                || enrolmentPeriodInClasses.get().getEndDateDateTime() == null
+ 		ClassEnrollmentAuthorizationFilter -> CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan: CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan\n()
+ 		CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan -> CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan: FenixServiceException(String)
+ 	END
+ 	OPT !enrolmentPeriodInClasses.get().isValid()
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getStartDateDateTime():DateTime
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getEndDateDateTime():DateTime
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionPeriod():ExecutionSemester
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionYear():ExecutionYear
+ 		ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getName():String
+ 		ClassEnrollmentAuthorizationFilter -> OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan: OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan\n(String)
+ 		OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan -> OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan: FenixServiceException(String,String[])
+ 	END
+ 	LOOP for: degreeCurricularPlan.getTargetEquivalencePlansSet()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlanEquivalencePlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 		ALT scp.getRegistration().getRegistrationProtocol().isMobilityAgreement()
+ 			ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriodMobility\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: getEnrolmentPeriodsSet():Set<EnrolmentPeriod>
+ 		ELSE else
+ 			ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlan: getClassesEnrollmentPeriod\n(ExecutionSemester):Optional<EnrolmentPeriod>
+ 			DegreeCurricularPlan -> DegreeCurricularPlan: getEnrolmentPeriodsSet():Set<EnrolmentPeriod>
+ 		END
+ 		OPT !enrolmentPeriodInClasses.isPresent() || enrolmentPeriodInClasses.get().getStartDateDateTime() == null                || enrolmentPeriodInClasses.get().getEndDateDateTime() == null
+ 			ClassEnrollmentAuthorizationFilter -> CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan: CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan\n()
+ 			CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan -> CurrentClassesEnrolmentPeriodUndefinedForDegreeCurricularPlan: FenixServiceException(String)
+ 		END
+ 		OPT !enrolmentPeriodInClasses.get().isValid()
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getStartDateDateTime():DateTime
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getEndDateDateTime():DateTime
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: toString(String):String
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionPeriod():ExecutionSemester
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getExecutionYear():ExecutionYear
+ 			ClassEnrollmentAuthorizationFilter -> EnrolmentPeriod: getName():String
+ 			ClassEnrollmentAuthorizationFilter -> OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan: OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan\n(String)
+ 			OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan -> OutsideOfCurrentClassesEnrolmentPeriodForDegreeCurricularPlan: FenixServiceException(String,String[])
+ 		END
+ 	END
+ END
+ WriteStudentAttendingCourse -> WriteStudentAttendingCourse: run(Registration,String):void
+ WriteStudentAttendingCourse -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ User -> User: getUsername():String
+ WriteStudentAttendingCourse -> WriteStudentAttendingCourse: readExecutionCourse(String):ExecutionCourse
+ WriteStudentAttendingCourse -> FenixFramework: getDomainObject(String):T
+ WriteStudentAttendingCourse -> Registration: addAttendsTo(ExecutionCourse):void
+ Registration -> Registration: checkIfReachedAttendsLimit():void
+ Registration -> Authenticate: getUser():User
+ OPT getStudent().readAttendByExecutionCourse(executionCourse) == null
+ 	Registration -> Registration: findEnrolment\n(StudentCurricularPlan,ExecutionCourse,ExecutionSemester):Enrolment
+ 	LOOP for: executionCourse.getAssociatedCurricularCoursesSet()
+ 		Registration -> StudentCurricularPlan_Base: getEnrolmentByCurricularCourseAndExecutionPeriod\n(CurricularCourse,ExecutionSemester):Enrolment
+ 	END
+ 	Registration -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	ALT isActive()
+ 		Registration -> Registration: getLastStudentCurricularPlan():StudentCurricularPlan
+ 		Registration -> Registration: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ 	END
+ 	Registration -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 	ALT enrolment != null
+ 		Registration -> Enrolment: createAttends(Registration,ExecutionCourse):void
+ 		Enrolment -> Enrolment: getAttendsFor(ExecutionSemester):Attends
+ 		Enrolment -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 		OPT attendsFor != null
+ 			Enrolment -> Attends: delete():void
+ 			Attends -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			Attends -> Attends: getDeletionBlockers():Collection<String>
+ 			Attends -> Attends: getProjectSubmissionLogsSet():Set<ProjectSubmissionLog>
+ 			Attends -> Attends: getGroupingsSet():Set<Grouping>
+ 			Attends -> Attends: setAluno(Registration):void
+ 			Attends -> Attends: setDisciplinaExecucao(ExecutionCourse):void
+ 			Attends -> Attends: setEnrolment(Enrolment):void
+ 			Attends -> Attends: setRootDomainObject(Bennu):void
+ 			Attends -> Attends: deleteDomainObject():void
+ 		END
+ 		Enrolment -> Enrolment: addAttends(Attends):void
+ 		Enrolment -> Attends: Attends(Registration,ExecutionCourse)
+ 	ELSE else
+ 		Registration -> Registration: getAttendsForExecutionCourse(ExecutionCourse):Attends
+ 		Registration -> Registration: getAttendsForExecutionPeriod(ExecutionSemester):List<Attends>
+ 		Registration -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 		OPT attends != null
+ 			Registration -> Attends: delete():void
+ 			Attends -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			Attends -> Attends: getDeletionBlockers():Collection<String>
+ 			Attends -> Attends: getProjectSubmissionLogsSet():Set<ProjectSubmissionLog>
+ 			Attends -> Attends: getGroupingsSet():Set<Grouping>
+ 			Attends -> Attends: setAluno(Registration):void
+ 			Attends -> Attends: setDisciplinaExecucao(ExecutionCourse):void
+ 			Attends -> Attends: setEnrolment(Enrolment):void
+ 			Attends -> Attends: setRootDomainObject(Bennu):void
+ 			Attends -> Attends: deleteDomainObject():void
+ 		END
+ 		Registration -> Attends: Attends(Registration,ExecutionCourse)
+ 		Attends -> Attends: Attends()
+ 		Attends -> Attends: Attends_Base()
+ 		Attends -> Attends: setRootDomainObject(Bennu):void
+ 		Attends -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		Attends -> Registration_Base: getStudent():Student
+ 		Attends -> Attends: setRegistration(Registration):void
+ 		Attends -> Attends: setDisciplinaExecucao(ExecutionCourse):void
+ 	END
+ END
+ @enduml

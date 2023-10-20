@@ -1,0 +1,100 @@
+@startuml
+ participant "JSP\nJSPWriteMarks" as JSPWriteMarks order 0
+ participant "services.teacher\nWriteMarks" as WriteMarks order 1
+ participant "domain.exceptions\nDomainException" as DomainException order 57
+ participant "pt.ist.fenixframework.core\nAbstractDomainObject" as AbstractDomainObject order 58
+ participant "services.teacher.WriteMarks\nAttendsMark" as AttendsMark order 59
+ participant "domain.student\nRegistration" as Registration order 60
+ participant "domain.exceptions\nDomainException" as DomainException order 61
+ participant "domain.exceptions\nDomainException" as DomainException order 62
+ participant "domain\nAttends" as Attends order 63
+ participant "domain.student\nRegistration" as Registration order 66
+ participant "domain.exceptions\nDomainException" as DomainException order 67
+ participant "domain\nMark" as Mark order 72
+ participant "domain\nEvaluation" as Evaluation order 83
+ participant "domain\nMark" as Mark order 86
+ participant "domain\nEvaluationManagementLog" as EvaluationManagementLog order 97
+ participant "core.i18n\nBundleUtil" as BundleUtil order 112
+ participant "domain\nExecutionCourse" as ExecutionCourse order 113
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 114
+ JSPWriteMarks -> WriteMarks: getConnection()
+ JSPWriteMarks <- WriteMarks: returnConnection()
+ JSPWriteMarks -> WriteMarks: executeAction()
+ WriteMarks -> WriteMarks: writeByStudent(String,String,List<StudentMark>):void
+ WriteMarks -> FenixFramework: getDomainObject(String):T
+ WriteMarks -> FenixFramework: getDomainObject(String):T
+ WriteMarks -> WriteMarks: writeMarks\n(List<AttendsMark>,ExecutionCourse,Evaluation):void
+ LOOP for: marks
+ 	WriteMarks -> WriteMarks: findAttend(ExecutionCourse,String):Attends
+ 	ALT attend.getEnrolment() != null && attend.getEnrolment().isImpossible()
+ 		WriteMarks -> Attends: getRegistration():Registration
+ 		Attends -> Attends: getAluno():Registration
+ 		WriteMarks -> Registration: getStudent():Student
+ 		WriteMarks -> Registration: getNumber():Integer
+ 		WriteMarks -> DomainException: DomainException(String,String[])
+ 		DomainException -> DomainException: DomainException(String,String,String[])
+ 		DomainException -> DomainException: DomainException(Status,String,String,String[])
+ 	ELSE else
+ 		WriteMarks -> Attends: getMarkByEvaluation(Evaluation):Mark
+ 		ALT isToDeleteMark(markValue)
+ 			OPT mark != null
+ 				WriteMarks -> Mark: delete():void
+ 				Mark -> Mark: setAttend(Attends):void
+ 				Mark -> Mark: setEvaluation(Evaluation):void
+ 				Mark -> Mark: setRootDomainObject(Bennu):void
+ 				Mark -> Mark: deleteDomainObject():void
+ 			END
+ 		ELSE else
+ 			ALT mark == null
+ 				WriteMarks -> Evaluation: addNewMark(Attends,String):Mark
+ 				Evaluation -> Mark: Mark(Attends,Evaluation,String)
+ 				Mark -> Mark: Mark()
+ 				Mark -> Mark: setAttend(Attends):void
+ 				Mark -> Mark: setEvaluation(Evaluation):void
+ 				Mark -> Mark: setMark(String):void
+ 				Mark -> Mark: setPublishedMark(String):void
+ 			ELSE else
+ 				WriteMarks -> Mark: setMark(String):void
+ 				ALT validateMark(mark)
+ 					Mark -> Mark: setMark(String):void
+ 				END
+ 			END
+ 		END
+ 	END
+ END
+ WriteMarks -> EvaluationManagementLog: createLog\n(ExecutionCourse,String,String,String[]):EvaluationManagementLog
+ EvaluationManagementLog -> EvaluationManagementLog: generateLabelDescription(String,String,String[]):String
+ EvaluationManagementLog -> BundleUtil: getString(String,String,String[]):String
+ EvaluationManagementLog -> EvaluationManagementLog: createEvaluationManagementLog\n(ExecutionCourse,String):EvaluationManagementLog
+ EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog(ExecutionCourse,String)
+ EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog_Base()
+ OPT getExecutionCourse() == null
+ 	EvaluationManagementLog -> EvaluationManagementLog: setExecutionCourse(ExecutionCourse):void
+ END
+ EvaluationManagementLog -> EvaluationManagementLog: setDescription(String):void
+ WriteMarks -> Evaluation: getPresentationName():String
+ WriteMarks -> ExecutionCourse: getName():String
+ WriteMarks -> ExecutionCourse: getDegreePresentationString():String
+ WriteMarks -> WriteMarks: convertMarks\n(ExecutionCourse,List<StudentMark>):List<AttendsMark>
+ LOOP for: marks
+ 	WriteMarks -> WriteMarks: findAttend\n(ExecutionCourse,String,List<DomainException>):Attends
+ 	LOOP for: executionCourse.getAttendsSet()
+ 		WriteMarks -> Attends: getRegistration():Registration
+ 		WriteMarks -> Registration: getStudent():Student
+ 	END
+ 	ALT activeAttends.isEmpty()
+ 		WriteMarks -> DomainException: DomainException(String,String[])
+ 	ELSE else
+ 		WriteMarks -> DomainException: DomainException(String,String[])
+ 	END
+ 	OPT attend != null
+ 		WriteMarks -> WriteMarks: addMark\n(List<AttendsMark>,StudentMark,Attends,List<DomainException>):void
+ 		ALT studentMark.mark.length() - studentMark.mark.indexOf('.') - 1 > 2
+ 			WriteMarks -> DomainException: DomainException(String,String[])
+ 		ELSE else
+ 			WriteMarks -> AbstractDomainObject: getExternalId():String
+ 			WriteMarks -> AttendsMark: AttendsMark(String,String)
+ 		END
+ 	END
+ END
+ @enduml

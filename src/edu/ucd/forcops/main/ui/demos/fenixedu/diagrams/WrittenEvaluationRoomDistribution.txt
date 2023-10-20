@@ -1,0 +1,148 @@
+@startuml
+ participant "JSP\nJSPWrittenEvaluationRoomDistribution" as JSPWrittenEvaluationRoomDistribution order 0
+ participant "services.teacher\nWrittenEvaluationRoomDistribution" as WrittenEvaluationRoomDistribution order 1
+ participant "domain\nAttends" as Attends order 29
+ participant "domain\nWrittenEvaluation_Base" as WrittenEvaluation_Base order 32
+ participant "domain\nWrittenEvaluationEnrolment_Base" as WrittenEvaluationEnrolment_Base order 33
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 35
+ participant "domain\nWrittenEvaluation" as WrittenEvaluation order 37
+ participant "util\nDateFormatUtil" as DateFormatUtil order 75
+ participant "domain\nSpace" as Space order 76
+ participant "domain\nInformation" as Information order 81
+ participant "domain\nSpaceClassification" as SpaceClassification order 106
+ participant "com.google.gson\nJsonElement" as JsonElement order 107
+ participant "com.google.gson\nJsonObject" as JsonObject order 108
+ participant "com.google.gson\nJsonElement" as JsonElement order 109
+ participant "com.google.gson\nJsonElement" as JsonElement order 110
+ participant "com.google.gson\nJsonObject" as JsonObject order 111
+ participant "com.google.gson\nJsonElement" as JsonElement order 112
+ participant "domain\nWrittenEvaluationEnrolment" as WrittenEvaluationEnrolment order 113
+ participant "core.domain\nBennu" as Bennu order 128
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 134
+ participant "domain\nEvaluationManagementLog" as EvaluationManagementLog order 135
+ participant "core.i18n\nBundleUtil" as BundleUtil order 150
+ participant "domain\nExecutionCourse" as ExecutionCourse order 151
+ participant "domain\nCurricularCourse" as CurricularCourse order 162
+ participant "domain\nDegreeCurricularPlan_Base" as DegreeCurricularPlan_Base order 163
+ participant "domain\nDegree_Base" as Degree_Base order 164
+ participant "service.filter\nExecutionCourseAndExamLecturingTeacherAuthorizationFilter" as ExecutionCourseAndExamLecturingTeacherAuthorizationFilter order 165
+ participant "core.security\nAuthenticate" as Authenticate order 168
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 171
+ JSPWrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: getConnection()
+ JSPWrittenEvaluationRoomDistribution <- WrittenEvaluationRoomDistribution: returnConnection()
+ JSPWrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: executeAction()
+ WrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: runWrittenEvaluationRoomDistribution(String,String,List<String>,Boolean):void
+ WrittenEvaluationRoomDistribution -> ExecutionCourseAndExamLecturingTeacherAuthorizationFilter: execute(String,String):void
+ ExecutionCourseAndExamLecturingTeacherAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ WrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: run(String,String,List<String>,Boolean):void
+ WrittenEvaluationRoomDistribution -> FenixFramework: getDomainObject(String):T
+ ALT distributeOnlyEnroledStudents
+ 	WrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: readEnroledStudentsInWrittenEvaluation(WrittenEvaluation):List<Registration>
+ 	WrittenEvaluationRoomDistribution -> WrittenEvaluation_Base: getWrittenEvaluationEnrolmentsSet():Set<WrittenEvaluationEnrolment>
+ 	LOOP for: writtenEvaluation.getWrittenEvaluationEnrolmentsSet()
+ 		WrittenEvaluationRoomDistribution -> WrittenEvaluationEnrolment_Base: getStudent():Registration
+ 	END
+ ELSE else
+ 	WrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: readAllStudentsAttendingExecutionCourses(WrittenEvaluation):List<Registration>
+ 	LOOP for: writtenEvaluation.getAssociatedExecutionCoursesSet()
+ 		LOOP for: executionCourse.getAttendsSet()
+ 			OPT !result.contains(attend.getRegistration())
+ 				WrittenEvaluationRoomDistribution -> Attends: getRegistration():Registration
+ 				Attends -> Attends: getAluno():Registration
+ 			END
+ 		END
+ 	END
+ END
+ WrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: readRooms\n(WrittenEvaluation,List<String>):List<Space>
+ WrittenEvaluationRoomDistribution -> WrittenEvaluationRoomDistribution: removeDuplicatedEntries(List<String>):List<String>
+ WrittenEvaluationRoomDistribution -> WrittenEvaluation: getAssociatedRooms():List<Space>
+ WrittenEvaluationRoomDistribution -> WrittenEvaluation: distributeStudentsByRooms(List<Registration>,List<Space>):void
+ WrittenEvaluation -> WrittenEvaluation: checkIfCanDistributeStudentsByRooms():void
+ WrittenEvaluation -> DateFormatUtil: parse(String,String):Date
+ WrittenEvaluation -> DateFormatUtil: format(String,Date):String
+ WrittenEvaluation -> WrittenEvaluation: getDayDate():Date
+ WrittenEvaluation -> DateFormatUtil: format(String,Date):String
+ WrittenEvaluation -> WrittenEvaluation: getBeginningDate():Date
+ OPT this.getEnrollmentEndDayDate() != null && this.getEnrollmentEndTimeDate() != null
+ 	WrittenEvaluation -> WrittenEvaluation: createDate(Date,Date):DateTime
+ 	WrittenEvaluation -> WrittenEvaluation: getEnrollmentEndDayDate():Date
+ 	WrittenEvaluation -> WrittenEvaluation: getEnrollmentEndTimeDate():Date
+ END
+ WrittenEvaluation -> WrittenEvaluation: checkRoomsCapacityForStudents(List<Space>,int):void
+ LOOP for: selectedRooms
+ 	WrittenEvaluation -> Space: getMetadata(String):Optional<T>
+ 	Space -> Space: getInformation():Optional<Information>
+ 	ALT ?
+ 		Space -> Information: getMetadata(String):Optional<T>
+ 		Information -> Information: getClassification():SpaceClassification
+ 		Information -> SpaceClassification: getMetadataSpecJson(String):Optional<JsonElement>
+ 		OPT ?
+ 			Information -> JsonElement: getAsJsonObject():JsonObject
+ 			Information -> JsonObject: get(String):JsonElement
+ 			Information -> JsonElement: getAsString():String
+ 			Information -> Information: getMetadata():JsonElement
+ 			Information -> JsonElement: getAsJsonObject():JsonObject
+ 			Information -> JsonObject: get(String):JsonElement
+ 			OPT ?
+ 				Information -> JsonElement: getAsBoolean():boolean
+ 			END
+ 			OPT ?
+ 				Information -> JsonElement: getAsInt():int
+ 			END
+ 			OPT ?
+ 				Information -> JsonElement: getAsBigDecimal():BigDecimal
+ 			END
+ 			Information -> JsonElement: getAsString():String
+ 		END
+ 	END
+ 	LOOP for:numberOfStudentsInserted < examCapacity && !studentsToDistribute.isEmpty()
+ 		WrittenEvaluation -> WrittenEvaluation: getRandomStudentFromList(List<Registration>):Registration
+ 		WrittenEvaluation -> WrittenEvaluation: getWrittenEvaluationEnrolmentFor(Registration):WrittenEvaluationEnrolment
+ 		ALT writtenEvaluationEnrolment == null
+ 			WrittenEvaluation -> WrittenEvaluationEnrolment: WrittenEvaluationEnrolment(WrittenEvaluation,Registration,Space)
+ 			WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: WrittenEvaluationEnrolment()
+ 			WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: WrittenEvaluationEnrolment_Base()
+ 			WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: setRootDomainObject(Bennu):void
+ 			WrittenEvaluationEnrolment -> Bennu: getInstance():Bennu
+ 			OPT ?
+ 				Bennu -> Bennu: initialize():Bennu
+ 			END
+ 			Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 			Bennu -> DomainRoot: getBennu():Bennu
+ 			WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: setWrittenEvaluation(WrittenEvaluation):void
+ 			WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: setStudent(Registration):void
+ 			WrittenEvaluationEnrolment -> WrittenEvaluationEnrolment: setRoom(Space):void
+ 		ELSE else
+ 			WrittenEvaluation -> WrittenEvaluationEnrolment_Base: setRoom(Space):void
+ 		END
+ 	END
+ END
+ LOOP for: getAssociatedExecutionCoursesSet()
+ 	WrittenEvaluation -> EvaluationManagementLog: createLog\n(ExecutionCourse,String,String,String[]):EvaluationManagementLog
+ 	EvaluationManagementLog -> EvaluationManagementLog: generateLabelDescription(String,String,String[]):String
+ 	EvaluationManagementLog -> BundleUtil: getString(String,String,String[]):String
+ 	EvaluationManagementLog -> EvaluationManagementLog: createEvaluationManagementLog\n(ExecutionCourse,String):EvaluationManagementLog
+ 	EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog(ExecutionCourse,String)
+ 	EvaluationManagementLog -> EvaluationManagementLog: EvaluationManagementLog_Base()
+ 	OPT getExecutionCourse() == null
+ 		EvaluationManagementLog -> EvaluationManagementLog: setExecutionCourse(ExecutionCourse):void
+ 	END
+ 	EvaluationManagementLog -> EvaluationManagementLog: setDescription(String):void
+ 	WrittenEvaluation -> WrittenEvaluation: getPresentationName():String
+ 	WrittenEvaluation -> ExecutionCourse: getName():String
+ 	ExecutionCourse -> ExecutionCourse: getNome():String
+ 	WrittenEvaluation -> ExecutionCourse: getDegreePresentationString():String
+ 	ExecutionCourse -> ExecutionCourse: getDegreesSortedByDegreeName():SortedSet<Degree>
+ 	LOOP for: getAssociatedCurricularCoursesSet()
+ 		ExecutionCourse -> CurricularCourse: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ExecutionCourse -> DegreeCurricularPlan_Base: getDegree():Degree
+ 	END
+ 	LOOP for: degrees
+ 		ExecutionCourse -> Degree_Base: getSigla():String
+ 	END
+ END
+ @enduml

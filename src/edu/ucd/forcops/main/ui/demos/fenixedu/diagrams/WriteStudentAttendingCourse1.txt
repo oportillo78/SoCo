@@ -1,0 +1,149 @@
+@startuml
+ participant "JSP\nJSPWriteStudentAttendingCourse" as JSPWriteStudentAttendingCourse order 0
+ participant "services.enrollment.shift\nWriteStudentAttendingCourse" as WriteStudentAttendingCourse order 1
+ participant "service\nServiceMonitoring" as ServiceMonitoring order 17
+ participant "core.domain\nUser" as User order 22
+ participant "service.filter.enrollment\nClassEnrollmentAuthorizationFilter" as ClassEnrollmentAuthorizationFilter order 23
+ participant "domain\nStudentCurricularPlan_Base" as StudentCurricularPlan_Base order 46
+ participant "domain\nDegreeCurricularPlanEquivalencePlan_Base" as DegreeCurricularPlanEquivalencePlan_Base order 47
+ participant "core.security\nAuthenticate" as Authenticate order 48
+ participant "core.domain\nAuthenticationContext" as AuthenticationContext order 54
+ participant "core.domain\nUser" as User order 55
+ participant "domain.student\nRegistration" as Registration order 56
+ participant "domain.student\nStudent" as Student order 89
+ participant "domain\nStudentCurricularPlan" as StudentCurricularPlan order 90
+ participant "domain\nExecutionCourse_Base" as ExecutionCourse_Base order 91
+ participant "domain\nEnrolment" as Enrolment order 93
+ participant "domain\nAttends" as Attends order 103
+ participant "domain\nAttends" as Attends order 122
+ participant "domain.student\nRegistration_Base" as Registration_Base order 131
+ participant "domain\nAttends" as Attends order 132
+ participant "domain.exceptions\nDomainException" as DomainException order 151
+ participant "domain\nAttends" as Attends order 152
+ participant "core.domain\nBennu" as Bennu order 167
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 181
+ participant "pt.ist.fenixframework\nFenixFramework" as FenixFramework order 182
+ participant "pt.ist.fenixframework\nDomainRoot" as DomainRoot order 183
+ participant "domain.student\nRegistration_Base" as Registration_Base order 184
+ participant "service.filter.enrollment.ClassEnrollmentAuthorizationFilter\nClassEnrollmentCondition" as ClassEnrollmentCondition order 185
+ participant "domain\nPerson" as Person order 186
+ participant "domain\nExecutionSemester" as ExecutionSemester order 188
+ participant "core.domain\nBennu" as Bennu order 192
+ JSPWriteStudentAttendingCourse -> WriteStudentAttendingCourse: getConnection()
+ JSPWriteStudentAttendingCourse <- WriteStudentAttendingCourse: returnConnection()
+ JSPWriteStudentAttendingCourse -> WriteStudentAttendingCourse: executeAction()
+ WriteStudentAttendingCourse -> WriteStudentAttendingCourse: runWriteStudentAttendingCourse(Registration,String):void
+ WriteStudentAttendingCourse -> ClassEnrollmentAuthorizationFilter: execute(Registration):void
+ ClassEnrollmentAuthorizationFilter -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ClassEnrollmentAuthorizationFilter -> User: getPerson():Person
+ OPT RoleType.RESOURCE_ALLOCATION_MANAGER.isMember(person.getUser())
+ 	ClassEnrollmentAuthorizationFilter -> Registration: getPerson():Person
+ 	Registration -> Registration: getStudent():Student
+ 	Registration -> Student: getPerson():Person
+ END
+ LOOP for: conditions
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentCondition: verify(Registration):void
+ END
+ ClassEnrollmentAuthorizationFilter -> Person: getActiveStudentCurricularPlansSortedByDegreeTypeAndDegreeName\n():SortedSet<StudentCurricularPlan>
+ LOOP for: getStudentsSet()
+ 	Person -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	ALT isActive()
+ 		Registration -> Registration: getLastStudentCurricularPlan():StudentCurricularPlan
+ 		Registration -> Registration: getStudentCurricularPlansSet():Set<StudentCurricularPlan>
+ 	END
+ END
+ LOOP for: activeStudentCurricularPlans
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verify\n(StudentCurricularPlan,ExecutionSemester):FenixServiceException
+ 	ClassEnrollmentAuthorizationFilter -> StudentCurricularPlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 	ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	LOOP for: degreeCurricularPlan.getTargetEquivalencePlansSet()
+ 		ClassEnrollmentAuthorizationFilter -> DegreeCurricularPlanEquivalencePlan_Base: getDegreeCurricularPlan():DegreeCurricularPlan
+ 		ClassEnrollmentAuthorizationFilter -> ClassEnrollmentAuthorizationFilter: verifyEnrolmentPeriod\n(DegreeCurricularPlan,ExecutionSemester,StudentCurricularPlan):FenixServiceException
+ 	END
+ 	ClassEnrollmentAuthorizationFilter -> ExecutionSemester: readActualExecutionSemester():ExecutionSemester
+ 	ExecutionSemester -> Bennu: getInstance():Bennu
+ 	OPT ?
+ 		Bennu -> Bennu: initialize():Bennu
+ 	END
+ 	Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 	Bennu -> DomainRoot: getBennu():Bennu
+ 	ExecutionSemester -> Bennu: getExecutionPeriodsSet():Set<ExecutionSemester>
+ END
+ WriteStudentAttendingCourse -> WriteStudentAttendingCourse: run(Registration,String):void
+ WriteStudentAttendingCourse -> ServiceMonitoring: logService(Class<?>,Object[]):void
+ ServiceMonitoring -> Authenticate: getUser():User
+ ALT ?
+ ELSE else
+ 	Authenticate -> AuthenticationContext: getUser():User
+ END
+ ServiceMonitoring -> User: getUsername():String
+ WriteStudentAttendingCourse -> WriteStudentAttendingCourse: readExecutionCourse(String):ExecutionCourse
+ WriteStudentAttendingCourse -> FenixFramework: getDomainObject(String):T
+ WriteStudentAttendingCourse -> Registration: addAttendsTo(ExecutionCourse):void
+ Registration -> Registration: checkIfReachedAttendsLimit():void
+ Registration -> Authenticate: getUser():User
+ OPT getStudent().readAttendByExecutionCourse(executionCourse) == null
+ 	Registration -> Registration: findEnrolment\n(StudentCurricularPlan,ExecutionCourse,ExecutionSemester):Enrolment
+ 	LOOP for: executionCourse.getAssociatedCurricularCoursesSet()
+ 		Registration -> StudentCurricularPlan: getEnrolmentByCurricularCourseAndExecutionPeriod\n(CurricularCourse,ExecutionSemester):Enrolment
+ 	END
+ 	Registration -> Registration: getActiveStudentCurricularPlan():StudentCurricularPlan
+ 	Registration -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 	ALT enrolment != null
+ 		Registration -> Enrolment: createAttends(Registration,ExecutionCourse):void
+ 		Enrolment -> Enrolment: getAttendsFor(ExecutionSemester):Attends
+ 		Enrolment -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 		OPT attendsFor != null
+ 			Enrolment -> Attends: delete():void
+ 			Attends -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			Attends -> Attends: getDeletionBlockers():Collection<String>
+ 			Attends -> Attends: getProjectSubmissionLogsSet():Set<ProjectSubmissionLog>
+ 			Attends -> Attends: getGroupingsSet():Set<Grouping>
+ 			Attends -> Attends: setAluno(Registration):void
+ 			Attends -> Attends: setDisciplinaExecucao(ExecutionCourse):void
+ 			Attends -> Attends: setEnrolment(Enrolment):void
+ 			Attends -> Attends: setRootDomainObject(Bennu):void
+ 			Attends -> Attends: deleteDomainObject():void
+ 		END
+ 		Enrolment -> Enrolment: addAttends(Attends):void
+ 		Enrolment -> Attends: Attends(Registration,ExecutionCourse)
+ 		Attends -> Attends: Attends()
+ 		Attends -> Registration_Base: getStudent():Student
+ 		Attends -> Attends: setRegistration(Registration):void
+ 		Attends -> Attends: setDisciplinaExecucao(ExecutionCourse):void
+ 	ELSE else
+ 		Registration -> Registration: getAttendsForExecutionCourse(ExecutionCourse):Attends
+ 		Registration -> Registration: getAttendsForExecutionPeriod(ExecutionSemester):List<Attends>
+ 		Registration -> ExecutionCourse_Base: getExecutionPeriod():ExecutionSemester
+ 		OPT attends != null
+ 			Registration -> Attends: delete():void
+ 			Attends -> DomainException: throwWhenDeleteBlocked(Collection<String>):void
+ 			Attends -> Attends: getDeletionBlockers():Collection<String>
+ 			Attends -> Attends: getProjectSubmissionLogsSet():Set<ProjectSubmissionLog>
+ 			Attends -> Attends: getGroupingsSet():Set<Grouping>
+ 			Attends -> Attends: setAluno(Registration):void
+ 			Attends -> Attends: setDisciplinaExecucao(ExecutionCourse):void
+ 			Attends -> Attends: setEnrolment(Enrolment):void
+ 			Attends -> Attends: setRootDomainObject(Bennu):void
+ 			Attends -> Attends: deleteDomainObject():void
+ 		END
+ 		Registration -> Attends: Attends(Registration,ExecutionCourse)
+ 		Attends -> Attends: Attends()
+ 		Attends -> Attends: Attends_Base()
+ 		Attends -> Attends: setRootDomainObject(Bennu):void
+ 		Attends -> Bennu: getInstance():Bennu
+ 		OPT ?
+ 			Bennu -> Bennu: initialize():Bennu
+ 		END
+ 		Bennu -> FenixFramework: getDomainRoot():DomainRoot
+ 		Bennu -> DomainRoot: getBennu():Bennu
+ 		Attends -> Registration_Base: getStudent():Student
+ 		Attends -> Attends: setRegistration(Registration):void
+ 		Attends -> Attends: setDisciplinaExecucao(ExecutionCourse):void
+ 	END
+ END
+ @enduml
